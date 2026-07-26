@@ -15,9 +15,7 @@ from sklearn.model_selection import train_test_split
 # expected yield (~10 events) is comparable to the ~9.4-event Higgs signal, with
 # ~5.8 events inside the 100-200 GeV fit window.  They are omitted because the
 # available MC has only 4/8/2 retained rows for them, far too few to estimate a
-# mass shape reliably (drawing a large sample would just duplicate those rows,
-# not add information).  A real scientific analysis would need substantially more
-# simulation of these rare channels; this teaching dataset does not have it.
+# mass shape reliably (drawing a large sample would just duplicate those rows).
 # The notebook treats their omission as a background systematic, not a free pass.
 #
 # The shipped MC files are a fixed-seed 25% subsample of the full retained MC,
