@@ -103,6 +103,8 @@ rankings, AUC, and quantile-based score bins are unaffected by it.
 
 Rescales the physical weights so the two classes carry equal total weight, then
 normalizes to unit mean so a regularization strength C stays on a stable scale.
+Each class is multiplied by a single factor, so the relative weights of rows
+within a class are preserved.
 
 Input:
     signal_mask      : boolean array, True for signal (Higgs) rows
@@ -115,8 +117,7 @@ def class_balanced_weights(signal_mask, physical_weights):
     signal_mask = np.asarray(signal_mask, dtype=bool)
     w = np.asarray(physical_weights, dtype=float).copy()
     total_background = w[~signal_mask].sum()
-    n_signal = signal_mask.sum()
-    w[signal_mask] = total_background / n_signal
+    w[signal_mask] *= total_background / w[signal_mask].sum()
     w *= len(w) / w.sum()
     return w
 

@@ -61,7 +61,7 @@ nothing but mass.
 |---|---:|---:|---:|
 | mass-only, 20 cells | | 2.35 | |
 | mass-only, 80 cells (capacity-matched) | | 2.72 | |
-| mass tag, `-abs(m-125)`, no new info | 0.984 | 2.70 | 0.00 |
+| mass tag, `-abs(m-125)`, no new info | 0.984 | 2.69 | 0.00 |
 | linear | 0.632 | 2.36 | 0.50 |
 | quadratic | 0.906 | 2.71 | 0.12 |
 | 3-layer neural net | 0.961 | 2.42 | 0.03 |

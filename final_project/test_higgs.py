@@ -91,15 +91,17 @@ def test_mu_confidence_interval_shape_includes_zero():
 # --- classifier ladder and model comparison --------------------------------------
 
 def test_classifier_ladder_auc():
-    targets = {"linear": 0.632, "quadratic": 0.906, "mlp": 0.961}
-    for kind, tgt in targets.items():
+    # The quadratic AUC is quoted in Section 10's report, so it is held tighter
+    # than the two that only appear in the Section 8 table.
+    targets = {"linear": (0.632, 0.03), "quadratic": (0.906, 0.005), "mlp": (0.961, 0.03)}
+    for kind, (tgt, tol) in targets.items():
         mdl, fx = _MODELS[kind]
-        _close(H.auc(mdl, fx, _ST["holdout"]), tgt, 0.03, f"AUC {kind}")
+        _close(H.auc(mdl, fx, _ST["holdout"]), tgt, tol, f"AUC {kind}")
 
 
 def test_model_comparison_ordering():
     base = H.mass_only_expected_Z(_ST)
-    _close(base, 2.35, 0.10, "mass-only baseline, 20 cells")
+    _close(base, 2.35, 0.02, "mass-only baseline, 20 cells")
     ez = {k: H.expected_Z_2d(m, f, _ST) for k, (m, f) in _MODELS.items()}
     _close(ez["linear"], 2.36, 0.12, "linear expected Z")
     _close(ez["mlp"], 2.42, 0.15, "MLP expected Z")
@@ -119,7 +121,7 @@ def test_capacity_matched_baseline_is_not_beaten():
     expected Z.  Against a mass-only fit with the SAME cell count, no classifier
     wins: the apparent gain was resolution, not information."""
     matched = H.matched_baseline_expected_Z(_ST)
-    _close(matched, 2.72, 0.10, "capacity-matched baseline (80 cells)")
+    _close(matched, 2.72, 0.02, "capacity-matched baseline (80 cells)")
     assert matched > H.mass_only_expected_Z(_ST), "more cells must raise expected Z"
     ez = {k: H.expected_Z_2d(m, f, _ST) for k, (m, f) in _MODELS.items()}
     for k, v in ez.items():
@@ -134,7 +136,7 @@ def test_mass_tag_control_reproduces_most_of_the_gain():
     classifier."""
     tag, fx = H.mass_tag_scorer()
     z = H.expected_Z_2d(tag, fx, _ST)
-    _close(z, 2.70, 0.12, "pure mass tag expected Z")
+    _close(z, 2.69, 0.02, "pure mass tag expected Z")
     _close(H.sideband_retention(tag, fx, _ST), 0.00, 0.02, "mass tag sideband retention")
     quad_z = H.expected_Z_2d(*_MODELS["quadratic"], _ST)
     assert abs(z - quad_z) < 0.15, (
