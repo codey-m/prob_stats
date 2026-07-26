@@ -3,9 +3,9 @@
 The scientific pipeline is fixed; the classifier is a pluggable component that
 produces a per-event score h(x).  Everything downstream -- the binned Poisson
 GLRT mass fit, the toy-calibrated p-value, the luminosity projection, and the
-leaderboard metric -- is identical no matter which classifier produced h(x).
+model-comparison metric -- is identical no matter which classifier produced h(x).
 
-Run `python higgs_analysis.py` from Projects/Project-2 to reproduce the
+Run `python higgs_analysis.py` from ProbStatsLabs/final_project to reproduce the
 headline numbers used to anchor the notebook and the autograder.
 """
 
@@ -14,7 +14,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from scipy.stats import norm, chi2, kstest
+from scipy.stats import norm, chi2
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -31,7 +31,6 @@ SEED = 6372
 RAW = [f"{q}{i}" for i in (1, 2, 3, 4) for q in ("E", "px", "py", "pz", "eta", "phi")]
 
 MASS_LO, MASS_HI, N_BINS = 100.0, 200.0, 20
-WINDOW = (120.0, 130.0)          # signal-region definition for the projection
 HOLDOUT_FRAC = 0.3
 
 
@@ -155,7 +154,7 @@ def glrt(S, B, obs):
     """Fit (mu, kappa), profile kappa, return mu_hat, kappa_hat, q, sqrt(q).
 
     S, B, obs may be 1D (mass only) or 2D (mass x score); arrays are flattened,
-    so the same profile-likelihood test serves the 1D fit and the 2D leaderboard.
+    so the same profile-likelihood test serves the 1D fit and the 2D comparison.
     """
     S = np.asarray(S, float).ravel()
     obs = np.asarray(obs, float).ravel()
@@ -191,11 +190,14 @@ def toy_pvalue(S, B, obs, n_toys=2000, seed=SEED):
 
 
 # ---------------------------------------------------------------------------
-# How solid is it?  Goodness-of-fit, a background-shape systematic, and a CI.
+# How solid is it?  Goodness-of-fit, a background-shape check, and two intervals.
 #
 # The baseline GLRT lets only the background *normalization* kappa float.  It
 # cannot absorb a background *shape* error, so the p-value is conditional on the
-# MC mass shape being right.  These tools quantify how much that matters.
+# MC mass shape being right.  These tools quantify how much that matters: the
+# deviance GOF asks whether the background-only model fits at all, glrt_shape()
+# re-tests with the shape free, and the two mu intervals below are the matched
+# pair -- one conditional on the fixed shape, one with the shape profiled out.
 # ---------------------------------------------------------------------------
 
 def _bin_centers_standardized():
@@ -220,8 +222,12 @@ def glrt_shape(S, B, obs):
     """GLRT for mu=0 with a background *shape* nuisance: lambda = mu*S + kappa*B*exp(t*x).
 
     Adding one linear tilt of the background makes the null far more flexible, so
-    the significance drops sharply -- an honest bound on how much the excess
-    depends on trusting the simulated background shape.
+    the significance drops sharply -- a measure of how much the excess depends on
+    trusting the simulated background shape.
+
+    The tilt is a *generic* one-parameter flexibility check.  It is NOT a model of
+    any particular omitted process: the reducible Drell-Yan/ttbar backgrounds are
+    absent from this dataset (see util.py) and nothing here stands in for them.
     """
     S = np.asarray(S, float).ravel()
     obs = np.asarray(obs, float).ravel()
@@ -242,36 +248,23 @@ def glrt_shape(S, B, obs):
                 q=q, Z_asymptotic=np.sqrt(q))
 
 
-def sideband_ks(state, sidebands=((100.0, 115.0), (135.0, 200.0))):
-    """KS test: real-data sideband masses vs the weighted background template shape.
-
-    A small p-value means the simulated background does not even describe the data
-    away from the peak -- direct evidence of a shape mismatch."""
-    m = state["data"]["mass"].values
-    keep_data = np.zeros(len(m), bool)
-    for lo, hi in sidebands:
-        keep_data |= (m >= lo) & (m <= hi)
-    allm, allw = [], []
-    for i, p in enumerate(state["processes"]):
-        if i == 0:
-            continue
-        mk = np.zeros(len(p), bool)
-        for lo, hi in sidebands:
-            mk |= (p["mass"].values >= lo) & (p["mass"].values <= hi)
-        allm.append(p["mass"].values[mk])
-        allw.append(p["_w"].values[mk])
-    allm = np.concatenate(allm)
-    allw = np.concatenate(allw)
-    order = np.argsort(allm)
-    xs, cw = allm[order], np.cumsum(allw[order]) / allw.sum()
-    cdf = lambda z: np.interp(z, xs, cw, left=0.0, right=1.0)
-    ks = kstest(m[keep_data], cdf)
-    return dict(statistic=float(ks.statistic), p_value=float(ks.pvalue),
-                n_sideband=int(keep_data.sum()))
+def _interval_from_profile(prof, mu_hat, level):
+    """Grid-scan a profile NLL for the set {mu : 2*(prof(mu) - prof(mu_hat)) <= thr}."""
+    fmin = prof(mu_hat)
+    thr = chi2.ppf(level, 1)
+    grid = np.linspace(0.0, 5.0, 1000)
+    inside = grid[np.array([2.0 * (prof(u) - fmin) for u in grid]) <= thr]
+    return dict(mu_hat=mu_hat, lo=float(inside.min()), hi=float(inside.max()), level=level)
 
 
 def mu_confidence_interval(S, B, obs, level=0.95):
-    """Profile-likelihood interval for the signal strength mu (kappa profiled out)."""
+    """Profile-likelihood interval for mu with only kappa profiled out.
+
+    CONDITIONAL, FIXED-SHAPE interval: the background mass shape is held at the MC
+    prediction and only its normalization floats.  It is therefore valid only to
+    the extent that the simulated shape is right, which Section 5 shows is exactly
+    the assumption under strain.  Pair it with mu_confidence_interval_shape().
+    """
     S = np.asarray(S, float).ravel()
     obs = np.asarray(obs, float).ravel()
     Bs = np.maximum(np.asarray(B, float).ravel(), 1e-9)
@@ -282,30 +275,56 @@ def mu_confidence_interval(S, B, obs, level=0.95):
                      [1.3], bounds=[(0.2, 5)])
         return r.fun
 
-    g = glrt(S, Bs, obs)
-    mu_hat, fmin = g["mu_hat"], prof(g["mu_hat"])
-    thr = chi2.ppf(level, 1)
-    grid = np.linspace(0.0, 5.0, 1000)
-    inside = grid[np.array([2.0 * (prof(u) - fmin) for u in grid]) <= thr]
-    return dict(mu_hat=mu_hat, lo=float(inside.min()), hi=float(inside.max()), level=level)
+    return _interval_from_profile(prof, glrt(S, Bs, obs)["mu_hat"], level)
+
+
+def mu_confidence_interval_shape(S, B, obs, level=0.95):
+    """Profile-likelihood interval for mu with BOTH kappa and the shape tilt profiled out.
+
+    The interval that goes with glrt_shape(): the same one-parameter background
+    tilt is free at every mu.  Letting the shape absorb part of the excess widens
+    the interval downward until it reaches mu=0, which is the interval consistent
+    with the shape-flexible significance.
+    """
+    S = np.asarray(S, float).ravel()
+    obs = np.asarray(obs, float).ravel()
+    Bs = np.maximum(np.asarray(B, float).ravel(), 1e-9)
+    x = _bin_centers_standardized()
+
+    def prof(mu):
+        def nll(p):
+            lam = np.maximum(mu * S + p[0] * Bs * np.exp(p[1] * x), 1e-9)
+            return np.sum(lam - obs * np.log(lam))
+        return minimize(nll, [1.3, 0.0], bounds=[(0.2, 5), (-3, 3)]).fun
+
+    return _interval_from_profile(prof, glrt_shape(S, Bs, obs)["mu_hat"], level)
 
 
 # ---------------------------------------------------------------------------
-# Luminosity projection -- a power calculation using the SAME GLRT statistic.
+# Luminosity projection -- a CONDITIONAL, ASYMPTOTIC, FIXED-TEMPLATE power calc.
 #
 # For an N-fold luminosity increase, signal and background both scale by N, and
-# the Asimov GLRT statistic scales linearly, so the median expected significance
+# the GLRT statistic on expected counts scales linearly, so the median expected significance
 # is sqrt(N) * baseline.  The *power* -- the probability of actually reaching a
 # 5-sigma discovery given mu=1 -- is Phi(Z_median - 5) in the asymptotic limit;
 # median >= 5 only means ~50% power, not a guaranteed discovery.
+#
+# Three approximations are baked in, and all three are optimistic:
+#   1. it uses the baseline glrt(), NOT glrt_shape(), so it inherits the
+#      fixed-background-shape assumption (with the Section 5 tilt free, 5x gives
+#      median Z ~ 4.7 and power ~ 0.39 instead of 5.16 and 0.57);
+#   2. expected counts stand in for the median toy dataset, an asymptotic step;
+#   3. the power uses a normal approximation for the distribution of Z.
+# Read the output as "how the reach scales if the background model is right",
+# not as a forecast.
 # ---------------------------------------------------------------------------
 
 def glrt_projection(state, factors=(1, 2, 4, 5, 6, 10), threshold=5.0):
-    """Return per-factor (N, median expected Z from the GLRT, asymptotic power)."""
+    """Per-factor (N, median expected Z, asymptotic power) under the fixed template."""
     S, B, _ = _templates(state)
     out = []
     for N in factors:
-        q = glrt(N * S, N * B, N * (S + B))["q"]      # Asimov: expected counts at Nx
+        q = glrt(N * S, N * B, N * (S + B))["q"]      # expected counts at Nx
         z_med = np.sqrt(q)
         power = float(norm.cdf(z_med - threshold))
         out.append((N, float(z_med), power))
@@ -313,18 +332,22 @@ def glrt_projection(state, factors=(1, 2, 4, 5, 6, 10), threshold=5.0):
 
 
 # ---------------------------------------------------------------------------
-# Leaderboard metric: 2D (mass x score) GLRT expected Asimov Z.
+# Model-comparison metric: 2D (mass x score) GLRT expected Z.
+#
+# This is what Section 8 ranks classifiers by instead of AUC.  It measures what
+# the *full analysis* gains from a score, not how well the score separates signal
+# from background on its own -- the distinction the section is built around.
 #
 # The classifier score enters as a *fit dimension*, not a hard cut, so it never
 # throws away the sidebands that pin kappa, and adding information can only help
-# (every classifier scores at least the mass-only baseline).  Asimov data = the
-# MC expectation itself (mu=1, kappa=1); the 495 experimental events are never
-# touched, so this cannot be model selection on the discovery data.
+# (every classifier scores at least the mass-only baseline).  The "data" fitted
+# here are the expected counts themselves (mu=1, kappa=1); the 495 experimental
+# events are never touched, so this cannot be model selection on discovery data.
 #
-# LOCKBOX: templates are built from the HELD-OUT MC only (rescaled by
+# Held-out MC only: templates are built from the HELD-OUT rows (rescaled by
 # 1/HOLDOUT_FRAC to recover full yields), never the rows the classifier trained
-# on.  Otherwise a high-capacity or memorizing submission could inflate its own
-# ranking by scoring its training rows over-confidently.
+# on.  Otherwise a high-capacity or memorizing model could inflate its own score
+# by rating its training rows over-confidently.
 # ---------------------------------------------------------------------------
 
 N_SCORE_BINS = 4
@@ -336,7 +359,7 @@ def _holdout_by_proc(state):
 
 
 def expected_Z_2d(model, featfn, state, n_score_bins=N_SCORE_BINS):
-    """Rank metric: sqrt(q) of the 2D mass x score GLRT on held-out Asimov data."""
+    """Comparison metric: sqrt(q) of the 2D mass x score GLRT on held-out expected counts."""
     frames = _holdout_by_proc(state)
     mass_bins = np.linspace(MASS_LO, MASS_HI, N_BINS + 1)
     # score-bin edges from held-out signal score quantiles (no training rows)
@@ -352,15 +375,20 @@ def expected_Z_2d(model, featfn, state, n_score_bins=N_SCORE_BINS):
             S += h
         else:
             B += h
-    return np.sqrt(glrt(S, B, S + B)["q"])          # Asimov: MC is truth
+    return np.sqrt(glrt(S, B, S + B)["q"])          # expected counts: MC is truth
 
 
-def mass_only_expected_Z(state):
-    """Baseline (no classifier): held-out 1D mass-only GLRT expected Z."""
+def mass_only_expected_Z(state, n_bins=N_BINS):
+    """No-classifier reference: held-out 1D mass-only GLRT expected Z.
+
+    n_bins defaults to the N_BINS used by the observed fit.  Pass a larger value
+    to build a CAPACITY-MATCHED reference (see matched_baseline_expected_Z): more
+    Poisson cells raise the expected Z on their own, with no classifier involved.
+    """
     frames = _holdout_by_proc(state)
-    mass_bins = np.linspace(MASS_LO, MASS_HI, N_BINS + 1)
-    S = np.zeros(N_BINS)
-    B = np.zeros(N_BINS)
+    mass_bins = np.linspace(MASS_LO, MASS_HI, n_bins + 1)
+    S = np.zeros(n_bins)
+    B = np.zeros(n_bins)
     for i, p in enumerate(frames):
         h, _ = np.histogram(p["mass"].values, bins=mass_bins,
                             weights=p["_w"].values / HOLDOUT_FRAC)
@@ -369,6 +397,30 @@ def mass_only_expected_Z(state):
         else:
             B += h
     return np.sqrt(glrt(S, B, S + B)["q"])
+
+
+def matched_baseline_expected_Z(state, n_score_bins=N_SCORE_BINS):
+    """The FAIR reference for expected_Z_2d: mass-only, same number of cells.
+
+    expected_Z_2d fits N_BINS x n_score_bins Poisson cells; mass_only_expected_Z
+    fits N_BINS.  Comparing them credits the classifier for the extra cells.
+    Splitting the mass axis into the same total number of bins, with no
+    classifier at all, isolates what a score actually contributes.
+    """
+    return mass_only_expected_Z(state, n_bins=N_BINS * n_score_bins)
+
+
+def mass_tag_scorer():
+    """Control score carrying nothing but mass: h(x) = -|m - 125|.
+
+    It has zero information beyond the axis the fit already uses, so whatever it
+    scores on expected_Z_2d is the part of a classifier's score attributable to
+    re-expressing the mass rather than to new information.
+    """
+    class _Tag:
+        def decision_function(self, X):
+            return -np.abs(np.asarray(X, float).ravel() - 125.0)
+    return _Tag(), (lambda d: d["mass"].values)
 
 
 def sideband_retention(model, featfn, state, sig_eff=0.8, sb=(115.0, 135.0)):
@@ -391,8 +443,8 @@ def sideband_retention(model, featfn, state, sig_eff=0.8, sb=(115.0, 135.0)):
     return kept / total
 
 
-def leaderboard_row(model, featfn, state):
-    """The three columns shown on the leaderboard for one classifier entry."""
+def comparison_row(model, featfn, state):
+    """The three columns Section 8 shows for one classifier: AUC, expected Z, sideband retention."""
     return dict(
         auc=auc(model, featfn, state["holdout"]),
         expected_Z=expected_Z_2d(model, featfn, state),
@@ -425,18 +477,23 @@ if __name__ == "__main__":
     gs = glrt_shape(S, B, obs)
     print(f"  with background shape nuisance: mu_hat={gs['mu_hat']:.3f} Z={gs['Z_asymptotic']:.3f}"
           f"  (baseline Z was {g['Z_asymptotic']:.2f})")
-    ks = sideband_ks(st)
-    print(f"  sideband KS p = {ks['p_value']:.4f}")
     ci = mu_confidence_interval(S, B, obs)
-    print(f"  mu 95% CI = [{ci['lo']:.2f}, {ci['hi']:.2f}]")
+    cis = mu_confidence_interval_shape(S, B, obs)
+    print(f"  mu 95% CI, background shape FIXED  = [{ci['lo']:.2f}, {ci['hi']:.2f}]")
+    print(f"  mu 95% CI, background shape FLEXED = [{cis['lo']:.2f}, {cis['hi']:.2f}]"
+          f"   (reaches mu=0: {cis['lo'] <= 1e-9})")
 
-    # --- leaderboard: rank on 2D expected Z (held-out), diagnostics beside it ---
-    print("\n=== leaderboard (rank = 2D mass x score expected Z, held-out MC) ===")
-    print(f"  mass-only baseline (no classifier): {mass_only_expected_Z(st):.3f}")
+    # --- model comparison: 2D expected Z (held-out), diagnostics beside it ---
+    print("\n=== model comparison (2D mass x score expected Z, held-out MC) ===")
+    print(f"  mass-only, {N_BINS} cells (no classifier):      {mass_only_expected_Z(st):.3f}")
+    print(f"  mass-only, {N_BINS * N_SCORE_BINS} cells (capacity-matched): "
+          f"{matched_baseline_expected_Z(st):.3f}   <- the fair reference")
+    _tag, _tagfx = mass_tag_scorer()
+    print(f"  mass tag -|m-125| (zero new info):     {expected_Z_2d(_tag, _tagfx, st):.3f}")
     print(f"{'model':>12} {'AUC':>7} {'expected_Z':>11} {'sideband_ret':>13}")
     for kind in ("linear", "quadratic", "mlp"):
         mdl, fx = make_classifier(kind, st["train"])
-        r = leaderboard_row(mdl, fx, st)
+        r = comparison_row(mdl, fx, st)
         print(f"{kind:>12} {r['auc']:7.4f} {r['expected_Z']:11.3f} "
               f"{r['sideband_retention']:13.3f}")
 

@@ -68,18 +68,27 @@ def test_shape_systematic_lowers_significance():
     assert gs["Z_asymptotic"] < _G["Z_asymptotic"], "shape nuisance must reduce Z"
 
 
-def test_sideband_ks_mismatch():
-    ks = H.sideband_ks(_ST)
-    _close(ks["p_value"], 0.027, 0.015, "sideband KS p")
-
-
-def test_mu_confidence_interval_is_wide():
+def test_mu_confidence_interval_fixed_shape():
+    """The conditional interval: background shape held at the MC prediction."""
     ci = H.mu_confidence_interval(_S, _B, _OBS)
-    _close(ci["lo"], 0.14, 0.10, "mu CI low")
-    _close(ci["hi"], 2.35, 0.20, "mu CI high")
+    _close(ci["lo"], 0.14, 0.10, "mu CI low (fixed shape)")
+    _close(ci["hi"], 2.35, 0.20, "mu CI high (fixed shape)")
+    assert ci["lo"] > 0.0, "the fixed-shape interval excludes mu=0"
 
 
-# --- classifier ladder and leaderboard --------------------------------------
+def test_mu_confidence_interval_shape_includes_zero():
+    """Load-bearing for Sections 5/6/9: once the background shape is free, the
+    interval reaches mu=0, so the exclusion of mu=0 is an artifact of holding the
+    simulated mass shape fixed rather than a property of the data."""
+    cis = H.mu_confidence_interval_shape(_S, _B, _OBS)
+    _close(cis["lo"], 0.00, 0.05, "mu CI low (shape flexed)")
+    _close(cis["hi"], 2.04, 0.20, "mu CI high (shape flexed)")
+    assert cis["lo"] <= 1e-9, "the shape-flexed interval must reach mu=0"
+    ci = H.mu_confidence_interval(_S, _B, _OBS)
+    assert cis["lo"] < ci["lo"], "flexing the shape must widen the interval downward"
+
+
+# --- classifier ladder and model comparison --------------------------------------
 
 def test_classifier_ladder_auc():
     targets = {"linear": 0.632, "quadratic": 0.906, "mlp": 0.961}
@@ -88,17 +97,49 @@ def test_classifier_ladder_auc():
         _close(H.auc(mdl, fx, _ST["holdout"]), tgt, 0.03, f"AUC {kind}")
 
 
-def test_leaderboard_ordering():
+def test_model_comparison_ordering():
     base = H.mass_only_expected_Z(_ST)
-    _close(base, 2.35, 0.10, "mass-only baseline")
+    _close(base, 2.35, 0.10, "mass-only baseline, 20 cells")
     ez = {k: H.expected_Z_2d(m, f, _ST) for k, (m, f) in _MODELS.items()}
-    _close(ez["quadratic"], 2.71, 0.12, "quadratic expected Z")
+    _close(ez["linear"], 2.36, 0.12, "linear expected Z")
     _close(ez["mlp"], 2.42, 0.15, "MLP expected Z")
-    # the load-bearing lesson: quadratic leads; the highest-AUC model (MLP) does
-    # NOT, and every classifier is at least the baseline.
-    assert ez["quadratic"] > base
-    assert ez["quadratic"] > ez["mlp"]
-    assert ez["quadratic"] > ez["linear"]
+    _close(ez["quadratic"], 2.71, 0.12, "quadratic expected Z")
+    # The highest-AUC model (MLP) does NOT lead, and the AUC ordering
+    # (linear < quadratic < mlp) is NOT the expected-Z ordering.  The notebook
+    # quotes this full ordering, so anchor it rather than just the winner.
+    assert ez["linear"] < ez["mlp"] < ez["quadratic"], (
+        f"expected linear < mlp < quadratic, got {ez}")
+    for k, v in ez.items():
+        assert v >= base - 1e-9, f"{k} fell below the 20-cell baseline"
+
+
+def test_capacity_matched_baseline_is_not_beaten():
+    """Section 8's central claim.  The 2D metric fits N_BINS x N_SCORE_BINS cells
+    while the stated baseline fits N_BINS, so the extra cells alone raise the
+    expected Z.  Against a mass-only fit with the SAME cell count, no classifier
+    wins: the apparent gain was resolution, not information."""
+    matched = H.matched_baseline_expected_Z(_ST)
+    _close(matched, 2.72, 0.10, "capacity-matched baseline (80 cells)")
+    assert matched > H.mass_only_expected_Z(_ST), "more cells must raise expected Z"
+    ez = {k: H.expected_Z_2d(m, f, _ST) for k, (m, f) in _MODELS.items()}
+    for k, v in ez.items():
+        assert v <= matched + 0.02, (
+            f"{k} beat the capacity-matched baseline ({v:.3f} > {matched:.3f}); "
+            "Section 8's conclusion would need revisiting")
+
+
+def test_mass_tag_control_reproduces_most_of_the_gain():
+    """The control that identifies the gain as resolution: a score carrying only
+    mass, with no information the fit lacks, must still score near the best
+    classifier."""
+    tag, fx = H.mass_tag_scorer()
+    z = H.expected_Z_2d(tag, fx, _ST)
+    _close(z, 2.70, 0.12, "pure mass tag expected Z")
+    _close(H.sideband_retention(tag, fx, _ST), 0.00, 0.02, "mass tag sideband retention")
+    quad_z = H.expected_Z_2d(*_MODELS["quadratic"], _ST)
+    assert abs(z - quad_z) < 0.15, (
+        f"mass tag {z:.3f} should land near the quadratic {quad_z:.3f}; "
+        "the notebook argues the quadratic's score is mostly re-expressed mass")
 
 
 def test_sideband_retention_collapses_with_auc():
@@ -109,9 +150,9 @@ def test_sideband_retention_collapses_with_auc():
     assert sbr["linear"] > sbr["quadratic"] > sbr["mlp"]
 
 
-def test_leaderboard_uses_holdout_only():
-    """Lockbox: the ranking metric must not touch the classifier's training rows,
-    so a memorizing submission cannot inflate its own score."""
+def test_comparison_uses_holdout_only():
+    """The comparison metric must not touch the classifier's training rows, so a
+    memorizing model cannot inflate its own score."""
     mdl, fx = _MODELS["quadratic"]
     z_full = H.expected_Z_2d(mdl, fx, _ST)
     corrupted = dict(_ST)
