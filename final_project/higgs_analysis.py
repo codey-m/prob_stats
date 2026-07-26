@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.optimize import minimize_scalar, minimize
-from scipy.stats import norm
+from scipy.optimize import minimize
+from scipy.stats import norm, chi2, kstest
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -78,13 +78,31 @@ def make_classifier(kind, train):
                          ("c", LogisticRegression(C=1.0, max_iter=3000))])
         return _fit(pipe, train), (lambda d: d[RAW].values)
     if kind == "mlp":
+        # sklearn's MLPClassifier takes no sample_weight, so we class-balance by
+        # resampling: draw equal numbers of signal and background rows, with the
+        # background drawn in proportion to its physical weights (the correct P0
+        # mixture).  This matches the nu_0 = nu_1 balancing the other models get.
         pipe = Pipeline([("s", StandardScaler()),
                          ("c", MLPClassifier((10, 10, 10), activation="relu",
-                                             max_iter=60, random_state=SEED))])
-        y = (train["_proc"] == 0).astype(int).values
-        pipe.fit(train[RAW].values, y)          # MLP: unweighted, as in the original
+                                             max_iter=400, random_state=SEED))])
+        Xb, yb = _balanced_resample(train, n_per_class=25000)
+        pipe.fit(Xb, yb)
         return pipe, (lambda d: d[RAW].values)
     raise ValueError(kind)
+
+
+def _balanced_resample(train, n_per_class, seed=SEED):
+    """Equal-size signal/background resample; background drawn ~ physical weight."""
+    rng = np.random.default_rng(seed)
+    is_sig = (train["_proc"] == 0).values
+    sig = train[is_sig]
+    bkg = train[~is_sig]
+    si = rng.integers(0, len(sig), n_per_class)                 # signal: uniform
+    pb = bkg["_w"].values / bkg["_w"].values.sum()              # background: by weight
+    bi = rng.choice(len(bkg), n_per_class, replace=True, p=pb)
+    X = np.vstack([sig[RAW].values[si], bkg[RAW].values[bi]])
+    y = np.concatenate([np.ones(n_per_class, int), np.zeros(n_per_class, int)])
+    return X, y
 
 
 def score(model, featfn, frame):
@@ -173,61 +191,163 @@ def toy_pvalue(S, B, obs, n_toys=2000, seed=SEED):
 
 
 # ---------------------------------------------------------------------------
-# Asimov significance and luminosity projection
+# How solid is it?  Goodness-of-fit, a background-shape systematic, and a CI.
+#
+# The baseline GLRT lets only the background *normalization* kappa float.  It
+# cannot absorb a background *shape* error, so the p-value is conditional on the
+# MC mass shape being right.  These tools quantify how much that matters.
 # ---------------------------------------------------------------------------
 
-def asimov_Z(S, B):
-    S, B = float(S), float(max(B, 1e-9))
-    return np.sqrt(2.0 * ((S + B) * np.log(1.0 + S / B) - S))
+def _bin_centers_standardized():
+    edges = np.linspace(MASS_LO, MASS_HI, N_BINS + 1)
+    ctr = 0.5 * (edges[:-1] + edges[1:])
+    return (ctr - ctr.mean()) / (ctr.max() - ctr.mean())
 
 
-def window_yields(state, keep_mc=None):
-    lo, hi = WINDOW
-    S = B = 0.0
+def goodness_of_fit(expected, obs, n_params):
+    """Poisson deviance GOF and its chi-square p-value (dof = nbins - n_params)."""
+    e = np.maximum(np.asarray(expected, float).ravel(), 1e-9)
+    o = np.asarray(obs, float).ravel()
+    pos = o > 0
+    term = np.zeros_like(o)
+    term[pos] = o[pos] * np.log(o[pos] / e[pos])
+    dev = 2.0 * np.sum(term - (o - e))
+    dof = len(o) - n_params
+    return dict(deviance=float(dev), dof=dof, p_value=float(chi2.sf(dev, dof)))
+
+
+def glrt_shape(S, B, obs):
+    """GLRT for mu=0 with a background *shape* nuisance: lambda = mu*S + kappa*B*exp(t*x).
+
+    Adding one linear tilt of the background makes the null far more flexible, so
+    the significance drops sharply -- an honest bound on how much the excess
+    depends on trusting the simulated background shape.
+    """
+    S = np.asarray(S, float).ravel()
+    obs = np.asarray(obs, float).ravel()
+    Bs = np.maximum(np.asarray(B, float).ravel(), 1e-9)
+    x = _bin_centers_standardized()
+
+    def nll(p, mu_fixed=None):
+        mu = p[0] if mu_fixed is None else mu_fixed
+        off = 0 if mu_fixed is None else -1
+        kappa, tilt = p[1 + off], p[2 + off]
+        lam = np.maximum(mu * S + kappa * Bs * np.exp(tilt * x), 1e-9)
+        return np.sum(lam - obs * np.log(lam))
+
+    free = minimize(nll, [1.0, 1.3, 0.0], bounds=[(0, 20), (0.2, 5), (-3, 3)])
+    null = minimize(lambda p: nll(p, 0.0), [1.3, 0.0], bounds=[(0.2, 5), (-3, 3)])
+    q = max(2.0 * (null.fun - free.fun), 0.0)
+    return dict(mu_hat=free.x[0], kappa_hat=free.x[1], tilt=free.x[2],
+                q=q, Z_asymptotic=np.sqrt(q))
+
+
+def sideband_ks(state, sidebands=((100.0, 115.0), (135.0, 200.0))):
+    """KS test: real-data sideband masses vs the weighted background template shape.
+
+    A small p-value means the simulated background does not even describe the data
+    away from the peak -- direct evidence of a shape mismatch."""
+    m = state["data"]["mass"].values
+    keep_data = np.zeros(len(m), bool)
+    for lo, hi in sidebands:
+        keep_data |= (m >= lo) & (m <= hi)
+    allm, allw = [], []
     for i, p in enumerate(state["processes"]):
-        m = p["mass"].values
-        w = p["_w"].values
-        if keep_mc is not None:
-            k = keep_mc(p)
-            m, w = m[k], w[k]
-        y = w[(m >= lo) & (m <= hi)].sum()
         if i == 0:
-            S += y
-        else:
-            B += y
-    return S, B
+            continue
+        mk = np.zeros(len(p), bool)
+        for lo, hi in sidebands:
+            mk |= (p["mass"].values >= lo) & (p["mass"].values <= hi)
+        allm.append(p["mass"].values[mk])
+        allw.append(p["_w"].values[mk])
+    allm = np.concatenate(allm)
+    allw = np.concatenate(allw)
+    order = np.argsort(allm)
+    xs, cw = allm[order], np.cumsum(allw[order]) / allw.sum()
+    cdf = lambda z: np.interp(z, xs, cw, left=0.0, right=1.0)
+    ks = kstest(m[keep_data], cdf)
+    return dict(statistic=float(ks.statistic), p_value=float(ks.pvalue),
+                n_sideband=int(keep_data.sum()))
 
 
-def luminosity_projection(state, factors=(1, 2, 4, 6, 10)):
-    S, B = window_yields(state)
-    return [(f, f * S, f * B, asimov_Z(f * S, f * B)) for f in factors]
+def mu_confidence_interval(S, B, obs, level=0.95):
+    """Profile-likelihood interval for the signal strength mu (kappa profiled out)."""
+    S = np.asarray(S, float).ravel()
+    obs = np.asarray(obs, float).ravel()
+    Bs = np.maximum(np.asarray(B, float).ravel(), 1e-9)
+
+    def prof(mu):
+        r = minimize(lambda k: np.sum(np.maximum(mu * S + k[0] * Bs, 1e-9)
+                                      - obs * np.log(np.maximum(mu * S + k[0] * Bs, 1e-9))),
+                     [1.3], bounds=[(0.2, 5)])
+        return r.fun
+
+    g = glrt(S, Bs, obs)
+    mu_hat, fmin = g["mu_hat"], prof(g["mu_hat"])
+    thr = chi2.ppf(level, 1)
+    grid = np.linspace(0.0, 5.0, 1000)
+    inside = grid[np.array([2.0 * (prof(u) - fmin) for u in grid]) <= thr]
+    return dict(mu_hat=mu_hat, lo=float(inside.min()), hi=float(inside.max()), level=level)
 
 
 # ---------------------------------------------------------------------------
-# Leaderboard metric: 2D (mass x score) GLRT expected Asimov Z, MC-only.
+# Luminosity projection -- a power calculation using the SAME GLRT statistic.
+#
+# For an N-fold luminosity increase, signal and background both scale by N, and
+# the Asimov GLRT statistic scales linearly, so the median expected significance
+# is sqrt(N) * baseline.  The *power* -- the probability of actually reaching a
+# 5-sigma discovery given mu=1 -- is Phi(Z_median - 5) in the asymptotic limit;
+# median >= 5 only means ~50% power, not a guaranteed discovery.
+# ---------------------------------------------------------------------------
+
+def glrt_projection(state, factors=(1, 2, 4, 5, 6, 10), threshold=5.0):
+    """Return per-factor (N, median expected Z from the GLRT, asymptotic power)."""
+    S, B, _ = _templates(state)
+    out = []
+    for N in factors:
+        q = glrt(N * S, N * B, N * (S + B))["q"]      # Asimov: expected counts at Nx
+        z_med = np.sqrt(q)
+        power = float(norm.cdf(z_med - threshold))
+        out.append((N, float(z_med), power))
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Leaderboard metric: 2D (mass x score) GLRT expected Asimov Z.
 #
 # The classifier score enters as a *fit dimension*, not a hard cut, so it never
 # throws away the sidebands that pin kappa, and adding information can only help
 # (every classifier scores at least the mass-only baseline).  Asimov data = the
 # MC expectation itself (mu=1, kappa=1); the 495 experimental events are never
 # touched, so this cannot be model selection on the discovery data.
+#
+# LOCKBOX: templates are built from the HELD-OUT MC only (rescaled by
+# 1/HOLDOUT_FRAC to recover full yields), never the rows the classifier trained
+# on.  Otherwise a high-capacity or memorizing submission could inflate its own
+# ranking by scoring its training rows over-confidently.
 # ---------------------------------------------------------------------------
 
 N_SCORE_BINS = 4
 
 
+def _holdout_by_proc(state):
+    h = state["holdout"]
+    return [h[h["_proc"] == i] for i in range(len(state["processes"]))]
+
+
 def expected_Z_2d(model, featfn, state, n_score_bins=N_SCORE_BINS):
-    """Rank metric: sqrt(q) of the 2D mass x score GLRT on Asimov (MC-truth) data."""
+    """Rank metric: sqrt(q) of the 2D mass x score GLRT on held-out Asimov data."""
+    frames = _holdout_by_proc(state)
     mass_bins = np.linspace(MASS_LO, MASS_HI, N_BINS + 1)
-    # score-bin edges from signal-process score quantiles (frozen, MC-only)
-    s_sig = score(model, featfn, state["processes"][0])
-    edges = np.quantile(s_sig, np.linspace(0, 1, n_score_bins + 1))
+    # score-bin edges from held-out signal score quantiles (no training rows)
+    edges = np.quantile(score(model, featfn, frames[0]), np.linspace(0, 1, n_score_bins + 1))
     edges[0], edges[-1] = -np.inf, np.inf
     S = np.zeros((N_BINS, n_score_bins))
     B = np.zeros_like(S)
-    for i, p in enumerate(state["processes"]):
+    for i, p in enumerate(frames):
         h, _, _ = np.histogram2d(p["mass"].values, score(model, featfn, p),
-                                 bins=[mass_bins, edges], weights=p["_w"].values)
+                                 bins=[mass_bins, edges],
+                                 weights=p["_w"].values / HOLDOUT_FRAC)
         if i == 0:
             S += h
         else:
@@ -236,19 +356,31 @@ def expected_Z_2d(model, featfn, state, n_score_bins=N_SCORE_BINS):
 
 
 def mass_only_expected_Z(state):
-    """Baseline: sqrt(q) of the 1D mass-only GLRT on Asimov data. No classifier."""
-    S, B, _ = _templates(state)
+    """Baseline (no classifier): held-out 1D mass-only GLRT expected Z."""
+    frames = _holdout_by_proc(state)
+    mass_bins = np.linspace(MASS_LO, MASS_HI, N_BINS + 1)
+    S = np.zeros(N_BINS)
+    B = np.zeros(N_BINS)
+    for i, p in enumerate(frames):
+        h, _ = np.histogram(p["mass"].values, bins=mass_bins,
+                            weights=p["_w"].values / HOLDOUT_FRAC)
+        if i == 0:
+            S += h
+        else:
+            B += h
     return np.sqrt(glrt(S, B, S + B)["q"])
 
 
 def sideband_retention(model, featfn, state, sig_eff=0.8, sb=(115.0, 135.0)):
     """Diagnostic: fraction of background outside the mass peak kept by an
     sig_eff-efficiency cut.  Collapses toward 0 as a classifier learns mass,
-    exposing why a hard cut destroys the kappa constraint (mass-sculpting)."""
-    thr = np.quantile(score(model, featfn, state["processes"][0]), 1 - sig_eff)
+    exposing why a hard cut destroys the kappa constraint (mass-sculpting).
+    Held-out MC only; the kept/total ratio is unaffected by the yield rescale."""
+    frames = _holdout_by_proc(state)
+    thr = np.quantile(score(model, featfn, frames[0]), 1 - sig_eff)
     lo, hi = sb
     kept = total = 0.0
-    for i, p in enumerate(state["processes"]):
+    for i, p in enumerate(frames):
         if i == 0:
             continue
         m = p["mass"].values
@@ -283,23 +415,33 @@ if __name__ == "__main__":
     print("=== GLRT mass fit, NO classifier (100-200 GeV, 20 bins) ===")
     print(f"  mu_hat={g['mu_hat']:.3f}  kappa_hat={g['kappa_hat']:.3f}  "
           f"q={g['q']:.3f}  Z_asymptotic={g['Z_asymptotic']:.3f}")
-    tp = toy_pvalue(S, B, obs, n_toys=2000)
+    tp = toy_pvalue(S, B, obs, n_toys=10000)
     print(f"  toy p-value={tp['p_value']:.4f}  Z_toy={tp['Z_toy']:.3f}")
 
-    # --- leaderboard: rank on 2D expected Z, diagnostics beside it ---
-    print("\n=== leaderboard (rank = 2D mass x score expected Z, MC-only) ===")
+    # --- how solid? GOF, shape systematic, CI ---
+    print("\n=== goodness-of-fit and systematics ===")
+    gof0 = goodness_of_fit(g["kappa_null"] * B, obs, n_params=1)
+    print(f"  background-only GOF p = {gof0['p_value']:.4f}  (poor fit => background model is strained)")
+    gs = glrt_shape(S, B, obs)
+    print(f"  with background shape nuisance: mu_hat={gs['mu_hat']:.3f} Z={gs['Z_asymptotic']:.3f}"
+          f"  (baseline Z was {g['Z_asymptotic']:.2f})")
+    ks = sideband_ks(st)
+    print(f"  sideband KS p = {ks['p_value']:.4f}")
+    ci = mu_confidence_interval(S, B, obs)
+    print(f"  mu 95% CI = [{ci['lo']:.2f}, {ci['hi']:.2f}]")
+
+    # --- leaderboard: rank on 2D expected Z (held-out), diagnostics beside it ---
+    print("\n=== leaderboard (rank = 2D mass x score expected Z, held-out MC) ===")
     print(f"  mass-only baseline (no classifier): {mass_only_expected_Z(st):.3f}")
     print(f"{'model':>12} {'AUC':>7} {'expected_Z':>11} {'sideband_ret':>13}")
-    rows = []
     for kind in ("linear", "quadratic", "mlp"):
         mdl, fx = make_classifier(kind, st["train"])
         r = leaderboard_row(mdl, fx, st)
-        rows.append((kind, r))
         print(f"{kind:>12} {r['auc']:7.4f} {r['expected_Z']:11.3f} "
               f"{r['sideband_retention']:13.3f}")
 
-    # --- luminosity projection ---
-    print("\n=== luminosity projection (Asimov, mu=1, window 120-130) ===")
-    for f, s, b, z in luminosity_projection(st, factors=(1, 2, 4, 6, 10)):
-        flag = "  <== 5 sigma" if z >= 5 else ""
-        print(f"  {f:2d}x: S={s:6.1f} B={b:6.1f}  Z={z:5.2f}{flag}")
+    # --- luminosity projection: GLRT power calculation ---
+    print("\n=== luminosity projection (GLRT power, mu=1) ===")
+    print(f"{'lumi':>5} {'median Z':>9} {'power P(Z>=5)':>14}")
+    for N, z_med, power in glrt_projection(st):
+        print(f"{N:>4}x {z_med:9.2f} {power:14.2f}")

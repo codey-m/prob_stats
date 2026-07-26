@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import OneHotEncoder
@@ -6,16 +7,37 @@ from sklearn.model_selection import train_test_split
 # ---------------------------------------------------------------------------
 # Process bookkeeping
 #
-# The final project keeps only the four processes that matter after the H->ZZ
-# ->4l event selection: the Higgs signal and the three irreducible ZZ->4l
-# backgrounds.  The reducible backgrounds (Drell-Yan, ttbar) are negligible in
-# the four-lepton final state after selection and are not shipped.
+# The final project keeps four processes after the H->ZZ->4l event selection:
+# the Higgs signal and the three irreducible ZZ->4l backgrounds.
+#
+# The reducible backgrounds (Drell-Yan, ttbar) are NOT shipped -- but note this
+# is a simplification, not a claim that they are truly negligible.  Their summed
+# expected yield (~10 events) is comparable to the ~9.4-event Higgs signal, with
+# ~5.8 events inside the 100-200 GeV fit window.  They are omitted because the
+# available MC has only 4/8/2 retained rows for them, far too few to estimate a
+# mass shape reliably (drawing a large sample would just duplicate those rows,
+# not add information).  A real scientific analysis would need substantially more
+# simulation of these rare channels; this teaching dataset does not have it.
+# The notebook treats their omission as a background systematic, not a free pass.
 #
 # The shipped MC files are a fixed-seed 25% subsample of the full retained MC,
 # kept small enough to live in the repo.  Each retained event therefore stands
 # in for 1 / MC_SUBSAMPLE_FRACTION physical events; compute_weights() folds that
 # factor into the per-event weight so expected yields are preserved.
 # ---------------------------------------------------------------------------
+
+# Resolve data relative to this file so the project runs from any directory.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def _data_path(*parts):
+    """Path under this project's data/ dir, or the same path relative to CWD
+    (the Colab bootstrap downloads into the working directory)."""
+    here = os.path.join(_HERE, "data", *parts)
+    if os.path.exists(here):
+        return here
+    return os.path.join("data", *parts)
+
 
 MC_SUBSAMPLE_FRACTION = 0.25
 
@@ -31,7 +53,7 @@ PROCESS_FILES = [
 def load_processes():
     """Return [higgs, zz4mu, zz2mu2e, zz4e] with a `signal` column (1 for Higgs)."""
     processes = [
-        pd.read_csv(f"data/MC/{fname}", index_col=None, header=0)
+        pd.read_csv(_data_path("MC", fname), index_col=None, header=0)
         for fname in PROCESS_FILES
     ]
     for i in range(len(processes)):
@@ -41,7 +63,7 @@ def load_processes():
 
 
 def load_expr_data():
-    return pd.read_csv("data/data/clean_data_2012.csv", index_col=None, header=0)
+    return pd.read_csv(_data_path("data", "clean_data_2012.csv"), index_col=None, header=0)
 
 
 """
