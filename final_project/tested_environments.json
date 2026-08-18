@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "validated_at": "2026-08-18",
+  "environments": [
+    {
+      "name": "macos-anaconda",
+      "platform": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+      "python": "3.13.9",
+      "packages": {
+        "numpy": "2.5.2",
+        "pandas": "2.3.3",
+        "scipy": "1.16.3",
+        "scikit-learn": "1.7.2",
+        "matplotlib": "3.10.6",
+        "nbformat": "5.10.4",
+        "nbconvert": "7.16.6",
+        "pytest": "8.4.2"
+      },
+      "command": "pytest -q test_higgs.py",
+      "result": "16 passed",
+      "additional_checks": [
+        {
+          "command": "python generators/build_final_project_release.py --check --render",
+          "result": "learner structure and static HTML render passed"
+        },
+        {
+          "command": "python generators/build_final_project_release.py --check --execute-reference",
+          "result": "private 60-cell reference executed end to end; all 16 report fields matched"
+        }
+      ]
+    },
+    {
+      "name": "macos-venv",
+      "platform": "macOS-26.5.2-arm64-arm-64bit",
+      "python": "3.11.14",
+      "packages": {
+        "numpy": "2.4.6",
+        "pandas": "2.3.3",
+        "scipy": "1.17.1",
+        "scikit-learn": "1.9.0",
+        "matplotlib": "3.11.1",
+        "nbformat": "5.11.0"
+      },
+      "command": "python test_higgs.py",
+      "result": "all 16 anchors passed",
+      "additional_checks": [
+        {
+          "command": "execute Section 0 from an empty temporary directory against GitHub main",
+          "result": "all seven runtime files downloaded and passed SHA-256 verification"
+        }
+      ]
+    }
+  ],
+  "colab_end_to_end": null,
+  "note": "These are validation records, not installation pins. The published main-branch artifact still requires a fresh-Colab smoke test after the files are pushed."
+}

@@ -1,0 +1,146 @@
+{
+ "schema_version": 1,
+ "release_ref": "main",
+ "release_ref_policy": "mutable-main-with-sha256-verification",
+ "repository": "codey-m/prob_stats",
+ "public_root": "final_project",
+ "learner_notebook": {
+  "path": "final_project/higgs_final_project.ipynb",
+  "sha256": "7c4c2e4035a3d63ac3af75af0782cc582d736d0ffe1da84594415cce2827ea13",
+  "cells": 60,
+  "markdown_cells": 36,
+  "code_cells": 24,
+  "student_tasks": 7,
+  "outputs": 0,
+  "execution_counts": 0,
+  "style_contract": {
+   "format": "colab-font-hr-v1",
+   "predict": 6,
+   "what_you_found": 6,
+   "watch_out": 1,
+   "task_headings": 7,
+   "inline_css_allowed": false
+  }
+ },
+ "analysis_contract": {
+  "analysis_seed": 6372,
+  "train_holdout_split_seed": 0,
+  "holdout_fraction": 0.3,
+  "mass_window_gev": [
+   100.0,
+   200.0
+  ],
+  "mass_bins": 20,
+  "score_bins": 4,
+  "capacity_matched_cells": 80,
+  "mc_subsample_seed": 6372,
+  "mc_subsample_fraction": 0.25,
+  "toy_calibration": {
+   "toys": 10000,
+   "seed": 6372,
+   "tail": "q_toy >= q_observed",
+   "estimator": "(K + 1) / (M + 1)"
+  },
+  "shape_flexible_significance": "one-sided asymptotic Z = sqrt(q)"
+ },
+ "runtime_files": {
+  "util.py": {
+   "sha256": "daa59f30e90fbd2f04f1ebf81461f8afb21a2bd6cd17520455610f0f5e89fe52",
+   "bytes": 5722
+  },
+  "higgs_analysis.py": {
+   "sha256": "1ef788bd806e8783bca9312b97480ff496448ead07c02cc8b28489eeb4be5688",
+   "bytes": 22065
+  },
+  "data/MC/higgs2012.csv": {
+   "sha256": "0e56a7acb6575a434f1d1c3b33b25386aa0a2b56a415d08a5aa082b7d37c5528",
+   "bytes": 2546226,
+   "rows": 9348
+  },
+  "data/MC/zzto4mu2012.csv": {
+   "sha256": "44da5a988429fbf1c5de621dd38add96a01cf75ccf29ff9dff3d74eb18b72764",
+   "bytes": 11424350,
+   "rows": 41106
+  },
+  "data/MC/zzto2mu2e2012.csv": {
+   "sha256": "332fb63df9ed5307faf37c61c325b4ba311471675ef93b2eeee79ebc01e12d2a",
+   "bytes": 7369488,
+   "rows": 26537
+  },
+  "data/MC/zzto4e2012.csv": {
+   "sha256": "82c09cffa38b839da42f9f11402327e5ab45f38423c187c003880712d7507800",
+   "bytes": 5969222,
+   "rows": 21476
+  },
+  "data/data/clean_data_2012.csv": {
+   "sha256": "965d8e81b321735fab9252336cda11aa7a036f9e716be7ddd01bb3f3d70998b4",
+   "bytes": 138702,
+   "rows": 495
+  }
+ },
+ "public_files": {
+  "README.md": {
+   "sha256": "49cfab7ed094bfd89e59c27ccca6f42c74a89075041e9e55a64f155d692f9d27",
+   "bytes": 3435
+  },
+  "higgs_final_project.ipynb": {
+   "sha256": "7c4c2e4035a3d63ac3af75af0782cc582d736d0ffe1da84594415cce2827ea13",
+   "bytes": 62619
+  },
+  "requirements.txt": {
+   "sha256": "83fc59af0c3148f2b9e5f3942b7e9e8f5e9363c39d88b7f9f32912b6881453b2",
+   "bytes": 359
+  },
+  "tested_environments.json": {
+   "sha256": "7da987b462a15c9619c21eeef9e8f95f0d1c7c9fa1fd20f1b053886c4afbde34",
+   "bytes": 1823
+  },
+  "util.py": {
+   "sha256": "daa59f30e90fbd2f04f1ebf81461f8afb21a2bd6cd17520455610f0f5e89fe52",
+   "bytes": 5722
+  },
+  "higgs_analysis.py": {
+   "sha256": "1ef788bd806e8783bca9312b97480ff496448ead07c02cc8b28489eeb4be5688",
+   "bytes": 22065
+  },
+  "test_higgs.py": {
+   "sha256": "72be0417e2d659bb0a9f97209562801bb511a382ee4809d65749bb7060840c82",
+   "bytes": 8307
+  },
+  "make_subsample.py": {
+   "sha256": "66d5f01664e65952731d7d098c9fb682be9985912342ceab69e50085f9a6bad7",
+   "bytes": 1963
+  },
+  "data/MANIFEST.md": {
+   "sha256": "fc49f16fc4c6816ccf476b21cab43f29765ffc4e9c8b087f539e08650238b1a5",
+   "bytes": 2047
+  },
+  "data/MC/higgs2012.csv": {
+   "sha256": "0e56a7acb6575a434f1d1c3b33b25386aa0a2b56a415d08a5aa082b7d37c5528",
+   "bytes": 2546226,
+   "rows": 9348
+  },
+  "data/MC/zzto4mu2012.csv": {
+   "sha256": "44da5a988429fbf1c5de621dd38add96a01cf75ccf29ff9dff3d74eb18b72764",
+   "bytes": 11424350,
+   "rows": 41106
+  },
+  "data/MC/zzto2mu2e2012.csv": {
+   "sha256": "332fb63df9ed5307faf37c61c325b4ba311471675ef93b2eeee79ebc01e12d2a",
+   "bytes": 7369488,
+   "rows": 26537
+  },
+  "data/MC/zzto4e2012.csv": {
+   "sha256": "82c09cffa38b839da42f9f11402327e5ab45f38423c187c003880712d7507800",
+   "bytes": 5969222,
+   "rows": 21476
+  },
+  "data/data/clean_data_2012.csv": {
+   "sha256": "965d8e81b321735fab9252336cda11aa7a036f9e716be7ddd01bb3f3d70998b4",
+   "bytes": 138702,
+   "rows": 495
+  }
+ },
+ "tested_environments": "tested_environments.json",
+ "data_provenance": "data/MANIFEST.md"
+}

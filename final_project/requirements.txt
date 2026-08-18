@@ -1,7 +1,9 @@
-# Higgs final project — tested with these (newer minor versions are generally fine)
+# Higgs final project runtime compatibility ranges.
+# Exact successful validation environments are recorded in tested_environments.json.
 numpy>=1.24,<3
 pandas>=2.0,<3
 scipy>=1.10,<2
 scikit-learn>=1.3,<2
 matplotlib>=3.7,<4
-nbformat>=5.7          # only needed to rebuild the notebook from build_notebook.py
+nbformat>=5.7          # only needed for local release validation
+nbconvert>=7,<8        # only needed for HTML/reference release checks
