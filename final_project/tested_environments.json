@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "validated_at": "2026-08-18",
+  "validated_at": "2026-08-22",
   "environments": [
     {
       "name": "macos-anaconda",
@@ -17,15 +17,23 @@
         "pytest": "8.4.2"
       },
       "command": "pytest -q test_higgs.py",
-      "result": "16 passed",
+      "result": "19 passed",
       "additional_checks": [
         {
           "command": "python generators/build_final_project_release.py --check --render",
-          "result": "learner structure and static HTML render passed"
+          "result": "learner structure, faculty preview currency and static HTML render passed"
         },
         {
           "command": "python generators/build_final_project_release.py --check --execute-reference",
-          "result": "private 60-cell reference executed end to end; all 16 report fields matched"
+          "result": "private 62-cell reference executed end to end; all 16 report fields matched"
+        },
+        {
+          "command": "python generators/render_faculty_review.py --check",
+          "result": "faculty preview matches the five graded OLX checkpoints"
+        },
+        {
+          "command": "python docs/verify_randomization.py (in Prob_SDA)",
+          "result": "ALL PASS, including Check_FP_readiness over 10000 draws"
         }
       ]
     },
@@ -43,14 +51,10 @@
       },
       "command": "python test_higgs.py",
       "result": "all 16 anchors passed",
-      "additional_checks": [
-        {
-          "command": "execute Section 0 from an empty temporary directory against GitHub main",
-          "result": "all seven runtime files downloaded and passed SHA-256 verification"
-        }
-      ]
+      "stale_since": "2026-08-19",
+      "note": "Validated against the 60-cell revision, before the Section 8 split scan, the anchor reselection and the two new tests. Not re-run since; treat as unverified until it is."
     }
   ],
   "colab_end_to_end": null,
-  "note": "These are validation records, not installation pins. The published main-branch artifact still requires a fresh-Colab smoke test after the files are pushed."
+  "note": "These are validation records, not installation pins. Nothing in the build verifies this file, so update it by hand whenever the tested revision moves. The published main-branch artifact still requires a fresh-Colab smoke test after the files are pushed, which is also the only measurement of how long the Section 8 split scan takes on Colab hardware."
 }

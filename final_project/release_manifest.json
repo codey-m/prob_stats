@@ -6,10 +6,10 @@
  "public_root": "final_project",
  "learner_notebook": {
   "path": "final_project/higgs_final_project.ipynb",
-  "sha256": "7c4c2e4035a3d63ac3af75af0782cc582d736d0ffe1da84594415cce2827ea13",
-  "cells": 60,
-  "markdown_cells": 36,
-  "code_cells": 24,
+  "sha256": "57bfc3042cdc2ac401ece567dc10309db6605a5d619a2167e3c704ca5b0176b8",
+  "cells": 62,
+  "markdown_cells": 37,
+  "code_cells": 25,
   "student_tasks": 7,
   "outputs": 0,
   "execution_counts": 0,
@@ -49,8 +49,8 @@
    "bytes": 5722
   },
   "higgs_analysis.py": {
-   "sha256": "1ef788bd806e8783bca9312b97480ff496448ead07c02cc8b28489eeb4be5688",
-   "bytes": 22065
+   "sha256": "b2bc9a6dc626633ca45ee2e33979b177405449c1159280e8d4fee692542c58e7",
+   "bytes": 24468
   },
   "data/MC/higgs2012.csv": {
    "sha256": "0e56a7acb6575a434f1d1c3b33b25386aa0a2b56a415d08a5aa082b7d37c5528",
@@ -84,28 +84,28 @@
    "bytes": 3435
   },
   "higgs_final_project.ipynb": {
-   "sha256": "7c4c2e4035a3d63ac3af75af0782cc582d736d0ffe1da84594415cce2827ea13",
-   "bytes": 62619
+   "sha256": "57bfc3042cdc2ac401ece567dc10309db6605a5d619a2167e3c704ca5b0176b8",
+   "bytes": 67224
   },
   "requirements.txt": {
    "sha256": "83fc59af0c3148f2b9e5f3942b7e9e8f5e9363c39d88b7f9f32912b6881453b2",
    "bytes": 359
   },
   "tested_environments.json": {
-   "sha256": "7da987b462a15c9619c21eeef9e8f95f0d1c7c9fa1fd20f1b053886c4afbde34",
-   "bytes": 1823
+   "sha256": "178267fb2c34c71a868e78d02fcc03b05344ce74a62c127fbfef500aa11ebd01",
+   "bytes": 2370
   },
   "util.py": {
    "sha256": "daa59f30e90fbd2f04f1ebf81461f8afb21a2bd6cd17520455610f0f5e89fe52",
    "bytes": 5722
   },
   "higgs_analysis.py": {
-   "sha256": "1ef788bd806e8783bca9312b97480ff496448ead07c02cc8b28489eeb4be5688",
-   "bytes": 22065
+   "sha256": "b2bc9a6dc626633ca45ee2e33979b177405449c1159280e8d4fee692542c58e7",
+   "bytes": 24468
   },
   "test_higgs.py": {
-   "sha256": "72be0417e2d659bb0a9f97209562801bb511a382ee4809d65749bb7060840c82",
-   "bytes": 8307
+   "sha256": "0324eb3191b3abcff707222369679be3c41f981312ea627c6a1d0ee8aaaee2df",
+   "bytes": 12944
   },
   "make_subsample.py": {
    "sha256": "66d5f01664e65952731d7d098c9fb682be9985912342ceab69e50085f9a6bad7",

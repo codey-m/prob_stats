@@ -14,7 +14,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
-from scipy.stats import norm, chi2
+from scipy.stats import norm, chi2, t as t_dist
 from sklearn.linear_model import LogisticRegression
 from sklearn.neural_network import MLPClassifier
 from sklearn.pipeline import Pipeline
@@ -403,9 +403,15 @@ def matched_baseline_expected_Z(state, n_score_bins=N_SCORE_BINS):
     """The FAIR reference for expected_Z_2d: mass-only, same number of cells.
 
     expected_Z_2d fits N_BINS x n_score_bins Poisson cells; mass_only_expected_Z
-    fits N_BINS.  Comparing them credits the classifier for the extra cells.
-    Splitting the mass axis into the same total number of bins, with no
+    fits N_BINS.  Comparing them credits the classifier for the finer grid it
+    was handed.  Spending the same cell budget on the mass axis, with no
     classifier at all, isolates what a score actually contributes.
+
+    The cells are not what raises the expected Z.  Splitting the same events on
+    a variable carrying no information moves it by about 0.01; spending those
+    cells on mass moves it by about 0.37, because 5 GeV bins smear out a peak
+    only a few GeV wide.  What the fine grid buys is mass resolution, which is
+    also why a score that is a function of mass reproduces the gain.
     """
     return mass_only_expected_Z(state, n_bins=N_BINS * n_score_bins)
 
@@ -450,6 +456,55 @@ def comparison_row(model, featfn, state):
         expected_Z=expected_Z_2d(model, featfn, state),
         sideband_retention=sideband_retention(model, featfn, state),
     )
+
+
+CONTENDERS = ("mass_tag", "linear", "quadratic", "mlp")
+
+
+def expected_Z_scan(seeds=range(10), contenders=CONTENDERS):
+    """Repeat the Section 8 comparison over train/holdout splits.
+
+    One row per split, holding the capacity-matched mass-only reference and each
+    contender's expected Z computed on that SAME split.  Pairing matters: the
+    reference and the contenders move together from split to split, so the
+    difference has far less spread than either column on its own.
+
+    A single split cannot say whether a gap of a few hundredths in expected Z
+    means anything.  This is what tells you.
+    """
+    rows = []
+    for s in seeds:
+        state = prepare(seed=int(s))
+        row = {"seed": int(s),
+               "mass_only_20": mass_only_expected_Z(state, n_bins=N_BINS),
+               "matched": matched_baseline_expected_Z(state)}
+        for kind in contenders:
+            if kind == "mass_tag":
+                mdl, fx = mass_tag_scorer()
+            else:
+                mdl, fx = make_classifier(kind, state["train"])
+            row[kind] = expected_Z_2d(mdl, fx, state)
+        rows.append(row)
+    return rows
+
+
+def paired_interval(rows, contender, reference="matched", level=0.95):
+    """Mean, standard error and t-interval of (contender - reference) across splits.
+
+    Returns `resolved=True` when the interval excludes zero, meaning the gap is
+    larger than the split-to-split noise.  A point estimate alone cannot support
+    that claim, which is the whole reason this function exists.
+    """
+    d = np.array([r[contender] - r[reference] for r in rows], float)
+    n = len(d)
+    if n < 2:
+        raise ValueError("a paired interval needs at least two splits")
+    mean = float(d.mean())
+    se = float(d.std(ddof=1) / np.sqrt(n))
+    half = float(t_dist.ppf(0.5 + level / 2.0, n - 1) * se)
+    lo, hi = mean - half, mean + half
+    return dict(contender=contender, n=n, mean=mean, se=se,
+                low=lo, high=hi, resolved=bool(lo > 0 or hi < 0))
 
 
 # ---------------------------------------------------------------------------
