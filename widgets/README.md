@@ -8,7 +8,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
-| [Bayes' rule: the base-rate effect](https://codey-m.github.io/prob_stats/widgets/widget-bayes-base-rate.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Bayes' rule and the base rate |
+| [Beach Beeps](https://codey-m.github.io/prob_stats/widgets/widget-bayes-base-rate.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Bayes' rule and the base rate |
 
 ## 6.3710.2x Probability & SDA: Discrete Distributions & Categorical Data
 
@@ -27,7 +27,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
-| [The Central Limit Theorem](https://codey-m.github.io/prob_stats/widgets/widget-clt.html) | Unit 1, Lec. 2: The central limit theorem |  |
+| [Mean Flights](https://codey-m.github.io/prob_stats/widgets/widget-clt.html) | Unit 1, Lec. 2: The central limit theorem | The Central Limit Theorem |
 
 ## 6.3710.5x Probability & SDA: Hypothesis Testing & Machine Learning Model Validation
 

@@ -1,169 +1,467 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>The Central Limit Theorem</title>
-<style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:Georgia,'Times New Roman',serif;background:#FAFAF8;color:#1A1A1A;padding:16px}
-  #app{max-width:780px;margin:0 auto}
-  h1{font-size:20px;font-weight:600;margin-bottom:4px}
-  .sub{font-size:13px;color:#666;margin-bottom:14px}
-  .controls{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin-bottom:12px}
-  .seg button{font-family:'Courier New',monospace;font-size:12px;padding:5px 10px;border:1px solid #CCC;background:#fff;cursor:pointer;border-radius:4px;margin-right:4px}
-  .seg button.on{background:#1A1A1A;color:#fff;border-color:#1A1A1A}
-  .ctrl label{font-size:12px;font-family:'Courier New',monospace;color:#444;margin-right:6px}
-  .ctrl .val{font-family:'Courier New',monospace;font-size:12px;color:#0b5cab;font-weight:700}
-  button.act{font-family:'Courier New',monospace;font-size:12px;padding:5px 12px;border:1px solid #0b5cab;background:#eef4fb;color:#0b5cab;border-radius:4px;cursor:pointer}
-  canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:10px}
-  .readout{font-size:13px;margin-bottom:8px}
-  .v{font-weight:700;font-family:'Courier New',monospace;color:#0b5cab}
-  .note{font-size:12px;color:#888;line-height:1.5}
-</style>
-</head>
-<body>
-<div id="app">
-  <h1>The Central Limit Theorem</h1>
-  <p class="sub">Draw many independent samples of size <i>n</i> from a finite-variance source. The distribution of the <b>sample mean</b> becomes bell-shaped as <i>n</i> grows, even when the source is skewed.</p>
+<!doctype html>
+<html lang="en" data-mode="course">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mean Flights</title><style>/* Mean Flights in the MIT Learn game format. Chrome and scene rules follow wonder-fold/style.css, so the two
+   paper-plane games read as one world. Scene colours: slate family, gold for the bell, ink for marks, MIT red for
+   the player's zone; green/amber/red only for outcomes. */
+:root{color-scheme:light;--ink:#0C0C0D;--ink-2:#40464C;--body:#212326;--muted:#626A73;--line:#DDE1E6;--rule:#E6E9EE;--ground:#F3F4F8;--red:#750014;--red-dark:#5A0010;--button-line:#B8C2CC;
+  --win:#216044;--over:#B45309;--lose:#A31F34;
+  --s-base:#7A9FBF;--s-body:#ADC3D7;--s-line:#4B7293;--s-darks:#52667C;--s-wash:#DCE6EF;--gold:#E9A83C;--gold-dark:#A86F12;--art-ink:#111827;--art-ground:#F9FAFB;--frame:#CBD2DB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--body);font:16px/1.55 "neue-haas-grotesk-text","Helvetica Neue",Helvetica,Arial,sans-serif}
+a{color:var(--red);text-underline-offset:3px}button,input{font:inherit}button,summary{cursor:pointer}
+button{border:1px solid var(--button-line);border-radius:4px;padding:10px 15px;background:#fff;color:var(--ink-2);font-weight:500;min-height:44px;touch-action:manipulation}
+button.primary{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}button.primary:hover{background:var(--red-dark);border-color:var(--red-dark)}
+button:disabled{opacity:.45;cursor:default}
+button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid #1472ae;outline-offset:3px}
+[hidden]{display:none!important}
 
-  <div class="controls">
-    <div class="seg" id="seg">
-      <button data-d="uniform" class="on">Uniform</button>
-      <button data-d="exponential">Exponential</button>
-      <button data-d="bimodal">Bimodal</button>
-    </div>
-    <div class="ctrl"><label>n = <span class="val" id="vN">5</span></label><input id="n" type="range" min="1" max="100" step="1" value="5"></div>
-    <button class="act" id="resample">Resample</button>
+/* Page chrome */
+.gamebar{background:#fff;display:grid;grid-template-columns:52px 1fr 52px;align-items:center;padding:12px 24px;border-bottom:1px solid var(--rule)}
+.gamebar .back{display:flex;align-items:center;justify-content:center;width:44px;height:44px;color:var(--ink);border-radius:4px}.gamebar .back svg{width:26px;height:26px}
+.gamebar h1{grid-column:2;text-align:center;margin:0;font-size:clamp(26px,3vw,38px);font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+main{max-width:1240px;margin:auto;padding:28px 24px 56px}
+.gamewrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:28px;align-items:start}
+.playcard,.howto,.explainer{background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.05),0 3px 10px rgba(16,24,40,.05)}
+.playcard{overflow:hidden}
+.gamestatus{display:flex;justify-content:center;gap:12px 36px;flex-wrap:wrap;padding:26px 24px 4px;font-size:18px;color:var(--muted)}
+.gamestatus b{color:var(--body);font-weight:600}
+.gameprompt{text-align:center;color:var(--muted);font-size:17px;margin:8px 24px 18px}.gameprompt strong{color:var(--body);font-weight:600}
+.gameplay{padding:0 24px}
+.gamecontrols{padding:14px 24px 22px}
+.actions{display:flex;gap:10px;flex-wrap:wrap}.actions button{min-width:190px}
+.why{font-size:14px;color:var(--muted);margin:8px 0 0;line-height:1.5}
+.gamefoot{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;padding:18px 24px 22px;border-top:1px solid var(--rule);background:linear-gradient(#FBFBFC,#F6F7F9)}
+.gamefoot p{margin:0 0 12px;font-size:16px;color:var(--muted)}.gamefoot strong{color:var(--body);font-weight:600}
+.gamefoot button{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--button-line);border-radius:4px;padding:10px 22px;font-weight:500;color:var(--ink-2)}.gamefoot button svg{width:22px;height:22px}
+.howto{padding:24px}.howto h2{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:500;margin:0 0 16px;color:var(--ink)}.howto h2 svg{width:28px;height:20px;flex:none}
+.howto p{font-size:15px;line-height:1.6;color:var(--body);margin:0 0 14px}.howto strong{font-weight:700}
+.explainer{margin-top:28px;padding:24px}.explainer h2{font-size:19px;margin:0 0 10px;letter-spacing:-.015em;color:var(--ink)}.explainer p{font-size:15px;line-height:1.65;margin:0 0 12px}
+.explainer .explainer-link{color:var(--muted);font-size:14px}.explainer .explainer-note{color:var(--muted);font-size:13px}
+.review-about{margin-top:24px}details summary{min-height:40px;padding:8px 0;font-size:14px;font-weight:600;color:var(--ink-2)}.review-about p{font-size:13px;color:var(--muted)}
+body.embedded .gamebar,body.embedded .review-about{display:none}body.embedded main{padding-top:20px}
+
+/* Play area: the lawn, then one throw and the scores on the same distance axis */
+.stack{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+.band{position:relative;border-top:1px solid var(--rule);transition:box-shadow .2s}.band:first-child{border-top:0}
+.band.outcome-win{box-shadow:inset 0 0 0 3px var(--win)}.band.outcome-over{box-shadow:inset 0 0 0 3px var(--over)}.band.outcome-lose{box-shadow:inset 0 0 0 3px var(--lose)}
+.band h3{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:14px;font-weight:600;margin:0;padding:8px 12px 0;color:var(--ink)}
+.band h3 .spread{font:500 13px ui-monospace,SFMono-Regular,monospace;color:var(--muted)}
+.band svg{display:block;width:100%;height:auto}
+.corner{position:absolute;top:8px;font:12px/1.2 ui-monospace,SFMono-Regular,Consolas,monospace;padding:3px 7px;border-radius:3px;background:rgba(255,255,255,.9);color:var(--ink-2);z-index:1}.corner-left{left:8px}.corner-right{right:8px;top:30px;font-weight:600}
+.corner-right.win{color:var(--win)}.corner-right.over{color:var(--over)}.corner-right.lose{color:var(--lose)}.corner-right:empty{display:none}
+.sky{fill:var(--art-ground)}.grass{fill:var(--s-wash)}.lane{fill:var(--art-ground);opacity:.6}.launch{stroke:var(--art-ink);stroke-width:2;stroke-dasharray:3 4}.tick{stroke:var(--s-darks);stroke-width:1.5}
+.gust{fill:none;stroke:#fff;stroke-width:2.5;stroke-linecap:round;animation:gust 2.7s linear infinite;opacity:.5}@keyframes gust{from{transform:translateX(-60px)}to{transform:translateX(120px)}}
+.landing{fill:var(--s-darks);stroke:#fff;stroke-width:1}.pending{opacity:0}.landing,.avg{transition:opacity .25s}
+.avg{stroke:var(--art-ink);stroke-width:3}
+.plane{fill:var(--s-darks);stroke:#fff;stroke-width:.8}
+.src{fill:var(--s-body);stroke:var(--s-line);stroke-width:2}
+.bar{fill:var(--s-body);pointer-events:none}.bell{fill:none;stroke:var(--gold-dark);stroke-width:2.5}
+.mu{stroke:var(--art-ink);stroke-width:1.5;stroke-dasharray:4 3}.axis{stroke:var(--frame)}
+.axis-label{font:11px ui-monospace,SFMono-Regular,monospace;fill:var(--muted)}
+.par{fill:none;stroke:var(--art-ink);stroke-width:1.5;stroke-dasharray:5 3}
+#scores{touch-action:none}
+.zone{fill:rgba(117,0,20,.09);cursor:grab}.locked .zone{cursor:default}
+.handle{cursor:ew-resize;outline:none}.handle .hit{fill:transparent}.handle .grip{fill:var(--red)}
+.handle:focus-visible .grip{fill:#1472ae}.locked .handle{cursor:default}.locked .handle .grip{fill:var(--ink-2)}
+.key-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 16px;font-size:13px;color:var(--muted);padding:6px 12px 10px;margin:0}
+.key{display:inline-block;width:14px;height:10px;margin-right:6px;vertical-align:-1px}
+.key.zone-key{background:rgba(117,0,20,.12);border-left:3px solid var(--red);border-right:3px solid var(--red);width:18px}
+.key.bars{background:var(--s-body)}.key.bell{height:3px;background:var(--gold-dark)}.key.mu{width:2px;height:12px;border-left:2px dashed var(--art-ink)}
+.key.par{border:1.5px dashed var(--art-ink);width:18px}
+.zone-line{font-size:14px;color:var(--body);margin:12px 0 0;font-variant-numeric:tabular-nums}
+.reason{min-height:3.2em;margin:8px 0 4px;font-size:15px;color:var(--muted)}.reason strong{color:var(--body);font-weight:600}
+.readout{font-size:13px;color:var(--muted);margin:0 0 6px;font-variant-numeric:tabular-nums}
+.overflow-note{font-size:12px;color:var(--muted);margin:5px 12px 9px}
+
+/* Free play (course mode only): the original widget's plane choice and n slider, on the same distance axis. */
+.freeplay{grid-column:1;padding:24px;background:#fff;border-radius:6px;box-shadow:0 1px 2px rgba(16,24,40,.05),0 3px 10px rgba(16,24,40,.05)}
+.freeplay h2{font-size:19px;margin:0 0 4px;letter-spacing:-.015em;color:var(--ink)}.free-sub{font-size:14px;color:var(--muted);margin:0 0 14px}
+.lever{border:0;margin:0 0 14px;padding:0;min-width:0}.lever legend{font-size:15px;font-weight:600;color:var(--body);padding:0;margin-bottom:8px}
+.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.option{position:relative;display:block;cursor:pointer}.option input{position:absolute;opacity:0;pointer-events:none}
+.option>span{display:flex;flex-direction:column;padding:9px 10px;border:1px solid var(--button-line);border-radius:4px;background:#fff}
+.option b{font-size:14px;font-weight:600;color:var(--body)}.option small{font-size:12px;color:var(--muted)}.option input:checked+span{border:2px solid var(--red);padding:8px 9px}
+.option input:focus-visible+span{outline:3px solid #1472ae;outline-offset:3px}
+.icon{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--ink-2);margin-bottom:4px}.option input:checked+span .icon{color:var(--red)}
+.actions button{display:inline-flex;align-items:center;justify-content:center;gap:10px}
+.bi{width:22px;height:22px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.throws label{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}.throws label b{font-weight:600}.throws .nota{font-weight:400;color:var(--muted);font-size:14px;margin-left:6px}
+.throws output{font:600 20px ui-monospace,SFMono-Regular,monospace;color:var(--ink)}
+.track{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}.track span{flex:none;width:28px}.track span:first-child{text-align:right}
+.track input{flex:1;min-width:0;margin:8px 0 2px;accent-color:var(--red)}.track input:focus-visible{outline:3px solid #1472ae;outline-offset:3px}
+.src-line{fill:none;stroke:var(--s-line);stroke-width:1.5;stroke-dasharray:4 3}.key.src-key{height:0;border-top:2px dashed var(--s-line);width:18px}
+.free-readout{margin:12px 0}
+@media(max-width:560px){.options{grid-template-columns:1fr}}
+@media(max-width:900px){.gamewrap{grid-template-columns:1fr}}
+@media(max-width:560px){main{padding:20px 12px 40px}.gamestatus{gap:6px 18px;font-size:16px}.gameprompt{font-size:15px}.gameplay,.gamecontrols,.gamefoot{padding-left:14px;padding-right:14px}.actions button{flex:1;min-width:0}.gamebar{padding:10px 12px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+/* Course pages (course mode): lecture terms shown, arcade-only copy and links hidden. */
+body:not(.course) .course-only{display:none}
+body.course .arcade-only,body.course .explainer-link{display:none}
+body.course main{padding:12px 12px 16px}
+/* Course pages embed the game and free play in separate frames: ?view=free shows free play alone. */
+body.game-only .freeplay{display:none}
+body.free-only .playcard,body.free-only .howto,body.free-only .explainer,body.free-only .review-about{display:none}
+body.free-only .gamewrap{grid-template-columns:1fr}body.free-only main{padding:12px}
+</style></head>
+<body class="gameformat">
+<header class="gamebar"><a class="back" href="index.html" aria-label="Back to the arcade"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></a><h1 id="title">Mean Flights</h1></header>
+<main>
+  <div class="gamewrap">
+    <section class="playcard" aria-label="Game">
+      <div class="gamestatus"><span>Round: <b id="st-round">1 of 5</b></span><span>Plane: <b id="st-plane"></b></span><span>Throws per score: <b id="st-n"></b></span><span>On target: <b id="st-wins">0</b></span></div>
+      <p class="gameprompt">Drag the zone to where <strong>9 scores in 10</strong> will land. The narrower, the better.</p>
+      <div class="gameplay">
+        <div class="stack">
+          <div class="band"><span class="corner corner-left">The club lawn</span>
+            <svg id="lawn" viewBox="0 0 680 120" role="img" aria-labelledby="lawn-desc"><desc id="lawn-desc">The lawn.</desc><g id="lawn-env"></g><g id="lawn-marks"></g><g id="lawn-planes"></g></svg>
+            <p class="overflow-note" id="lawn-overflow" hidden></p>
+          </div>
+          <div class="band">
+            <h3><span>Where one throw lands<span class="course-only"> (the source distribution)</span></span><span class="spread" id="one-spread"></span></h3>
+            <svg id="one" viewBox="0 0 680 80" role="img" aria-labelledby="one-desc"><desc id="one-desc"></desc><g id="one-g"></g></svg>
+          </div>
+          <div class="band" id="scores-band"><span class="corner corner-right" id="outcome-label"></span>
+            <h3><span>Where 1,000 scores land<span class="course-only"> (sample means)</span></span><span class="spread" id="score-spread"></span></h3>
+            <svg id="scores" viewBox="0 0 680 150" aria-labelledby="scores-desc"><desc id="scores-desc"></desc>
+              <rect id="zone" class="zone" data-drag="band" y="8" height="120"/>
+              <g id="sc-bars"></g>
+              <g id="sc-zone">
+                <g id="h-lo" class="handle" data-drag="lo" tabindex="0" role="slider" aria-label="Zone starts at" aria-valuemin="0" aria-valuemax="14"><rect class="hit" y="8" width="24" height="120"/><rect class="grip" y="8" width="6" height="120" rx="2"/></g>
+                <g id="h-hi" class="handle" data-drag="hi" tabindex="0" role="slider" aria-label="Zone ends at" aria-valuemin="0" aria-valuemax="14"><rect class="hit" y="8" width="24" height="120"/><rect class="grip" y="8" width="6" height="120" rx="2"/></g></g>
+              <g id="sc-over"></g><g id="sc-axis"></g>
+            </svg>
+            <p class="overflow-note" id="off-chart" hidden></p>
+            <p class="key-row"><span><i class="key zone-key"></i>Your zone</span><span><i class="key bars"></i>Scores</span><span><i class="key bell"></i><span class="arcade-only">Bell curve</span><span class="course-only">Normal curve N(μ, σ²/n)</span></span><span><i class="key par"></i>Narrowest zone for this batch</span><span><i class="key mu"></i><span class="arcade-only">The plane’s true average</span><span class="course-only">μ</span></span></p>
+          </div>
+        </div>
+        <p class="zone-line" id="zone-line"></p>
+        <p id="feedback" class="reason" role="status" aria-live="polite" aria-atomic="true"><strong id="feedback-title"></strong> <span id="feedback-text"></span></p>
+        <p class="readout course-only" id="readout"></p>
+      </div>
+      <div class="gamecontrols">
+        <div class="actions"><button type="button" id="fly" class="primary"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 21 5l-5 15-4-6z"/><path d="m12 14 9-9"/></svg><span>Fly 1,000 rounds</span></button><button type="button" id="next" class="primary" hidden><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span id="next-label">Next round</span></button></div>
+        <p class="why" id="plane-why"></p>
+      </div>
+      <div class="gamefoot">
+        <div class="foot-left"><p><strong>New meet</strong> <span>- five new rounds</span></p><div class="foot-buttons"><button id="new-meet" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h12l-2.5 4L17 12H5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>New meet</button></div></div>
+        <div class="foot-right"><button id="reset" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Start over</button></div>
+      </div>
+    </section>
+    <section class="freeplay course-only" aria-labelledby="free-title">
+      <h2 id="free-title">Free play: any plane, any number of throws</h2>
+      <p class="free-sub">Pick a plane and a sample size n, and see where 1,000 sample means land.</p>
+      <fieldset class="lever"><legend>Plane</legend><div class="options" id="f-planes"></div></fieldset>
+      <div class="lever throws"><label for="f-n"><span><b>Throws per score</b><span class="nota">sample size n</span></span><output id="fv-n" for="f-n"></output></label>
+        <div class="track"><span aria-hidden="true">1</span><input type="range" id="f-n" min="1" max="100" step="1" value="5"><span aria-hidden="true">100</span></div></div>
+      <div class="stack"><div class="band">
+        <svg id="f-chart" viewBox="0 0 680 170" role="img" aria-labelledby="f-desc"><desc id="f-desc"></desc><g id="f-g"></g></svg>
+        <p class="overflow-note" id="f-off-chart" hidden></p>
+        <p class="key-row"><span><i class="key src-key"></i>One throw (scaled)</span><span><i class="key bars"></i>1,000 sample means</span><span><i class="key bell"></i>Normal curve N(μ, σ²/n)</span><span><i class="key mu"></i>μ</span></p>
+      </div></div>
+      <p class="readout free-readout" id="f-readout" aria-live="polite"></p>
+      <div class="actions"><button type="button" id="f-fly"><svg class="bi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12 21 5l-5 15-4-6z"/><path d="m12 14 9-9"/></svg><span>Fly 1,000 new rounds</span></button></div>
+    </section>
+    <aside class="howto" aria-labelledby="howto-title">
+      <h2 id="howto-title"><svg viewBox="0 0 28 20" aria-hidden="true"><rect x="1.5" y="1.5" width="25" height="17" rx="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 7v6M5 10h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18.5" cy="8" r="1.4" fill="currentColor"/><circle cx="21.5" cy="11.5" r="1.4" fill="currentColor"/></svg>How to play</h2>
+      <p><strong>The paper plane club</strong> scores every plane by its average distance over several throws, so one lucky throw can’t win the day.</p>
+      <p><strong>Each round</strong> names a plane and how many throws make one score. The middle chart shows where a single throw of that plane lands.</p>
+      <p><strong>Drag the zone</strong> on the bottom chart to where you think 9 scores in 10 will land. Drag its edges to resize it, or its middle to move it.</p>
+      <p><strong>Fly 1,000 rounds.</strong> You’re on target if the zone catches at least 900 scores and is not much wider than it needs to be.</p>
+    </aside>
   </div>
-
-  <canvas id="cv" width="700" height="380"></canvas>
-
-  <div class="readout">
-    theoretical SE = &sigma;/&radic;n = <span class="v" id="seTh"></span> &nbsp;|&nbsp; observed SD of the means = <span class="v" id="seObs"></span>
-  </div>
-  <p class="note" id="note"></p>
-</div>
-
-<script>
-(function(){
-  var B=2000;
-  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-  var dist='uniform';
-
-  function randn(){ // Box-Muller
-    var u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
-    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-  }
-  var SRC={
-    uniform:{mu:0.5, sd:Math.sqrt(1/12), lo:0, hi:1,
-             draw:function(){return Math.random();},
-             pdf:function(x){return (x>=0&&x<=1)?1:0;}, prange:[-0.1,1.1]},
-    exponential:{mu:1, sd:1, lo:0, hi:6,
-             draw:function(){return -Math.log(1-Math.random());},
-             pdf:function(x){return x>=0?Math.exp(-x):0;}, prange:[0,6]},
-    bimodal:{mu:0, sd:Math.sqrt(4.25), lo:-5, hi:5,
-             draw:function(){return (Math.random()<0.5?-2:2)+0.5*randn();},
-             pdf:function(x){var a=Math.exp(-(x+2)*(x+2)/(2*0.25)),b=Math.exp(-(x-2)*(x-2)/(2*0.25));return 0.5*(a+b)/(Math.sqrt(2*Math.PI)*0.5);}, prange:[-5,5]}
+  <section class="explainer" id="takeaway" hidden aria-labelledby="takeaway-title">
+    <h2 id="takeaway-title">Averages settle into a bell</h2>
+    <p>One throw of the Looper lands near 3 m or near 10 m, and almost never in between. Its score, the average of many throws, lands in between: near its true average of 6.5 m, in a bell around it. The same happens for every plane, whatever single throws look like. The bell also narrows as throws are added, but slowly. The spread shrinks with the square root of the number of throws, so four times as many throws only halves it.</p>
+    <p class="course-only">This is the central limit theorem. The throws are i.i.d. draws X₁, …, Xₙ with mean μ and standard deviation σ, and the score is the sample mean. For large n the sample mean is approximately normal with mean μ and standard error σ/√n, whatever the distribution of a single throw, so about 90% of sample means land within μ ± 1.645 σ/√n. The Tumbler is a uniform distribution, the Glider an exponential distribution shifted by 1.5 m, and the Looper a bimodal mixture of two normals.</p>
+    <p class="arcade-only">The bell is the central limit theorem, from Probability &amp; Statistical Data Analysis (6.3710.4x) Lec. 2, The central limit theorem.</p>
+    <p class="explainer-link">Explore in Probability &amp; Statistical Data Analysis: sample means, standard error and the central limit theorem.</p>
+    <p class="explainer-note">Each round is one batch of 1,000 simulated scores, with no redrawing to favor an outcome. A zone that covers 90% of the population can catch fewer than 900 in one batch. The verdict describes the batch on screen: a zone up to a quarter wider than its narrowest 900-score zone, or 0.2 m wider for very narrow zones, is still on target.</p>
+  </section>
+  
+</main>
+<noscript><p>This interactive activity requires JavaScript.</p></noscript>
+<script>/* Mean Flights: paper planes, scores that average n throws, and a zone that must catch 9 scores in 10. Pure and deterministic. */
+(function(root){
+  'use strict';
+  const DMAX=14,SCORES=1000,CATCH=900,ROUNDS=5,STEP=.1,THEORY_DRAWS=20000;
+  function rng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const randn=r=>Math.sqrt(-2*Math.log(Math.max(1e-12,r())))*Math.cos(2*Math.PI*r());
+  const npdf=(x,m,s)=>Math.exp(-(((x-m)/s)**2)/2)/(s*Math.sqrt(2*Math.PI));
+  // Three planes, the original widget's three sources: uniform, exponential and bimodal. Distances in meters.
+  const PLANES={
+    tumbler:{name:'The Tumbler',small:'lands anywhere',course:'uniform',why:'It tumbles and lands anywhere from 2 m to 11 m, no spot likelier than another.',
+      mu:6.5,sd:9/Math.sqrt(12),draw:r=>2+9*r(),pdf:x=>x>=2&&x<=11?1/9:0},
+    glider:{name:'The Glider',small:'usually short',course:'exponential',why:'It usually lands short, past 1.5 m, and now and then rides a draft much farther.',
+      mu:5,sd:3.5,draw:r=>1.5-3.5*Math.log(1-r()),pdf:x=>x<1.5?0:Math.exp(-(x-1.5)/3.5)/3.5},
+    looper:{name:'The Looper',small:'short or far',course:'bimodal',why:'Half its throws loop back and land near 3 m. The rest fly straight to near 10 m.',
+      mu:6.5,sd:Math.sqrt(3.5**2+.7**2),draw:r=>(r()<.5?3:10)+.7*randn(r),pdf:x=>.5*(npdf(x,3,.7)+npdf(x,10,.7))}
   };
+  const score=(p,n,r)=>{let t=0;for(let j=0;j<n;j++)t+=p.draw(r);return t/n;};
+  // The narrowest zone holding k of the sorted values.
+  function narrowest(sorted,k){let best=null;for(let i=0;i+k-1<sorted.length;i++){const w=sorted[i+k-1]-sorted[i];if(!best||w<best.width)best={lo:sorted[i],hi:sorted[i+k-1],width:w};}return best;}
+  // Estimate a 90% zone from a fixed reference simulation, used only to choose histogram bin widths.
+  const theoryCache={};
+  function theory(plane,n){
+    const key=plane+':'+n;if(theoryCache[key])return theoryCache[key];
+    const p=PLANES[plane],r=rng(0xC0FFEE^n*7919),v=Array.from({length:THEORY_DRAWS},()=>score(p,n,r)).sort((a,b)=>a-b);
+    return theoryCache[key]=narrowest(v,THEORY_DRAWS*.9);
+  }
+  // One unscreened batch of 1,000 scores, plus the throws behind the first score for the lawn.
+  // Par describes this batch after it is drawn; a population 90% zone need not catch 900 in every batch.
+  function round(seed,plane,n){
+    const p=PLANES[plane],t=theory(plane,n),r=rng(seed),throws=Array.from({length:n},()=>p.draw(r));
+    const scores=[throws.reduce((a,v)=>a+v,0)/n];for(let i=1;i<SCORES;i++)scores.push(score(p,n,r));
+    const par=narrowest(scores.slice().sort((a,b)=>a-b),CATCH);
+    return {seed,plane,n,throws,scores,theory:t,par,allow:Math.max(par.width*1.25,par.width+.2)};
+  }
+  // Keep tails outside the chart separate, instead of folding them into the edge bins.
+  function histogram(values,width){
+    const counts=Array(Math.ceil(DMAX/width)).fill(0);let below=0,above=0;
+    for(const value of values){if(value<0)below++;else if(value>DMAX)above++;else counts[Math.min(counts.length-1,Math.floor(value/width))]++;}
+    return {counts,below,above};
+  }
+  function judge(rd,lo,hi){
+    const caught=rd.scores.filter(v=>v>=lo&&v<=hi).length,width=hi-lo;
+    return {caught,width,kind:caught<CATCH?'lose':width>rd.allow+1e-9?'over':'win'};
+  }
+  // The first meet teaches in order: one throw, four throws, a two-humped plane alone, then averaged, then a skewed plane averaged a lot.
+  const INTRO=[['tumbler',1],['tumbler',4],['looper',1],['looper',16],['glider',64]];
+  const NS=[1,2,4,9,16,25,36,64,100];
+  function meet(seed=1){
+    seed>>>=0;let plan;
+    if(seed===1)plan=INTRO;
+    else{const r=rng(seed^0x5bd1e995),keys=Object.keys(PLANES);
+      for(;;){plan=Array.from({length:ROUNDS},()=>[keys[Math.floor(r()*3)],NS[Math.floor(r()*NS.length)]]);
+        if(new Set(plan.map(x=>x[0])).size>=2&&new Set(plan.map(x=>x[1])).size===ROUNDS)break;}}
+    return {seed,rounds:plan.map(([pl,n],i)=>round((Math.imul(seed,131)+i*7907)>>>0,pl,n))};
+  }
+  root.MeanFlights={DMAX,SCORES,CATCH,ROUNDS,STEP,PLANES,npdf,narrowest,theory,round,histogram,judge,meet};
+})(globalThis);
+</script><script>(function(){
+  'use strict';
+  const M=globalThis.MeanFlights,$=id=>document.getElementById(id);
+  // Course pages run the course version: wire_course.py sets data-mode="course" (?mode=course previews it). It adds the
+  // lecture's terms (μ, σ, σ/√n, sample means) and the original widget's readout: theoretical SE against observed SD.
+  const COURSE=document.documentElement.dataset.mode==='course'||new URLSearchParams(location.search).get('mode')==='course';
+  const reduced=()=>globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches??false;
+  const raf=typeof globalThis.requestAnimationFrame==='function'?globalThis.requestAnimationFrame.bind(globalThis):null;
+  const now=()=>globalThis.performance?.now?.()??Date.now();
+  const DMAX=M.DMAX,AX0=40,AX1=660,X=d=>AX0+Math.max(0,Math.min(DMAX,d))/DMAX*(AX1-AX0),LANE=78,BASE=128,MINW=.2;
+  const m1=v=>v.toFixed(1)+' m',m2=v=>v.toFixed(2)+' m',snap=v=>Math.round(v/M.STEP)*M.STEP;
+  const throwsWord=n=>n===1?'throw':'throws';
+  let m,seed=1,meets=1,idx=0,wins=0,zone={lo:1.5,hi:12.5},phase='place',anim=null,result=null;
+  const rd=()=>m.rounds[idx],P=()=>M.PLANES[rd().plane],se=()=>P().sd/Math.sqrt(rd().n);
 
-  function normPdf(x,mu,sd){return Math.exp(-(x-mu)*(x-mu)/(2*sd*sd))/(sd*Math.sqrt(2*Math.PI));}
-
-  function simulate(n){
-    var s=SRC[dist], means=new Array(B);
-    for(var i=0;i<B;i++){var acc=0;for(var j=0;j<n;j++)acc+=s.draw();means[i]=acc/n;}
-    return means;
+  function setURL(){try{const u=new URL(location.href);u.searchParams.set('seed',seed);history.replaceState(null,'',u.href);}catch(e){}}
+  function startMeet(next){seed=next>>>0;m=M.meet(seed);idx=0;wins=0;setURL();startRound();}
+  function startRound(){
+    anim=null;phase='place';result=null;zone={lo:1.5,hi:12.5};
+    $('scores-band').classList.remove('outcome-win','outcome-over','outcome-lose');$('outcome-label').textContent='';$('outcome-label').className='corner corner-right';
+    $('lawn-marks').innerHTML='';$('lawn-planes').innerHTML='';$('sc-over').innerHTML='';$('sc-bars').innerHTML='';
+    $('scores').classList.remove('locked');$('fly').hidden=false;$('fly').disabled=false;$('next').hidden=true;
+    $('feedback-title').textContent='';$('feedback-text').textContent=`Each score averages ${rd().n} ${throwsWord(rd().n)} of ${P().name.replace('The ','the ')}. Where will 9 scores in 10 land?`;
+    $('readout').textContent='';$('off-chart').hidden=true;$('lawn-overflow').hidden=true;
+    one();axis();drawZone();status();
+    $('plane-why').textContent=P().why;
+  }
+  function status(){
+    $('st-round').textContent=`${idx+1} of ${M.ROUNDS}`;$('st-plane').textContent=P().name;$('st-n').textContent=rd().n;$('st-wins').textContent=wins;
+    $('one-spread').textContent=COURSE?`μ = ${m2(P().mu)}, σ = ${m2(P().sd)}`:`average ${m1(P().mu)}, give or take ${m1(P().sd)}`;
+    $('score-spread').textContent=phase==='done'?(COURSE?`σ/√n = ${m2(se())}`:`give or take ${m1(se())}`):'';
   }
 
-  function draw(){
-    var n=+document.getElementById('n').value;
-    document.getElementById('vN').textContent=n;
-    var s=SRC[dist];
-    var se=s.sd/Math.sqrt(n);
-    var means=simulate(n);
-
-    // observed sd of means
-    var m=0; for(var i=0;i<B;i++)m+=means[i]; m/=B;
-    var vv=0; for(i=0;i<B;i++)vv+=(means[i]-m)*(means[i]-m); var obs=Math.sqrt(vv/(B-1));
-
-    document.getElementById('seTh').textContent=se.toFixed(3);
-    document.getElementById('seObs').textContent=obs.toFixed(3);
-
-    var W=cv.width, H=cv.height, ml=44, mr=14;
-    ctx.clearRect(0,0,W,H);
-
-    // ---- top strip: source distribution pdf ----
-    var topY=8, topH=86;
-    ctx.fillStyle='#333'; ctx.font="12px 'Courier New',monospace";
-    ctx.fillText("source distribution (one draw)", ml, topY+12);
-    var pr=s.prange, pw=W-ml-mr;
-    // find pdf max
-    var pmax=0; for(i=0;i<=120;i++){var xx=pr[0]+(pr[1]-pr[0])*i/120; pmax=Math.max(pmax,s.pdf(xx));}
-    pmax=pmax||1;
-    ctx.strokeStyle='#8a6d3b'; ctx.lineWidth=2; ctx.beginPath();
-    for(i=0;i<=120;i++){
-      var x=pr[0]+(pr[1]-pr[0])*i/120;
-      var px=ml+pw*i/120, py=topY+24+ (topH-24) - (s.pdf(x)/pmax)*(topH-26);
-      if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py);
+  function lawn(){
+    let g=`<rect class="sky" width="680" height="34"/><rect class="grass" y="34" width="680" height="86"/><rect class="lane" x="0" y="${LANE-26}" width="680" height="52"/>`;
+    g+=`<line class="launch" x1="${X(0)}" y1="40" x2="${X(0)}" y2="112"/>`;
+    for(let t=2;t<=DMAX;t+=2)g+=`<line class="tick" x1="${X(t)}" y1="110" x2="${X(t)}" y2="116"/>`;
+    g+=[0,1,2].map(i=>`<path class="gust" style="animation-delay:${-i*.9}s" d="M${60+i*210} ${46+(i%2)*56}c30-6 60 6 90 0"/>`).join('');
+    $('lawn-env').innerHTML=g;
+  }
+  // One throw: the plane's density, scaled to its own peak, with its true average.
+  function one(){
+    const p=P(),pts=[];let peak=0;
+    for(let i=0;i<=280;i++){const x=DMAX*i/280,y=p.pdf(x);pts.push([x,y]);peak=Math.max(peak,y);}
+    const Y=y=>72-y/peak*58,d=`M${X(0)} 72`+pts.map(([x,y])=>`L${X(x).toFixed(1)} ${Y(y).toFixed(1)}`).join('')+`L${X(DMAX)} 72Z`;
+    $('one-desc').textContent=p.why;
+    $('one-g').innerHTML=`<line class="axis" x1="${AX0}" y1="72" x2="${AX1}" y2="72"/><path class="src" d="${d}"/><line class="mu" x1="${X(p.mu)}" y1="8" x2="${X(p.mu)}" y2="72"/>`;
+  }
+  function axis(){
+    let g=`<line class="axis" x1="${AX0}" y1="${BASE}" x2="${AX1}" y2="${BASE}"/>`;
+    for(let t=0;t<=DMAX;t+=2)g+=`<text class="axis-label" x="${X(t)}" y="146" text-anchor="middle">${t}${t===DMAX?' m':''}</text>`;
+    $('sc-axis').innerHTML=g;
+  }
+  // The zone: a band with two handles. The elements persist, so a focused handle keeps focus while it moves.
+  function drawZone(){
+    const a=X(zone.lo),b=X(zone.hi);
+    $('zone').setAttribute('x',a.toFixed(1));$('zone').setAttribute('width',Math.max(0,b-a).toFixed(1));
+    for(const [id,v,x] of [['h-lo',zone.lo,a],['h-hi',zone.hi,b]]){
+      const h=$(id);h.querySelector('.hit').setAttribute('x',(x-12).toFixed(1));h.querySelector('.grip').setAttribute('x',(x-3).toFixed(1));
+      h.setAttribute('aria-valuenow',v.toFixed(1));h.setAttribute('aria-valuetext',m1(v));
     }
-    ctx.stroke();
-    // mean marker
-    var mux=ml+pw*((s.mu-pr[0])/(pr[1]-pr[0]));
-    ctx.strokeStyle='#bbb'; ctx.setLineDash([3,3]); ctx.beginPath(); ctx.moveTo(mux,topY+22); ctx.lineTo(mux,topY+topH); ctx.stroke(); ctx.setLineDash([]);
-
-    // ---- bottom: histogram of sample means ----
-    var by=topH+34, bh=H-by-26;
-    ctx.fillStyle='#333'; ctx.fillText("distribution of the sample mean ("+B+" samples, n="+n+")", ml, by-8);
-
-    var lo=s.mu-4*se, hi=s.mu+4*se;
-    // clamp to data extremes a touch
-    for(i=0;i<B;i++){if(means[i]<lo)lo=means[i]; if(means[i]>hi)hi=means[i];}
-    var nb=40, binw=(hi-lo)/nb, counts=new Array(nb).fill(0);
-    for(i=0;i<B;i++){var b=Math.floor((means[i]-lo)/binw); if(b<0)b=0; if(b>=nb)b=nb-1; counts[b]++;}
-    var cmax=0; for(i=0;i<nb;i++)cmax=Math.max(cmax,counts[i]);
-    // overlay normal peak in counts
-    var peak=normPdf(s.mu,s.mu,se)*B*binw; cmax=Math.max(cmax,peak);
-
-    var pw2=W-ml-mr;
-    function X(v){return ml+pw2*((v-lo)/(hi-lo));}
-    function Y(c){return by+bh - (c/cmax)*bh;}
-    // bars
-    ctx.fillStyle='#9cc3e6';
-    for(i=0;i<nb;i++){
-      var x0=X(lo+i*binw), x1=X(lo+(i+1)*binw);
-      ctx.fillRect(x0, Y(counts[i]), Math.max(1,x1-x0-1), by+bh-Y(counts[i]));
-    }
-    // normal overlay
-    ctx.strokeStyle='#c0392b'; ctx.lineWidth=2; ctx.beginPath();
-    for(i=0;i<=160;i++){
-      var xv=lo+(hi-lo)*i/160, cc=normPdf(xv,s.mu,se)*B*binw;
-      var X2=X(xv), Y2=Y(cc);
-      if(i===0)ctx.moveTo(X2,Y2); else ctx.lineTo(X2,Y2);
-    }
-    ctx.stroke();
-    // axis baseline + mean line + ticks
-    ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ml,by+bh); ctx.lineTo(W-mr,by+bh); ctx.stroke();
-    ctx.strokeStyle='#888'; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(X(s.mu),by); ctx.lineTo(X(s.mu),by+bh); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle='#555'; ctx.font="11px 'Courier New',monospace";
-    ctx.fillText("μ="+s.mu.toFixed(2), X(s.mu)+3, by+12);
-    ctx.fillText(lo.toFixed(2), ml, by+bh+14);
-    ctx.fillText(hi.toFixed(2), W-mr-30, by+bh+14);
-
-    document.getElementById('note').textContent =
-      (n<=2 ? "With n="+n+" the sample mean still looks like the source. "
-            : "With n="+n+" the sample mean is already close to the red normal curve. ")
-      + "The bell narrows as σ/√n: bigger samples give more precise means.";
+    $('zone-line').textContent=`Your zone: ${m1(zone.lo)} to ${m1(zone.hi)}, ${m1(zone.hi-zone.lo)} wide.`;
+    $('scores-desc').textContent=`Where 1,000 scores land. Your zone runs from ${m1(zone.lo)} to ${m1(zone.hi)}.`;
+  }
+  function setZone(what,lo,hi){
+    if(what==='lo')zone.lo=Math.max(0,Math.min(snap(lo),zone.hi-MINW));
+    else if(what==='hi')zone.hi=Math.min(DMAX,Math.max(snap(hi),zone.lo+MINW));
+    else{const w=zone.hi-zone.lo,l=Math.max(0,Math.min(DMAX-w,snap(lo)));zone.lo=l;zone.hi=+(l+w).toFixed(1);}
+    drawZone();
   }
 
-  document.getElementById('n').addEventListener('input',draw);
-  document.getElementById('resample').addEventListener('click',draw);
-  document.getElementById('seg').addEventListener('click',function(e){
-    if(e.target.tagName!=='BUTTON')return;
-    [].forEach.call(this.children,function(b){b.classList.remove('on');});
-    e.target.classList.add('on'); dist=e.target.getAttribute('data-d'); draw();
+  // Scores chart: the first k scores as a histogram, on the same axis as one throw. Bins and height are fixed for
+  // the round, so bars only grow as scores arrive.
+  function overflow(id,h,unit){
+    const parts=[];if(h.below)parts.push(`${h.below} below 0 m`);if(h.above)parts.push(`${h.above} beyond ${DMAX} m`);
+    $(id).hidden=!parts.length;$(id).textContent=`Off chart: ${parts.join('; ')} (${unit}). Included in the calculations.`;
+  }
+  function bins(){const r=rd(),b=Math.min(.5,Math.max(.05,r.theory.width/14)),nb=Math.ceil(DMAX/b);return {b,nb};}
+  function bars(k){
+    const r=rd(),{b}=bins(),full=M.histogram(r.scores,b),shown=k===M.SCORES?full:M.histogram(r.scores.slice(0,k),b);
+    const peak=Math.max(M.SCORES*b*M.npdf(P().mu,P().mu,se()),...full.counts),Y=c=>BASE-c/peak*116,cur=shown.counts;
+    overflow('off-chart',shown,'scores');
+    $('sc-bars').innerHTML=cur.map((c,i)=>c?`<rect class="bar" x="${X(i*b).toFixed(1)}" y="${Y(c).toFixed(1)}" width="${Math.max(1,X((i+1)*b)-X(i*b)-.8).toFixed(1)}" height="${(BASE-Y(c)).toFixed(1)}"/>`:'').join('');
+    return {b,Y};
+  }
+  function overlay(Y,b){
+    const p=P(),s=se(),r=rd(),lo=Math.max(0,p.mu-4.5*s),hi=Math.min(DMAX,p.mu+4.5*s);let path='';
+    for(let i=0;i<=200;i++){const x=lo+(hi-lo)*i/200;path+=(i?'L':'M')+X(x).toFixed(1)+' '+Y(M.SCORES*b*M.npdf(x,p.mu,s)).toFixed(1);}
+    $('sc-over').innerHTML=`<rect class="par" x="${X(r.par.lo).toFixed(1)}" y="12" width="${(X(r.par.hi)-X(r.par.lo)).toFixed(1)}" height="${BASE-12}"/><path class="bell" d="${path}"/><line class="mu" x1="${X(p.mu)}" y1="10" x2="${X(p.mu)}" y2="${BASE}"/>`;
+  }
+
+  // Fly: one round of n throws on the lawn, then the 1,000 scores arrive in batches, then the verdict.
+  function fly(){
+    if(phase!=='place')return;
+    phase='flying';$('fly').disabled=true;$('scores').classList.add('locked');
+    const r=rd(),token={};anim=token;
+    $('feedback-title').textContent='';$('feedback-text').textContent=`Flying: each score averages ${r.n} ${throwsWord(r.n)}.`;
+    lawnRound(token,()=>{
+      if(!raf||reduced()){bars(M.SCORES);verdict();return;}
+      let k=0;const tick=()=>{if(anim!==token)return;k=Math.min(M.SCORES,k+100);bars(k);if(k<M.SCORES)setTimeout(tick,70);else verdict();};
+      tick();
+    });
+  }
+  function lawnRound(token,done){
+    const r=rd(),throws=r.throws,n=r.n,avg=r.scores[0],jit=i=>((i*37)%29-14)*1.4,marks=throws.map((d,i)=>({x:X(d),y:LANE+jit(i),outside:d<0?-1:d>DMAX?1:0}));
+    $('lawn-marks').innerHTML=marks.map(f=>f.outside?`<path class="landing pending" d="M${f.x} ${f.y}l${-8*f.outside} -5v10Z"/>`:`<circle class="landing pending" cx="${f.x.toFixed(1)}" cy="${f.y.toFixed(1)}" r="${n>40?3:4}"/>`).join('')+`<line class="avg pending" x1="${X(avg).toFixed(1)}" y1="${LANE-26}" x2="${X(avg).toFixed(1)}" y2="${LANE+26}"/>`;
+    const dots=[...$('lawn-marks').querySelectorAll('.landing')],avgLine=$('lawn-marks').querySelector('.avg');
+    if(avg<0||avg>DMAX)avgLine.setAttribute('visibility','hidden');
+    const finish=()=>{dots.forEach(e=>e.classList.remove('pending'));avgLine.classList.remove('pending');$('lawn-planes').innerHTML='';
+      overflow('lawn-overflow',M.histogram(throws,.5),'throws; edge arrows');
+      $('lawn-desc').textContent=n===1?`One throw landed at ${m1(avg)}: that is one score.`:`${n} throws landed between ${m1(Math.min(...throws))} and ${m1(Math.max(...throws))}. Their average, one score, is ${m1(avg)}.`;done();};
+    if(!raf||reduced())return finish();
+    const stagger=Math.min(110,1200/n),dur=650,t0=now();
+    $('lawn-planes').innerHTML=marks.map(()=>`<path class="plane" d="M-8 -3.5 8 0-8 3.5-5 0Z" style="display:none"/>`).join('');
+    const planes=[...$('lawn-planes').querySelectorAll('.plane')];
+    const step=()=>{
+      if(anim!==token)return;
+      const t=now()-t0;let all=true;
+      marks.forEach((f,k)=>{
+        const u=(t-k*stagger)/dur,pl=planes[k];
+        if(u<0){all=false;return;}
+        if(u>=1){if(pl.style.display!=='none'){pl.style.display='none';dots[k].classList.remove('pending');}return;}
+        all=false;
+        const x0=X(0),y0=LANE-8,cx=(x0+f.x)/2,cy=LANE-50-(f.x-x0)*.04,a=1-u;
+        const x=a*a*x0+2*a*u*cx+u*u*f.x,y=a*a*y0+2*a*u*cy+u*u*f.y,dx=2*a*(cx-x0)+2*u*(f.x-cx),dy=2*a*(cy-y0)+2*u*(f.y-cy);
+        pl.style.display='';pl.setAttribute('transform',`translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${(Math.atan2(dy,dx)*180/Math.PI).toFixed(0)})`);
+      });
+      if(all){finish();return;}
+      raf(step);
+    };
+    raf(step);
+  }
+
+  // The verdict judges the 1,000 scores on screen against the zone on screen. After a miss it names the cause.
+  function verdict(){
+    anim=null;phase='done';
+    const r=rd(),p=P(),s=se(),j=M.judge(r,zone.lo,zone.hi),{b,Y}=bars(M.SCORES);overlay(Y,b);result=j;
+    if(j.kind==='win')wins++;
+    // Where the missed scores went: past the left edge, past the right edge, or both.
+    const left=r.scores.filter(v=>v<zone.lo).length,right=r.scores.filter(v=>v>zone.hi).length;
+    const sides=`${left} ${left===1?'score':'scores'} landed short of it and ${right} past it`;
+    const miss=j.width>=r.par.width?`It is wide enough, but ${sides}: slide it ${left>right?'left':'right'}.`:`It is too narrow: ${sides}.`;
+    const spread=r.n===1?`With 1 throw a score is a single throw, so their distributions have the same shape.`
+      :`With ${r.n} throws per score, scores vary by about ${m1(s)} either side of the plane’s average of ${m1(p.mu)}: ${m1(p.sd)} ÷ √${r.n}.`;
+    const parText=`For this batch, the narrowest zone that catches 900 runs from ${m1(r.par.lo)} to ${m1(r.par.hi)}, ${m1(r.par.width)} wide.`;
+    const [label,title,text]=j.kind==='win'
+      ?[`${j.caught} of 1,000`,`On target: ${j.caught} of 1,000 scores in a ${m1(j.width)} zone.`,`${parText} ${spread}`]
+      :j.kind==='over'
+      ?[`${j.caught} of 1,000, too wide`,`Caught ${j.caught}, but the zone is ${m1(j.width)} wide.`,`${parText} Anything up to ${m1(r.allow)} is on target. ${spread}`]
+      :[`${j.caught} of 1,000`,`Only ${j.caught} of 1,000 scores landed in your zone.`,`${miss} ${parText} ${spread}`];
+    $('scores-band').classList.add('outcome-'+j.kind);$('outcome-label').textContent=label;$('outcome-label').className='corner corner-right '+j.kind;
+    $('feedback-title').textContent=title;$('feedback-text').textContent=text+' A new batch can put a different number in the same zone.';
+    const mean=r.scores.reduce((a,v)=>a+v,0)/M.SCORES,obs=Math.sqrt(r.scores.reduce((a,v)=>a+(v-mean)**2,0)/(M.SCORES-1));
+    $('readout').textContent=`σ = ${p.sd.toFixed(2)} m, so the theoretical SE = σ/√n = ${p.sd.toFixed(2)}/√${r.n} = ${s.toFixed(3)} m. Observed SD of the 1,000 sample means = ${obs.toFixed(3)} m. Normal approximation (can be poor for small n): about 90% of sample means within μ ± 1.645·SE = ${(p.mu-1.645*s).toFixed(2)} to ${(p.mu+1.645*s).toFixed(2)} m.`;
+    $('scores-desc').textContent=`1,000 scores. ${title} ${parText}`;
+    const last=idx===M.ROUNDS-1;$('fly').hidden=true;$('next').hidden=false;$('next-label').textContent=last?'Next meet':'Next round';$('next').dataset.end=last?'1':'';
+    if(last)$('feedback-text').textContent+=` Meet over: on target in ${wins} of ${M.ROUNDS} rounds.`;
+    status();$('takeaway').hidden=false;$('next').focus({preventScroll:true});
+  }
+
+  // Dragging: the handles resize the zone, the band moves it. Arrow keys move a focused handle by 0.1 m (Shift: 0.5 m).
+  const svg=$('scores');let drag=null;
+  const toD=clientX=>{const r=svg.getBoundingClientRect();return ((clientX-r.left)/r.width*680-AX0)/(AX1-AX0)*DMAX;};
+  svg.addEventListener('pointerdown',e=>{
+    if(phase!=='place')return;const t=e.target.closest('[data-drag]');if(!t)return;
+    drag={what:t.dataset.drag,start:toD(e.clientX),lo:zone.lo,hi:zone.hi};try{svg.setPointerCapture(e.pointerId);}catch(err){}e.preventDefault();
   });
-  draw();
+  svg.addEventListener('pointermove',e=>{if(!drag)return;const dx=toD(e.clientX)-drag.start;setZone(drag.what,drag.lo+dx,drag.hi+dx);});
+  const end=()=>{drag=null;};svg.addEventListener('pointerup',end);svg.addEventListener('pointercancel',end);
+  for(const [id,what] of [['h-lo','lo'],['h-hi','hi']])$(id).addEventListener('keydown',e=>{
+    if(phase!=='place')return;
+    const step={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1,PageDown:-5,PageUp:5}[e.key];if(step===undefined)return;
+    e.preventDefault();const dv=step*(e.shiftKey?.5:M.STEP);setZone(what,zone.lo+dv,zone.hi+dv);
+  });
+
+  // Free play (course mode): the original widget's controls. Pick a source and n, draw 1,000 sample means, compare the
+  // theoretical SE with the observed SD. Uses fresh randomness on every change, as the original did.
+  let fPlane='glider';
+  const PLANE_ICON={
+    tumbler:'<path d="M3 24l5-3-1 5zM9 21c3-2 2-6 6-7s3-5 7-6"/><path d="M22 4l5 2-4 3z"/>',
+    glider:'<path d="M3 22c6 0 10-2 14-8"/><path d="M17 8l11-3-5 10-3-4z"/>',
+    looper:'<path d="M3 24c4 0 6-3 6-6a4 4 0 1 1 8 0c0 3-3 3-3 0 0-5 5-9 10-10"/><path d="M24 8l4-1-2 4z"/>'};
+  $('f-planes').innerHTML=Object.entries(M.PLANES).map(([k,p])=>`<label class="option"><input type="radio" name="f-plane" value="${k}"><span><svg class="icon" viewBox="0 0 30 30" aria-hidden="true">${PLANE_ICON[k]}</svg><b>${p.name}</b><small>${p.course}</small></span></label>`).join('');
+  function freePlay(){
+    const p=M.PLANES[fPlane],n=+$('f-n').value,s=p.sd/Math.sqrt(n),r=Math.random;
+    document.querySelectorAll('input[name=f-plane]').forEach(e=>{e.checked=e.value===fPlane;});
+    $('fv-n').textContent=n;$('f-n').setAttribute('aria-valuetext',`n = ${n}`);
+    const means=Array.from({length:M.SCORES},()=>{let t=0;for(let j=0;j<n;j++)t+=p.draw(r);return t/n;});
+    const mean=means.reduce((a,v)=>a+v,0)/M.SCORES,obs=Math.sqrt(means.reduce((a,v)=>a+(v-mean)**2,0)/(M.SCORES-1));
+    const b=Math.min(.5,Math.max(.05,s/3)),h=M.histogram(means,b),c=h.counts,B2=148;
+    overflow('f-off-chart',h,'sample means');
+    const peak=Math.max(M.SCORES*b*M.npdf(p.mu,p.mu,s),...c),Y=v=>B2-v/peak*134;
+    let g=`<line class="axis" x1="${AX0}" y1="${B2}" x2="${AX1}" y2="${B2}"/>`;
+    c.forEach((v,i)=>{if(v)g+=`<rect class="bar" x="${X(i*b).toFixed(1)}" y="${Y(v).toFixed(1)}" width="${Math.max(1,X((i+1)*b)-X(i*b)-.8).toFixed(1)}" height="${(B2-Y(v)).toFixed(1)}"/>`;});
+    let src='',sp=0;for(let i=0;i<=280;i++)sp=Math.max(sp,p.pdf(DMAX*i/280));
+    for(let i=0;i<=280;i++){const x=DMAX*i/280;src+=(i?'L':'M')+X(x).toFixed(1)+' '+(B2-p.pdf(x)/sp*60).toFixed(1);}
+    const lo=Math.max(0,p.mu-4.5*s),hi=Math.min(DMAX,p.mu+4.5*s);let bell='';
+    for(let i=0;i<=200;i++){const x=lo+(hi-lo)*i/200;bell+=(i?'L':'M')+X(x).toFixed(1)+' '+Y(M.SCORES*b*M.npdf(x,p.mu,s)).toFixed(1);}
+    g+=`<path class="src-line" d="${src}"/><path class="bell" d="${bell}"/><line class="mu" x1="${X(p.mu)}" y1="8" x2="${X(p.mu)}" y2="${B2}"/>`;
+    for(let t=0;t<=DMAX;t+=2)g+=`<text class="axis-label" x="${X(t)}" y="166" text-anchor="middle">${t}${t===DMAX?' m':''}</text>`;
+    $('f-g').innerHTML=g;
+    $('f-desc').textContent=`1,000 sample means of ${n} ${throwsWord(n)} of ${p.name}. They centre on ${m2(p.mu)} with observed SD ${obs.toFixed(3)} m.`;
+    $('f-readout').textContent=`σ = ${p.sd.toFixed(2)} m and n = ${n}, so the theoretical SE = σ/√n = ${p.sd.toFixed(2)}/√${n} = ${s.toFixed(3)} m. Observed SD of the 1,000 sample means = ${obs.toFixed(3)} m.`;
+  }
+  $('f-planes').addEventListener('change',e=>{fPlane=e.target.value;freePlay();});
+  $('f-n').addEventListener('input',freePlay);$('f-fly').addEventListener('click',freePlay);
+
+  function randomSeed(){try{return crypto.getRandomValues(new Uint32Array(1))[0];}catch(e){return (Date.now()^Math.floor(Math.random()*4294967296))>>>0;}}
+  const newMeet=()=>{let next=randomSeed();if(next===seed||next===1)next=(next+2)>>>0;meets++;startMeet(next);};
+  $('fly').addEventListener('click',fly);
+  $('next').addEventListener('click',()=>{if($('next').dataset.end==='1')newMeet();else{idx++;startRound();}});
+  $('new-meet').addEventListener('click',newMeet);
+  $('reset').addEventListener('click',()=>startMeet(seed));
+  const params=new URLSearchParams(location.search),raw=params.get('seed'),n=raw===null?1:Number(raw);
+  if(COURSE||params.get('embed')==='1')document.body.classList.add('embedded');
+  if(COURSE){
+    document.body.classList.add('course');
+    // Course pages embed free play in its own frame (?view=free), directly above the graded check; the game frame leaves it out.
+    document.body.classList.add(new URLSearchParams(location.search).get('view')==='free'?'free-only':'game-only');
+    const fit=()=>{try{const f=window.frameElement,mn=document.querySelector('main');if(f&&mn){const h=Math.ceil(mn.getBoundingClientRect().bottom+window.scrollY+8);if(Math.abs(f.offsetHeight-h)>4)f.style.height=h+'px';}}catch(e){}};
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(fit).observe(document.body);
+    window.addEventListener('load',fit);
+  }
+  if(COURSE)freePlay();
+  lawn();startMeet(Number.isInteger(n)&&n>=0&&n<=4294967295?n:1);
 })();
 </script>
-</body>
-</html>
+</body></html>
