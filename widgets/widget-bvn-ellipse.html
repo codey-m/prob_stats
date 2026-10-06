@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bivariate normal: correlation and conditioning</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,'Times New Roman',serif;background:#FAFAF8;color:#1A1A1A;padding:16px}
+  #app{max-width:780px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin-bottom:4px}
+  .sub{font-size:13px;color:#555;margin-bottom:14px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 16px;margin-bottom:12px}
+  .ctrl label{display:block;font-size:12px;font-family:'Courier New',monospace;color:#444;margin-bottom:3px}
+  .ctrl input{width:100%}
+  .ctrl .val{color:#0b5cab;font-weight:700}
+  canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:10px}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#333;margin-bottom:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:22px;height:0;display:inline-block;flex:none}
+  .sw-ell{border-top:3px solid #0b5cab}
+  .sw-slice{border-top:3px solid #1A1A1A}
+  .sw-cond{border-top:3px dashed #9A4A00}
+  .readout{font-size:13px;margin-bottom:8px}
+  .v{font-weight:700;font-family:'Courier New',monospace;color:#0b5cab}
+  .note{font-size:12px;color:#555;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Bivariate normal: correlation shapes the cloud, conditioning narrows it</h1>
+  <p class="sub">The ellipses are equal-probability contours of a centered 2-D Gaussian. The vertical line is the slice X = x&#8320;, and the bell-shaped curve opening to the right of it is the conditional distribution of Y given that slice.</p>
+
+  <div class="controls">
+    <div class="ctrl"><label>&sigma;<sub>x</sub> = <span class="val" id="vSx">1.0</span></label><input id="sx" type="range" min="0.5" max="3" step="0.05" value="1.5"></div>
+    <div class="ctrl"><label>&sigma;<sub>y</sub> = <span class="val" id="vSy">1.0</span></label><input id="sy" type="range" min="0.5" max="3" step="0.05" value="1.5"></div>
+    <div class="ctrl"><label>&rho; = <span class="val" id="vR">0.0</span></label><input id="rho" type="range" min="-0.95" max="0.95" step="0.01" value="0.6"></div>
+    <div class="ctrl"><label>slice x&#8320; = <span class="val" id="vX">0.0</span></label><input id="x0" type="range" min="-4" max="4" step="0.1" value="1.5"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw sw-ell"></i> contours of the joint distribution</span>
+    <span><i class="sw sw-slice"></i> the slice X = x&#8320;</span>
+    <span><i class="sw sw-cond"></i> conditional distribution of Y</span>
+  </div>
+
+  <p class="note">Every element is also labelled directly on the plot, and the three families differ in line weight and dash pattern, so they can be told apart without relying on colour.</p>
+
+  <canvas id="cv" width="700" height="470" role="img" aria-label="Contour plot of a bivariate normal distribution with a vertical slice and the resulting conditional distribution."></canvas>
+
+  <div class="readout" aria-live="polite">
+    E[Y | X=x&#8320;] = <span class="v" id="cm"></span> &nbsp;|&nbsp; SD(Y | X=x&#8320;) = <span class="v" id="csd"></span> &nbsp;|&nbsp; marginal SD(Y) = <span class="v" id="msd"></span>
+  </div>
+  <p class="note" id="note"></p>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var RANGE=6.5; // world coords -RANGE..RANGE
+  var C_ELL='#0b5cab', C_ELL2='#5C8CC2', C_SLICE='#1A1A1A', C_COND='#9A4A00';
+  function normPdf(x,mu,sd){return Math.exp(-(x-mu)*(x-mu)/(2*sd*sd))/(sd*Math.sqrt(2*Math.PI));}
+
+  function draw(){
+    var sx=+document.getElementById('sx').value,
+        sy=+document.getElementById('sy').value,
+        rho=+document.getElementById('rho').value,
+        x0=+document.getElementById('x0').value;
+    document.getElementById('vSx').textContent=sx.toFixed(2);
+    document.getElementById('vSy').textContent=sy.toFixed(2);
+    document.getElementById('vR').textContent=rho.toFixed(2);
+    document.getElementById('vX').textContent=x0.toFixed(1);
+
+    var W=cv.width,H=cv.height;
+    var size=Math.min(W,H)-20, ox=(W-size)/2, oy=(H-size)/2;
+    var cx=ox+size/2, cy=oy+size/2, sc=size/(2*RANGE);
+    function SX(x){return cx+x*sc;} function SY(y){return cy-y*sc;}
+
+    ctx.clearRect(0,0,W,H);
+    // axes grid
+    ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+    for(var g=-6;g<=6;g+=2){ctx.beginPath();ctx.moveTo(SX(g),oy);ctx.lineTo(SX(g),oy+size);ctx.stroke();ctx.beginPath();ctx.moveTo(ox,SY(g));ctx.lineTo(ox+size,SY(g));ctx.stroke();}
+    ctx.strokeStyle='#ccc'; ctx.beginPath();ctx.moveTo(ox,cy);ctx.lineTo(ox+size,cy);ctx.stroke();ctx.beginPath();ctx.moveTo(cx,oy);ctx.lineTo(cx,oy+size);ctx.stroke();
+    ctx.fillStyle='#767676';ctx.font="11px 'Courier New',monospace";ctx.fillText("x",ox+size-10,cy-4);ctx.fillText("y",cx+4,oy+10);
+
+    // covariance ellipses k=1,2 via (sx cosθ, sy(ρ cosθ + sqrt(1-ρ²) sinθ))*k
+    var r2=Math.sqrt(1-rho*rho);
+    [2,1].forEach(function(k){
+      ctx.strokeStyle = k===1 ? C_ELL : C_ELL2;
+      ctx.lineWidth = k===1 ? 2 : 1.5;
+      if(k===2)ctx.setLineDash([2,3]); else ctx.setLineDash([]);
+      ctx.beginPath();
+      for(var i=0;i<=120;i++){
+        var th=2*Math.PI*i/120;
+        var X=k*sx*Math.cos(th);
+        var Y=k*sy*(rho*Math.cos(th)+r2*Math.sin(th));
+        if(i===0)ctx.moveTo(SX(X),SY(Y)); else ctx.lineTo(SX(X),SY(Y));
+      }
+      ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+    });
+
+    // conditional-mean (regression) line E[Y|X=x] = rho*(sy/sx)*x
+    var slope=rho*(sy/sx);
+    ctx.strokeStyle=C_COND; ctx.lineWidth=1.5; ctx.setLineDash([7,5]);
+    ctx.beginPath(); ctx.moveTo(SX(-RANGE),SY(slope*-RANGE)); ctx.lineTo(SX(RANGE),SY(slope*RANGE)); ctx.stroke(); ctx.setLineDash([]);
+
+    // slice line X=x0
+    ctx.strokeStyle=C_SLICE; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(SX(x0),oy); ctx.lineTo(SX(x0),oy+size); ctx.stroke();
+
+    // conditional distribution of Y | X=x0
+    var mc=slope*x0, csd=sy*r2;
+    // draw density bulging to the right of the slice line
+    var peak=normPdf(mc,mc,csd), amp=Math.min(70, sc*1.6); // px amplitude
+    ctx.strokeStyle=C_COND; ctx.lineWidth=2.5; ctx.fillStyle='rgba(154,74,0,0.12)';
+    ctx.beginPath();
+    var started=false, basePx=SX(x0);
+    for(var i=0;i<=120;i++){
+      var y=mc-4*csd+(8*csd)*i/120;
+      var px=basePx + (normPdf(y,mc,csd)/peak)*amp;
+      var py=SY(y);
+      if(!started){ctx.moveTo(basePx,py);ctx.lineTo(px,py);started=true;} else ctx.lineTo(px,py);
+    }
+    ctx.lineTo(basePx,SY(mc+4*csd)); ctx.closePath(); ctx.fill(); ctx.stroke();
+    // conditional mean point + ±sd ticks on the slice
+    ctx.fillStyle=C_COND;
+    ctx.beginPath();ctx.arc(SX(x0),SY(mc),4,0,2*Math.PI);ctx.fill();
+    ctx.strokeStyle=C_COND;ctx.lineWidth=1.5;
+    [mc-csd,mc+csd].forEach(function(yy){ctx.beginPath();ctx.moveTo(SX(x0)-5,SY(yy));ctx.lineTo(SX(x0)+5,SY(yy));ctx.stroke();});
+
+    // direct labels, so each element is identifiable without colour
+    ctx.font="12px Georgia,'Times New Roman',serif";
+    function label(text,px,py,color,align){
+      var w=ctx.measureText(text).width;
+      var tx=align==='right' ? px-w-4 : px+4;
+      tx=Math.min(Math.max(tx, ox+2), ox+size-w-2);
+      var ty=Math.min(Math.max(py, oy+12), oy+size-4);
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.fillRect(tx-2,ty-11,w+4,14);
+      ctx.fillStyle=color; ctx.fillText(text,tx,ty);
+    }
+    label('X = x₀', SX(x0), oy+14, C_SLICE, x0>2 ? 'right' : 'left');
+    label('Y | X = x₀', basePx+amp, SY(mc)-6, C_COND, x0>2 ? 'right' : 'left');
+    // sit just above the top of the outer contour, which is clear for any rho
+    label('joint contours', SX(2*sx*rho), SY(2*sy)-8, C_ELL, x0>2 ? 'right' : 'left');
+
+    document.getElementById('cm').textContent=mc.toFixed(2);
+    document.getElementById('csd').textContent=csd.toFixed(2);
+    document.getElementById('msd').textContent=sy.toFixed(2);
+    document.getElementById('note').textContent=
+      "Conditioning on X shrinks the spread of Y from "+sy.toFixed(2)+" (marginal) to "+csd.toFixed(2)+
+      " = σ_y·√(1−ρ²). The stronger the correlation |ρ|, the tighter the conditional slice, and that reduction in uncertainty is exactly what an estimate of Y from X buys you.";
+
+    // live text alternative for screen readers
+    var tilt = rho>0.05 ? "tilted upward to the right" : (rho<-0.05 ? "tilted downward to the right" : "axis aligned, with no tilt");
+    cv.setAttribute('aria-label',
+      "Contour plot of a centered bivariate normal distribution. The ellipses are "+tilt+
+      ", with standard deviation "+sx.toFixed(2)+" along x and "+sy.toFixed(2)+" along y and correlation "+rho.toFixed(2)+". "+
+      "A vertical line marks the slice at x equals "+x0.toFixed(1)+". "+
+      "Along that slice, Y is normal with conditional mean "+mc.toFixed(2)+" and conditional standard deviation "+csd.toFixed(2)+", "+
+      "compared with a marginal standard deviation of "+sy.toFixed(2)+". "+
+      "Conditioning therefore reduces the spread of Y by "+((1-csd/sy)*100).toFixed(0)+" percent.");
+  }
+
+  ['sx','sy','rho','x0'].forEach(function(id){document.getElementById(id).addEventListener('input',draw);});
+  draw();
+})();
+</script>
+</body>
+</html>

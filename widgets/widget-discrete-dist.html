@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Discrete distributions: PMF and CDF</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,'Times New Roman',serif;background:#FAFAF8;color:#1A1A1A;padding:16px}
+  #app{max-width:780px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin-bottom:4px}
+  .sub{font-size:13px;color:#666;margin-bottom:14px}
+  .controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;margin-bottom:12px}
+  .seg button{font-family:'Courier New',monospace;font-size:12px;padding:5px 10px;border:1px solid #CCC;background:#fff;cursor:pointer;border-radius:4px;margin-right:4px}
+  .seg button.on{background:#1A1A1A;color:#fff;border-color:#1A1A1A}
+  .ctrl{display:none}
+  .ctrl.show{display:inline-flex;align-items:center}
+  .ctrl label{font-size:12px;font-family:'Courier New',monospace;color:#444;margin-right:6px}
+  .ctrl .val{font-family:'Courier New',monospace;font-size:12px;color:#0b5cab;font-weight:700}
+  .chk{display:none;font-family:'Courier New',monospace;font-size:12px;color:#444}
+  .chk.show{display:inline-flex;align-items:center;gap:5px}
+  canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:10px}
+  .readout{font-size:13px;margin-bottom:8px}
+  .v{font-weight:700;font-family:'Courier New',monospace;color:#0b5cab}
+  .note{font-size:12px;color:#888;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Discrete distributions: PMF and CDF</h1>
+  <p class="sub">Pick a distribution and its parameters. The top panel is the probability mass function. The bottom panel is the cumulative distribution function F(k) = P(X &le; k), the probability that the variable comes out at or below k; it steps up by the PMF value at each k and climbs from 0 to 1. The dashed line marks the mean and the bar on the axis marks one standard deviation each way.</p>
+
+  <div class="controls">
+    <div class="seg" id="seg">
+      <button data-d="binomial" class="on">Binomial</button>
+      <button data-d="poisson">Poisson</button>
+      <button data-d="geometric">Geometric</button>
+    </div>
+    <div class="ctrl" id="ctrlN"><label>n = <span class="val" id="vN">20</span></label><input id="n" type="range" min="1" max="60" step="1" value="20"></div>
+    <div class="ctrl" id="ctrlP"><label>p = <span class="val" id="vP">0.50</span></label><input id="p" type="range" min="0.01" max="0.99" step="0.01" value="0.5"></div>
+    <div class="ctrl" id="ctrlLam"><label>&lambda; = <span class="val" id="vLam">4.0</span></label><input id="lam" type="range" min="0.5" max="20" step="0.5" value="4"></div>
+    <div class="ctrl" id="ctrlPg"><label>p = <span class="val" id="vPg">0.30</span></label><input id="pg" type="range" min="0.05" max="0.95" step="0.05" value="0.3"></div>
+    <label class="chk" id="chkWrap"><input type="checkbox" id="pois"> overlay Poisson(&lambda;=np)</label>
+  </div>
+
+  <canvas id="cv" width="700" height="440"></canvas>
+
+  <div class="readout">
+    mean = <span class="v" id="mean"></span> &nbsp;|&nbsp; standard deviation = <span class="v" id="sd"></span>
+  </div>
+  <p class="note" id="note"></p>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var dist='binomial';
+
+  function binomialPMF(n,p){
+    var pmf=new Array(n+1); pmf[0]=Math.pow(1-p,n); var r=p/(1-p);
+    for(var k=1;k<=n;k++) pmf[k]=pmf[k-1]*(n-k+1)/k*r;
+    return pmf;
+  }
+  function poissonPMF(lam,kmax){
+    var pmf=new Array(kmax+1); pmf[0]=Math.exp(-lam);
+    for(var k=1;k<=kmax;k++) pmf[k]=pmf[k-1]*lam/k;
+    return pmf;
+  }
+  function geometricPMF(p,kmax){
+    var pmf=new Array(kmax+1); pmf[0]=0; var v=p;
+    for(var k=1;k<=kmax;k++){ pmf[k]=v; v*=(1-p); }
+    return pmf;
+  }
+
+  function getModel(){
+    if(dist==='binomial'){
+      var n=+document.getElementById('n').value, p=+document.getElementById('p').value;
+      document.getElementById('vN').textContent=n;
+      document.getElementById('vP').textContent=p.toFixed(2);
+      var m={k0:0,kmax:n,pmf:binomialPMF(n,p),mean:n*p,sd:Math.sqrt(n*p*(1-p)),name:'Binomial'};
+      if(document.getElementById('pois').checked){ m.overlayLam=n*p; m.overlay=poissonPMF(n*p,n); }
+      return m;
+    }
+    if(dist==='poisson'){
+      var lam=+document.getElementById('lam').value;
+      document.getElementById('vLam').textContent=lam.toFixed(1);
+      var kmax=Math.max(8,Math.ceil(lam+4*Math.sqrt(lam)));
+      return {k0:0,kmax:kmax,pmf:poissonPMF(lam,kmax),mean:lam,sd:Math.sqrt(lam),name:'Poisson'};
+    }
+    var pg=+document.getElementById('pg').value;
+    document.getElementById('vPg').textContent=pg.toFixed(2);
+    var kmax=Math.min(40,Math.max(8,Math.ceil(Math.log(0.01)/Math.log(1-pg))));
+    return {k0:1,kmax:kmax,pmf:geometricPMF(pg,kmax),mean:1/pg,sd:Math.sqrt(1-pg)/pg,name:'Geometric'};
+  }
+
+  function draw(){
+    var m=getModel();
+    document.getElementById('mean').textContent=m.mean.toFixed(2);
+    document.getElementById('sd').textContent=m.sd.toFixed(2);
+
+    var W=cv.width, H=cv.height, ml=40, mr=16, k;
+    ctx.clearRect(0,0,W,H);
+    var plotW=W-ml-mr, lo=m.k0-0.5, hi=m.kmax+0.5;
+    function X(v){ return ml+plotW*((v-lo)/(hi-lo)); }
+
+    var pmfY0=26, pmfY1=196, cdfY0=252, cdfY1=410;
+    var pmfH=pmfY1-pmfY0, cdfH=cdfY1-cdfY0;
+
+    var pmax=0;
+    for(k=m.k0;k<=m.kmax;k++) if(m.pmf[k]>pmax) pmax=m.pmf[k];
+    if(m.overlay) for(k=0;k<=m.kmax;k++) if(m.overlay[k]>pmax) pmax=m.overlay[k];
+    pmax=pmax||1;
+
+    // ---- PMF panel ----
+    ctx.fillStyle='#333'; ctx.font="12px 'Courier New',monospace";
+    ctx.fillText(m.name+" PMF  p(k)", ml, 16);
+    ctx.fillStyle='#9cc3e6';
+    for(k=m.k0;k<=m.kmax;k++){
+      var x0=X(k-0.5), x1=X(k+0.5), h=(m.pmf[k]/pmax)*pmfH;
+      ctx.fillRect(x0+0.5, pmfY1-h, Math.max(1,x1-x0-1), h);
+    }
+    ctx.strokeStyle='#ccc'; ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(ml,pmfY1); ctx.lineTo(W-mr,pmfY1); ctx.stroke();
+
+    // one-SD bar on the axis
+    var sxl=X(Math.max(lo,m.mean-m.sd)), sxr=X(Math.min(hi,m.mean+m.sd));
+    ctx.strokeStyle='#8a6d3b'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(sxl,pmfY1+6); ctx.lineTo(sxr,pmfY1+6);
+    ctx.moveTo(sxl,pmfY1+3); ctx.lineTo(sxl,pmfY1+9); ctx.moveTo(sxr,pmfY1+3); ctx.lineTo(sxr,pmfY1+9); ctx.stroke();
+    // mean line
+    var mx=X(m.mean);
+    ctx.strokeStyle='#888'; ctx.setLineDash([4,3]); ctx.beginPath(); ctx.moveTo(mx,pmfY0); ctx.lineTo(mx,pmfY1); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#555'; ctx.font="11px 'Courier New',monospace";
+    ctx.fillText("mean="+m.mean.toFixed(2), Math.min(mx+4,W-mr-92), pmfY0+10);
+
+    // Poisson overlay (Binomial only)
+    if(m.overlay){
+      ctx.strokeStyle='#c0392b'; ctx.fillStyle='#c0392b'; ctx.lineWidth=2; ctx.beginPath();
+      for(k=0;k<=m.kmax;k++){ var xx=X(k), yy=pmfY1-(m.overlay[k]/pmax)*pmfH; if(k===0)ctx.moveTo(xx,yy); else ctx.lineTo(xx,yy); }
+      ctx.stroke();
+      for(k=0;k<=m.kmax;k++){ var xd=X(k), yd=pmfY1-(m.overlay[k]/pmax)*pmfH; ctx.beginPath(); ctx.arc(xd,yd,2,0,2*Math.PI); ctx.fill(); }
+      ctx.fillStyle='#c0392b'; ctx.font="11px 'Courier New',monospace";
+      ctx.fillText("Poisson(λ="+m.overlayLam.toFixed(2)+")", ml+4, pmfY0+10);
+    }
+
+    // ---- CDF panel ----
+    ctx.fillStyle='#333'; ctx.font="12px 'Courier New',monospace";
+    ctx.fillText(m.name+" CDF  F(k) = P(X ≤ k)", ml, cdfY0-10);
+    ctx.strokeStyle='#eee'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(ml,cdfY0); ctx.lineTo(W-mr,cdfY0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ml,cdfY1); ctx.lineTo(W-mr,cdfY1); ctx.stroke();
+    ctx.fillStyle='#999'; ctx.font="10px 'Courier New',monospace";
+    ctx.fillText("1.0", ml-24, cdfY0+3); ctx.fillText("0.0", ml-24, cdfY1+3);
+    function Y(c){ return cdfY1-c*cdfH; }
+    ctx.strokeStyle='#0b5cab'; ctx.lineWidth=2; ctx.beginPath();
+    var lvl=0; ctx.moveTo(ml, Y(0));
+    for(k=m.k0;k<=m.kmax;k++){
+      var xL=X(k-0.5), xR=X(k+0.5);
+      ctx.lineTo(xL, Y(lvl)); lvl+=m.pmf[k];
+      ctx.lineTo(xL, Y(lvl)); ctx.lineTo(xR, Y(lvl));
+    }
+    ctx.lineTo(W-mr, Y(lvl)); ctx.stroke();
+
+    // x ticks
+    ctx.fillStyle='#777'; ctx.font="10px 'Courier New',monospace"; ctx.textAlign='center';
+    var step=Math.max(1,Math.ceil((m.kmax-m.k0+1)/12));
+    for(k=m.k0;k<=m.kmax;k+=step) ctx.fillText(k, X(k), cdfY1+16);
+    ctx.fillText(m.kmax, X(m.kmax), cdfY1+16);
+    ctx.textAlign='left'; ctx.fillText("k", W-mr-4, cdfY1+16);
+
+    var note=document.getElementById('note');
+    if(dist==='binomial'){
+      note.textContent = document.getElementById('pois').checked
+        ? "Red shows Poisson(λ=np). As n grows and p shrinks with λ=np held fixed, the Binomial approaches it. Poisson is covered formally in Module 4."
+        : "Binomial counts successes in n independent trials. Turn on the overlay to preview the Poisson(λ=np) limit, a Module 4 topic.";
+    } else if(dist==='poisson'){
+      note.textContent = "Poisson counts rare events, with mean and variance both equal to λ. It is previewed here and covered formally in Module 4.";
+    } else {
+      note.textContent = "Geometric counts the trials up to and including the first success, so the support is k = 1, 2, 3, ... with mean 1/p.";
+    }
+  }
+
+  function show(el,on){ el.classList.toggle('show', on); }
+  function updateControls(){
+    show(document.getElementById('ctrlN'), dist==='binomial');
+    show(document.getElementById('ctrlP'), dist==='binomial');
+    show(document.getElementById('chkWrap'), dist==='binomial');
+    show(document.getElementById('ctrlLam'), dist==='poisson');
+    show(document.getElementById('ctrlPg'), dist==='geometric');
+  }
+
+  ['n','p','lam','pg'].forEach(function(id){ document.getElementById(id).addEventListener('input',draw); });
+  document.getElementById('pois').addEventListener('change',draw);
+  document.getElementById('seg').addEventListener('click',function(e){
+    if(e.target.tagName!=='BUTTON')return;
+    [].forEach.call(this.children,function(b){b.classList.remove('on');});
+    e.target.classList.add('on'); dist=e.target.getAttribute('data-d'); updateControls(); draw();
+  });
+
+  updateControls(); draw();
+})();
+</script>
+</body>
+</html>

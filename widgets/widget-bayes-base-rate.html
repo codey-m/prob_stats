@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bayes' rule: the base-rate effect</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,'Times New Roman',serif;background:#FAFAF8;color:#1A1A1A;padding:16px}
+  #app{max-width:780px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;letter-spacing:-0.01em;margin-bottom:4px}
+  .sub{font-size:13px;color:#666;margin-bottom:16px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px 18px;margin-bottom:14px}
+  .ctrl label{display:block;font-size:12px;font-family:'Courier New',monospace;color:#444;letter-spacing:.03em;margin-bottom:3px}
+  .ctrl input[type=range]{width:100%}
+  .ctrl .val{font-family:'Courier New',monospace;font-size:12px;color:#0b5cab;font-weight:700}
+  canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:12px}
+  .readout{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;font-size:13px;margin-bottom:10px}
+  .readout .big{grid-column:1/-1;font-size:15px;padding:8px 10px;background:#FFF7EC;border-left:3px solid #b5651d;border-radius:4px}
+  .k{font-family:'Courier New',monospace;color:#666}
+  .v{font-weight:700}
+  .legend{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:#333;margin-bottom:8px}
+  .legend span{display:inline-flex;align-items:center;gap:5px}
+  .sw{width:14px;height:14px;border-radius:2px;display:inline-block;border:1px solid rgba(0,0,0,.25)}
+  .note{font-size:12px;color:#777;line-height:1.5}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Bayes' rule: how the base rate drives P(condition | positive)</h1>
+  <p class="sub">A test for a condition is applied to 1,000 people. Move the sliders and watch how many who test positive actually have the condition.</p>
+
+  <div class="controls">
+    <div class="ctrl"><label>Prior P(D) &mdash; <span class="val" id="vPrior"></span></label><input id="prior" type="range" min="0.001" max="0.5" step="0.001" value="0.01"></div>
+    <div class="ctrl"><label>Sensitivity P(+|D) &mdash; <span class="val" id="vSens"></span></label><input id="sens" type="range" min="0.5" max="1" step="0.005" value="0.95"></div>
+    <div class="ctrl"><label>Specificity P(&minus;|&not;D) &mdash; <span class="val" id="vSpec"></span></label><input id="spec" type="range" min="0.5" max="1" step="0.005" value="0.95"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:#1a5fb4"></i> has D, tests + (TP) &mdash; solid blue</span>
+    <span><i class="sw" style="background:#e8862b"></i> no D, tests + (FP) &mdash; hatched orange</span>
+    <span><i class="sw" style="background:#4a4a4a"></i> has D, tests &minus; (FN) &mdash; dark grey</span>
+    <span><i class="sw" style="background:#d7dce0"></i> no D, tests &minus; (TN) &mdash; light grey</span>
+  </div>
+  <p class="note">The two groups that test positive are drawn first (top-left) and enclosed by a heavy outline, so &ldquo;positive&rdquo; can be read from position and the outline, not colour alone. Within that outline, true positives are solid and false positives are hatched.</p>
+
+  <canvas id="cv" width="700" height="300" role="img" aria-label="Grid of 1000 people showing test outcomes."></canvas>
+
+  <div class="readout">
+    <div class="big">P(D | +) = <span class="v" id="post"></span> &nbsp; &mdash; of everyone who tests positive, this fraction truly has the condition.</div>
+    <div><span class="k">have D:</span> <span class="v" id="cD"></span> &nbsp; <span class="k">test +:</span> <span class="v" id="cPos"></span></div>
+    <div><span class="k">true positives:</span> <span class="v" id="cTP"></span> &nbsp; <span class="k">false positives:</span> <span class="v" id="cFP"></span></div>
+  </div>
+  <p class="note" id="lesson"></p>
+</div>
+
+<script>
+(function(){
+  var N=1000, COLS=50, ROWS=20, cell, pad=2;
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  cell=Math.floor((cv.width - 1)/COLS);
+  var ids=['prior','sens','spec'];
+  // Colour-blind-safe: blue vs orange carries the key TP-vs-FP comparison;
+  // FN/TN are separated by lightness (dark vs light grey), not hue.
+  var COL={TP:'#1a5fb4',FP:'#e8862b',FN:'#4a4a4a',TN:'#d7dce0'};
+
+  function fmtPct(p){return (p*100).toFixed(p<0.1?2:1)+'%';}
+
+  // Diagonal hatch inside one cell so false positives are distinguishable
+  // from true positives without relying on colour.
+  function hatchCell(x,y,w,h){
+    ctx.save();
+    ctx.beginPath(); ctx.rect(x,y,w,h); ctx.clip();
+    ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=1;
+    for(var d=-h; d<w; d+=3){
+      ctx.beginPath(); ctx.moveTo(x+d, y+h); ctx.lineTo(x+d+h, y); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function draw(){
+    var prior=+document.getElementById('prior').value;
+    var sens=+document.getElementById('sens').value;
+    var spec=+document.getElementById('spec').value;
+    document.getElementById('vPrior').textContent=fmtPct(prior);
+    document.getElementById('vSens').textContent=fmtPct(sens);
+    document.getElementById('vSpec').textContent=fmtPct(spec);
+
+    var diseased=Math.round(N*prior);
+    var healthy=N-diseased;
+    var TP=Math.round(diseased*sens), FN=diseased-TP;
+    var FP=Math.round(healthy*(1-spec)), TN=healthy-FP;
+    var pos=TP+FP;
+    var post = pos>0 ? TP/pos : 0;
+
+    // build category array, positives first so the "+" block is contiguous
+    var seq=[];
+    for(var i=0;i<TP;i++)seq.push('TP');
+    for(i=0;i<FP;i++)seq.push('FP');
+    for(i=0;i<FN;i++)seq.push('FN');
+    for(i=0;i<TN;i++)seq.push('TN');
+
+    ctx.clearRect(0,0,cv.width,cv.height);
+    var gridH=ROWS*cell;
+    for(i=0;i<N;i++){
+      var r=Math.floor(i/COLS), c=i%COLS;
+      var x=c*cell+pad/2, y=r*cell+pad/2, w=cell-pad, h=cell-pad;
+      ctx.fillStyle=COL[seq[i]];
+      ctx.fillRect(x, y, w, h);
+      if(seq[i]==='FP') hatchCell(x, y, w, h);   // texture cue, not colour
+    }
+
+    // Structural outline around the contiguous positive block (cells 0..pos-1):
+    // encodes "tests positive" by position, independent of colour.
+    if(pos>0){
+      ctx.strokeStyle='#111'; ctx.lineWidth=2.5;
+      var fullRows=Math.floor(pos/COLS), rem=pos%COLS;
+      if(fullRows>0){
+        ctx.strokeRect(0.5, 0.5, COLS*cell-1, fullRows*cell-1);
+      }
+      if(rem>0){
+        ctx.strokeRect(0.5, fullRows*cell+0.5, rem*cell-1, cell-1);
+      }
+    }
+
+    // colour-independent caption
+    ctx.fillStyle='#333'; ctx.font="13px 'Courier New',monospace";
+    var y2=gridH+22;
+    ctx.fillText("Outlined block (top-left) = "+pos+" positive tests: "+TP+" true (solid) + "+FP+" false (hatched)", 4, y2);
+
+    document.getElementById('post').textContent=fmtPct(post);
+    document.getElementById('cD').textContent=diseased;
+    document.getElementById('cPos').textContent=pos;
+    document.getElementById('cTP').textContent=TP;
+    document.getElementById('cFP').textContent=FP;
+
+    // live text alternative for screen readers
+    cv.setAttribute('aria-label',
+      "Grid of 1000 people. "+diseased+" have the condition; "+healthy+" do not. "+
+      pos+" test positive (shown as an outlined group at the top left): "+
+      TP+" true positives and "+FP+" false positives. "+
+      "The probability of having the condition given a positive test is "+fmtPct(post)+".");
+
+    var lesson;
+    if(post<0.5 && prior<0.05){
+      lesson="Even with a "+fmtPct(sens)+" sensitive, "+fmtPct(spec)+" specific test, most positives are FALSE positives when the condition is rare — the false positives ("+FP+") swamp the true positives ("+TP+"). This is the base-rate fallacy.";
+    } else if(post>=0.5){
+      lesson="Now a majority of positive tests are true positives. Raising the base rate or the specificity shrinks the false-positive pile and lifts P(D | +).";
+    } else {
+      lesson="P(D | +) balances the base rate against the test's error rates. Try lowering the base rate to see false positives take over.";
+    }
+    document.getElementById('lesson').textContent=lesson;
+  }
+
+  ids.forEach(function(id){document.getElementById(id).addEventListener('input',draw);});
+  // make the canvas internal height fit the grid + caption
+  cv.height=ROWS*cell+30;
+  draw();
+})();
+</script>
+</body>
+</html>

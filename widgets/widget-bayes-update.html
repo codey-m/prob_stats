@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Bayesian updating: prior, likelihood, posterior</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Georgia,'Times New Roman',serif;background:#FAFAF8;color:#1A1A1A;padding:16px}
+  #app{max-width:780px;margin:0 auto}
+  h1{font-size:20px;font-weight:600;margin-bottom:4px}
+  .sub{font-size:13px;color:#555;margin-bottom:14px}
+  .controls{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px 16px;margin-bottom:12px}
+  .ctrl label{display:block;font-size:12px;font-family:'Courier New',monospace;color:#444;margin-bottom:3px}
+  .ctrl input{width:100%}
+  .ctrl .val{color:#0b5cab;font-weight:700}
+  canvas{display:block;width:100%;height:auto;background:#fff;border:1px solid #E5E5E5;border-radius:6px;margin-bottom:10px}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:#333;margin-bottom:8px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .sw{width:22px;height:0;display:inline-block;flex:none}
+  .sw-prior{border-top:3px solid #0b5cab}
+  .sw-like{border-top:3px dashed #9A4A00}
+  .sw-post{border-top:5px solid #1A1A1A}
+  .readout{font-size:13px;margin-bottom:8px}
+  .v{font-weight:700;font-family:'Courier New',monospace;color:#0b5cab}
+  .note{font-size:12px;color:#555;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>Bayesian updating in one dimension</h1>
+  <p class="sub">The posterior is a precision-weighted blend of what you believed (prior) and what you observed (likelihood). Slide the inputs and watch it move.</p>
+
+  <div class="controls">
+    <div class="ctrl"><label>prior mean &mu;&#8320; = <span class="val" id="vM0">0</span></label><input id="m0" type="range" min="-5" max="5" step="0.1" value="0"></div>
+    <div class="ctrl"><label>prior SD &sigma;&#8320; = <span class="val" id="vS0">1</span></label><input id="s0" type="range" min="0.3" max="3" step="0.05" value="1.5"></div>
+    <div class="ctrl"><label>observation x = <span class="val" id="vX">2</span></label><input id="x" type="range" min="-5" max="5" step="0.1" value="2"></div>
+    <div class="ctrl"><label>likelihood SD &sigma; = <span class="val" id="vS">1</span></label><input id="s" type="range" min="0.3" max="3" step="0.05" value="1"></div>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw sw-prior"></i> prior: thin solid line</span>
+    <span><i class="sw sw-like"></i> likelihood: dashed line</span>
+    <span><i class="sw sw-post"></i> posterior: thick shaded curve</span>
+  </div>
+
+  <p class="note">Each curve is also labelled where it peaks, and the three curves differ in line weight and dash pattern, so they can be told apart without relying on colour.</p>
+
+  <canvas id="cv" width="700" height="340" role="img" aria-label="Three probability density curves: prior, likelihood, and posterior."></canvas>
+
+  <div class="readout" aria-live="polite">
+    posterior mean = <span class="v" id="pm"></span> &nbsp;|&nbsp; posterior SD = <span class="v" id="ps"></span> &nbsp;|&nbsp; posterior variance = <span class="v" id="pv"></span>
+  </div>
+  <p class="note" id="note"></p>
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+  var LO=-8, HI=8;
+  var C_PRIOR='#0b5cab', C_LIKE='#9A4A00', C_POST='#1A1A1A';
+  function normPdf(x,mu,sd){return Math.exp(-(x-mu)*(x-mu)/(2*sd*sd))/(sd*Math.sqrt(2*Math.PI));}
+
+  function draw(){
+    var m0=+document.getElementById('m0').value, s0=+document.getElementById('s0').value,
+        x=+document.getElementById('x').value, s=+document.getElementById('s').value;
+    document.getElementById('vM0').textContent=m0.toFixed(1);
+    document.getElementById('vS0').textContent=s0.toFixed(2);
+    document.getElementById('vX').textContent=x.toFixed(1);
+    document.getElementById('vS').textContent=s.toFixed(2);
+
+    var prec=1/(s0*s0)+1/(s*s), pv=1/prec, pm=pv*(m0/(s0*s0)+x/(s*s)), psd=Math.sqrt(pv);
+
+    var W=cv.width,H=cv.height, ml=36,mr=14,mt=12,mb=24;
+    var pw=W-ml-mr, ph=H-mt-mb;
+    function X(v){return ml+pw*((v-LO)/(HI-LO));}
+    // common vertical scale
+    var ymax=0;
+    [[m0,s0],[x,s],[pm,psd]].forEach(function(p){ymax=Math.max(ymax,normPdf(p[0],p[0],p[1]));});
+    ymax*=1.1;
+    function Y(d){return mt+ph-(d/ymax)*ph;}
+
+    ctx.clearRect(0,0,W,H);
+    // axis
+    ctx.strokeStyle='#ccc';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(ml,mt+ph);ctx.lineTo(W-mr,mt+ph);ctx.stroke();
+    ctx.fillStyle='#767676';ctx.font="11px 'Courier New',monospace";
+    for(var g=-8;g<=8;g+=2){ctx.fillText(String(g),X(g)-4,mt+ph+14);ctx.strokeStyle='#f0f0f0';ctx.beginPath();ctx.moveTo(X(g),mt);ctx.lineTo(X(g),mt+ph);ctx.stroke();}
+
+    function curve(mu,sd,color,dash,width,fill){
+      ctx.strokeStyle=color;ctx.lineWidth=width; if(dash)ctx.setLineDash(dash);else ctx.setLineDash([]);
+      ctx.beginPath();
+      for(var i=0;i<=200;i++){var xv=LO+(HI-LO)*i/200; var px=X(xv),py=Y(normPdf(xv,mu,sd)); if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+      ctx.stroke(); ctx.setLineDash([]);
+      if(fill){ctx.fillStyle=fill;ctx.lineTo(X(HI),mt+ph);ctx.lineTo(X(LO),mt+ph);ctx.closePath();ctx.fill();}
+    }
+    curve(m0,s0,C_PRIOR,null,2,null);
+    curve(x,s,C_LIKE,[7,5],2,null);
+    curve(pm,psd,C_POST,null,3.5,'rgba(26,26,26,0.10)');
+
+    // vertical marker at the posterior mean
+    ctx.strokeStyle=C_POST;ctx.setLineDash([2,3]);ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(X(pm),mt);ctx.lineTo(X(pm),mt+ph);ctx.stroke();ctx.setLineDash([]);
+
+    // direct labels at each peak, so the curves are identifiable without colour
+    ctx.font="12px Georgia,'Times New Roman',serif";
+    function label(text,mu,sd,color){
+      var px=X(mu), py=Y(normPdf(mu,mu,sd));
+      var w=ctx.measureText(text).width;
+      var tx=Math.min(Math.max(px+6, ml+2), W-mr-w-2);
+      var ty=Math.max(py-6, mt+12);
+      ctx.fillStyle='rgba(255,255,255,0.85)';
+      ctx.fillRect(tx-2,ty-11,w+4,14);
+      ctx.fillStyle=color; ctx.fillText(text,tx,ty);
+    }
+    label('prior',m0,s0,C_PRIOR);
+    label('likelihood',x,s,C_LIKE);
+    label('posterior',pm,psd,C_POST);
+
+    document.getElementById('pm').textContent=pm.toFixed(2);
+    document.getElementById('ps').textContent=psd.toFixed(2);
+    document.getElementById('pv').textContent=pv.toFixed(2);
+
+    var wPrior=(1/(s0*s0))/prec;
+    document.getElementById('note').textContent=
+      "The posterior mean sits "+(wPrior>0.5?"closer to the prior":"closer to the data")+
+      ", because it weights each source by its precision (1/variance): prior weight "+(wPrior*100).toFixed(0)+
+      "%, data weight "+((1-wPrior)*100).toFixed(0)+"%. A tighter prior (smaller σ₀) or a sharper measurement (smaller σ) pulls it that way, and the posterior is always narrower than either input.";
+
+    // live text alternative for screen readers
+    cv.setAttribute('aria-label',
+      "Three probability density curves on a horizontal axis from -8 to 8. "+
+      "The prior is centred at "+m0.toFixed(1)+" with standard deviation "+s0.toFixed(2)+". "+
+      "The likelihood is centred at the observation "+x.toFixed(1)+" with standard deviation "+s.toFixed(2)+". "+
+      "The posterior is centred at "+pm.toFixed(2)+" with standard deviation "+psd.toFixed(2)+", "+
+      "which is narrower than both inputs. It lies "+(wPrior>0.5?"closer to the prior":"closer to the observation")+
+      ", with prior weight "+(wPrior*100).toFixed(0)+" percent and data weight "+((1-wPrior)*100).toFixed(0)+" percent.");
+  }
+  ['m0','s0','x','s'].forEach(function(id){document.getElementById(id).addEventListener('input',draw);});
+  draw();
+})();
+</script>
+</body>
+</html>
