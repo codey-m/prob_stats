@@ -33,7 +33,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
-| [The Wonder Fold](https://codey-m.github.io/prob_stats/widgets/widget-ht-power.html) | Unit 2, Lec. 6: Power and optimal tests | Significance, error, and power |
+| [Wonder Fold](https://codey-m.github.io/prob_stats/widgets/widget-ht-power.html) | Unit 2, Lec. 6: Power and optimal tests | Significance, error, and power |
 
 ## Review tips
 

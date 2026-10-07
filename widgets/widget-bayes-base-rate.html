@@ -53,6 +53,16 @@ body.embedded .gamebar,body.embedded .review-about{display:none}body.embedded ma
 .sea{fill:var(--sea)}.surf{fill:var(--sea-wash)}.wave{fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:.8}
 .prop{fill:var(--cap)}.prop-light{fill:var(--cap-2)}.grass{stroke:#6E8B5A;stroke-width:2;stroke-linecap:round;fill:none}
 .cell{fill:var(--sand)}.speck{fill:var(--speck)}
+.print{fill:#9C8457;opacity:.55}
+.ripple{fill:none;stroke:#D9C49A;stroke-width:1.6;opacity:.9}
+.blotch{fill:#A8916A;opacity:.18}
+.puddle{fill:#B9D5E2;stroke:#8FB4C7;stroke-width:1;opacity:.75}.shine{stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:.8}
+.mini-wrap{display:flex;gap:10px;align-items:flex-start}.mini-grid{width:46px;height:46px;flex:none;margin-top:2px}
+.m-coin{fill:#E9A83C;stroke:#A86F12;stroke-width:.6}.m-coin.faint{opacity:.45}.m-sand{fill:#E2CFA6}
+.m-beep{fill:none;stroke:#111827;stroke-width:1.6}.m-quiet{fill:none;stroke:#B8A57E;stroke-width:1;stroke-dasharray:2 1.5}
+.mini-rates{display:grid;gap:3px;margin-top:6px}.mini-rates>span{display:flex;align-items:center;gap:8px;font-size:12px}.mini-row{height:8px;flex:none}.mini-rates>span{white-space:nowrap}
+.pi{width:18px;height:18px;vertical-align:-4px;fill:none;stroke:var(--ink-2);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.pi.coin-i circle{fill:#E9A83C;stroke:#A86F12;stroke-width:1.6}.pi.coin-i .inner{fill:none;stroke-width:1}
 .beach.soft{--sand:#F3E8CF;--speck:#D6C49C}.beach.firm{--sand:#EBDAB5;--speck:#CDB78A}.beach.damp{--sand:#DCC8A0;--speck:#BCA478}.beach.wet{--sand:#CDB892;--speck:#A99269}
 .ring{fill:none;stroke:var(--art-ink);stroke-width:3}
 .detector circle{fill:none;stroke:var(--red);stroke-width:3}.detector line{stroke:var(--red);stroke-width:3;stroke-linecap:round}
@@ -110,7 +120,7 @@ body.free-only .gamewrap{grid-template-columns:1fr}body.free-only main{padding:1
   <div class="gamewrap">
     <section class="playcard" aria-label="Game">
       <div class="gamestatus"><span>Day: <b id="st-day">1</b></span><span>Spot: <b id="st-spot">1 of 5</b></span><span>Points: <b id="st-points">0</b></span></div>
-      <p class="gameprompt">Each dig costs <strong>3 points</strong> and each coin is worth <strong>10</strong>. Dig every beep, or walk on?</p>
+      <p class="gameprompt">Each dig <svg class="pi" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3l2 2M20 4l-8 8"/><path d="M12.5 11.5 6.5 13l-3 7.5 7.5-3z"/></svg> costs <strong>3 points</strong> and each coin <svg class="pi coin-i" viewBox="-12 -12 24 24" aria-hidden="true"><circle r="9"/><circle r="5.2" class="inner"/></svg> is worth <strong>10</strong>. Dig every beep, or walk on?</p>
       <div class="gameplay">
         <div class="beach-wrap" id="beach-wrap"><span class="corner corner-left" id="place"></span><span class="corner corner-right" id="outcome-label"></span>
           <svg id="beach" class="beach" viewBox="0 0 400 452" role="img" aria-label="A beach of 100 squares of sand.">
@@ -300,8 +310,47 @@ body.free-only .gamewrap{grid-template-columns:1fr}body.free-only main{padding:1
     $('cells').innerHTML='';
     s.cells.forEach((c,i)=>{el('rect',{class:'cell',x:cx(i),y:cy(i),width:CELL,height:CELL,rx:4},$('cells'));
       for(let j=0;j<6;j+=2)el('circle',{class:'speck',cx:cx(i)+4+c.specks[j]*(CELL-8),cy:cy(i)+4+c.specks[j+1]*(CELL-8),r:1.1},$('cells'));});
+    groundMarks(s);footprints(s);
     $('items').innerHTML='';$('rings').innerHTML='';
   }
+  /* The spot's settings, drawn on the sand (Cody, 2026-10-07: settings that decide the call should be visible).
+     Footprints show how busy the place is, so how common lost coins are: one step for every half coin in 100
+     (a single short trail in the quiet dunes, a crowd under the pier). They come from their own random stream,
+     independent of where the coins are, so they never point at a square. */
+  function stream(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  const GRID={x0:X0,y0:Y0,x1:X0+9*PITCH+CELL,y1:Y0+9*PITCH+CELL};
+  function footprints(s){
+    const r=stream((s.seed^0x51F15EED)>>>0),k=place(s).k,steps=2*k,trails=Math.max(1,Math.round(k/6)),g=el('g',{class:'prints'},$('cells'));
+    for(let t=0;t<trails;t++){
+      let x=GRID.x0+20+r()*(GRID.x1-GRID.x0-40),y=GRID.y0+20+r()*(GRID.y1-GRID.y0-40),a=r()*Math.PI*2;
+      const n=Math.round(steps/trails);
+      for(let k2=0;k2<n;k2++){
+        a+=(r()-.5)*.5;x+=Math.cos(a)*15;y+=Math.sin(a)*15;
+        if(x<GRID.x0+6||x>GRID.x1-6){a=Math.PI-a;x=Math.max(GRID.x0+6,Math.min(GRID.x1-6,x));}
+        if(y<GRID.y0+6||y>GRID.y1-6){a=-a;y=Math.max(GRID.y0+6,Math.min(GRID.y1-6,y));}
+        const side=k2%2?1:-1,px=x+Math.cos(a+Math.PI/2)*4*side,py=y+Math.sin(a+Math.PI/2)*4*side;
+        el('ellipse',{class:'print',cx:px.toFixed(1),cy:py.toFixed(1),rx:2.6,ry:4.4,transform:`rotate(${(a*180/Math.PI+90).toFixed(0)} ${px.toFixed(1)} ${py.toFixed(1)})`},g);
+      }
+    }
+  }
+  // The ground, drawn by how much it fools the detector: dry soft sand lies in loose ripples (coins sink deep);
+  // firm sand is smooth; damp sand is blotched darker; wet sand by the water shines with puddles.
+  function groundMarks(s){
+    const key=ground(s).key,r=stream((s.seed^0x6A09E667)>>>0),g=el('g',{class:'ground-marks '+key},$('cells'));
+    if(key==='soft')for(let y=GRID.y0+18;y<GRID.y1;y+=34){let d=`M${GRID.x0} ${y}`;for(let x=GRID.x0;x<GRID.x1;x+=40)d+=` q10 -5 20 0 t20 0`;el('path',{class:'ripple',d},g);}
+    if(key==='damp')for(let k=0;k<12;k++)el('ellipse',{class:'blotch',cx:(GRID.x0+r()*(GRID.x1-GRID.x0)).toFixed(1),cy:(GRID.y0+r()*(GRID.y1-GRID.y0)).toFixed(1),rx:(14+r()*18).toFixed(1),ry:(8+r()*10).toFixed(1)},g);
+    if(key==='wet'){
+      for(let k=0;k<9;k++)el('ellipse',{class:'puddle',cx:(GRID.x0+r()*(GRID.x1-GRID.x0)).toFixed(1),cy:(GRID.y0+r()*(GRID.y1-GRID.y0)).toFixed(1),rx:(12+r()*20).toFixed(1),ry:(5+r()*7).toFixed(1)},g);
+      for(let k=0;k<14;k++){const x=GRID.x0+r()*(GRID.x1-GRID.x0-20),y=GRID.y0+r()*(GRID.y1-GRID.y0);el('path',{class:'shine',d:`M${x.toFixed(1)} ${y.toFixed(1)}h${(8+r()*12).toFixed(1)}`},g);}
+    }
+  }
+  // Mini pictures for the clue cards: 100 squares with the coin share filled, and the detector's two rates.
+  function mini100(k){let d='';for(let i=0;i<100;i++)d+=`<circle cx="${(i%10)*6+3}" cy="${Math.floor(i/10)*6+3}" r="2.2" class="${i<k?'m-coin':'m-sand'}"/>`;return `<svg viewBox="0 0 60 60" class="mini-grid" aria-hidden="true">${d}</svg>`;}
+  function miniRow(n,of,on,off){let d='';for(let i=0;i<of;i++)d+=`<g transform="translate(${i*13} 0)">${i<n?on:off}</g>`;return `<svg viewBox="0 0 ${of*13} 12" class="mini-row" style="width:${of*13*0.62}px" aria-hidden="true">${d}</svg>`;}
+  const FOUND='<circle cx="6" cy="6" r="3.6" class="m-coin"/><rect x="1" y="1" width="10" height="10" rx="2.5" class="m-beep"/>',
+        SUNK='<circle cx="6" cy="6" r="3.6" class="m-coin faint"/><rect x="1" y="1" width="10" height="10" rx="2.5" class="m-quiet"/>',
+        FALSE='<rect x="1" y="1" width="10" height="10" rx="2.5" class="m-beep"/>',
+        EMPTY='<rect x="1" y="1" width="10" height="10" rx="2.5" class="m-quiet"/>';
   const ring=i=>el('rect',{class:'ring',x:cx(i)-1.5,y:cy(i)-1.5,width:CELL+3,height:CELL+3,rx:5},$('rings'));
   const put=(i,sym)=>el('use',{href:'#'+sym,x:cx(i)+5,y:cy(i)+5,width:24,height:24},$('items'));
 
@@ -309,9 +358,9 @@ body.free-only .gamewrap{grid-template-columns:1fr}body.free-only main{padding:1
     const pl=place(s),gr=ground(s);
     $('place').textContent=pl.name;
     $('c-place').textContent=pl.name;
-    $('c-place-why').textContent=`About ${pl.k} squares in 100 hide a coin.`+(COURSE?` P(D) = ${pl.k/100}.`:'');
+    $('c-place-why').innerHTML=`<span class="mini-wrap">${mini100(pl.k)}<span>About ${pl.k} squares in 100 hide a coin.${COURSE?` P(D) = ${pl.k/100}.`:''} Busier places lose more coins: see the footprints.</span></span>`;
     $('c-ground').textContent=gr.name;
-    $('c-ground-why').textContent=`${gr.note?gr.note+' ':''}The detector finds ${gr.finds} and beeps at ${gr.falses}.`+(COURSE?` P(+ | D) = ${gr.sens}, P(+ | not D) = ${gr.fpr}.`:'');
+    $('c-ground-why').innerHTML=`${gr.note?gr.note+' ':''}The detector finds ${gr.finds} and beeps at ${gr.falses}.${COURSE?` P(+ | D) = ${gr.sens}, P(+ | not D) = ${gr.fpr}.`:''}<span class="mini-rates"><span>${miniRow(Math.round(gr.sens*10),10,FOUND,SUNK)} coins found</span><span>${miniRow(Math.round(gr.fpr*20),20,FALSE,EMPTY)} false beeps</span></span>`;
     $('c-beeps').textContent=swept?plural(s.beeps,'beep','beeps'):'Sweeping…';
     $('c-beeps-why').textContent=swept?'Coin or bottle cap? Only digging shows which.':'';
   }
