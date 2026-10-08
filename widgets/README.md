@@ -20,6 +20,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
+| [Pairing Bench](https://codey-m.github.io/prob_stats/widgets/widget-pairing-bench.html) | Unit 1 overview | Pairing Bench, arrange six cup-and-saucer sets |
 | [Bivariate normal: correlation and conditioning](https://codey-m.github.io/prob_stats/widgets/widget-bvn-ellipse.html) | Unit 1, Lec. 2: Sums, covariance, and correlation | Correlation and conditioning |
 | [Bayesian updating: prior, likelihood, posterior](https://codey-m.github.io/prob_stats/widgets/widget-bayes-update.html) | Unit 2, Lec. 5: Linear models with normal noise | Bayesian updating |
 
@@ -27,7 +28,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
-| [Mean Flights](https://codey-m.github.io/prob_stats/widgets/widget-clt.html) | Unit 1, Lec. 2: The central limit theorem | The Central Limit Theorem |
+| [Tipping Point](https://codey-m.github.io/prob_stats/widgets/widget-clt.html) | Unit 1, Lec. 2: The central limit theorem | The Central Limit Theorem |
 
 ## 6.3710.5x Probability & SDA: Hypothesis Testing & Machine Learning Model Validation
 
