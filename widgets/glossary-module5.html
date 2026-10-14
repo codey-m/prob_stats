@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.3710x — Glossary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #FAFAF8; color: #1A1A1A; min-height: 100vh; }
+    #app { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    #header { margin-bottom: 1.75rem; }
+    #header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+    #header p { font-size: 13px; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    #search-wrap { position: relative; margin-bottom: 0.75rem; }
+    #search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #aaa; pointer-events: none; }
+    #gs { width: 100%; padding: 10px 12px 10px 36px; font-size: 15px; font-family: inherit; border: 1px solid #DDD; border-radius: 6px; background: #FFF; color: #1A1A1A; outline: none; transition: border-color 0.15s; }
+    #gs:focus { border-color: #888; }
+    #gs::placeholder { color: #BBB; }
+    #uf { display: flex; flex-wrap: wrap; border-bottom: 1px solid #EEE; margin-bottom: 0.5rem; }
+    .ub { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 14px 6px; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; cursor: pointer; color: #AAA; transition: color 0.12s; }
+    .ub.on { color: #1A1A1A; border-bottom-color: #1A1A1A; font-weight: 600; }
+    .ub:hover { color: #1A1A1A; }
+    #gc { font-size: 11px; color: #BBB; font-family: 'Courier New', monospace; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .lh { font-size: 11px; color: #CCC; padding: 16px 0 5px; border-bottom: 1px solid #EEE; font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+    .tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid #F0F0F0; }
+    .tn { font-size: 18px; font-weight: 600; margin-bottom: 3px; color: #1A1A1A; }
+    .no { font-family: 'Courier New', monospace; font-size: 12px; background: #F4F4F2; color: #666; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .td { font-size: 14px; color: #555; line-height: 1.7; }
+    .ut { font-family: 'Courier New', monospace; font-size: 10px; background: #F4F4F2; color: #999; padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.04em; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    mark { background: #FFF3CC; color: #7A5C00; border-radius: 2px; padding: 0 1px; }
+    #empty { color: #BBB; font-size: 14px; padding: 3rem 0; text-align: center; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>6.3710x — Glossary</h1>
+    <p>MODULE 5 &nbsp;·&nbsp; REGRESSION AND HYPOTHESIS TESTING</p>
+  </div>
+  <div id="search-wrap">
+    <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="gs" type="search" placeholder="Search terms, definitions, notation…" aria-label="Search glossary" />
+  </div>
+  <div id="uf" role="tablist" aria-label="Filter by unit"></div>
+  <p id="gc" aria-live="polite"></p>
+  <div id="gl" role="list"></div>
+</div>
+
+<script>
+const MODULE = { name: "Module 5", subtitle: "Regression and hypothesis testing", course: "6.3710x" };
+
+const UNIT_COLORS = {
+  "Linear regression":       "#378ADD",   // blue
+  "Multivariate regression": "#1D9E75",   // teal
+  "Model validation":        "#7F77DD",   // purple
+  "Hypothesis testing":      "#BA7517",   // amber
+};
+
+const T = [
+
+  // ── Unit 1 — Linear regression ────────────────────────────────────────────
+  { term: "Linear regression", notation: null, unit: "Linear regression",
+    def: "A model that predicts a response variable from an explanatory variable with a straight line, choosing the line that minimizes the squared prediction errors." },
+  { term: "Least squares", notation: null, unit: "Linear regression",
+    def: "The criterion that selects regression coefficients by minimizing the sum of squared residuals." },
+  { term: "Residual", notation: null, unit: "Linear regression",
+    def: "The difference between an observed response and the value the fitted model predicts for it." },
+  { term: "Coefficient of determination", notation: "R²", unit: "Linear regression",
+    def: "The fraction of the variance in the response explained by the model, ranging from 0 to 1." },
+  { term: "Slope", notation: null, unit: "Linear regression",
+    def: "The regression coefficient giving the expected change in the response per one-unit change in the predictor." },
+  { term: "Regression to the mean", notation: null, unit: "Linear regression",
+    def: "The tendency for extreme observations to be followed by ones nearer the average, a direct consequence of imperfect correlation." },
+  { term: "Correlation versus causation", notation: null, unit: "Linear regression",
+    def: "An observed association between two variables does not by itself establish that one causes the other; confounders can create or hide associations." },
+  { term: "Simpson's paradox", notation: null, unit: "Linear regression",
+    def: "A trend that holds within each subgroup of the data can reverse direction when the subgroups are pooled together." },
+
+  // ── Unit 2 — Multivariate regression ──────────────────────────────────────
+  { term: "Multiple linear regression", notation: null, unit: "Multivariate regression",
+    def: "A regression model with several explanatory variables, fitting a hyperplane to the data by least squares." },
+  { term: "Design matrix", notation: null, unit: "Multivariate regression",
+    def: "The matrix whose columns hold the predictor values (usually including a column of ones for the intercept) used to express the regression in matrix form." },
+  { term: "Regularization", notation: null, unit: "Multivariate regression",
+    def: "Adding a penalty on the size of the coefficients (for example ridge or lasso) to reduce overfitting and stabilize estimates when predictors are many or collinear." },
+  { term: "Multicollinearity", notation: null, unit: "Multivariate regression",
+    def: "Strong correlation among predictors, which inflates the variance of the estimated coefficients and makes them hard to interpret." },
+  { term: "Cross-validation", notation: null, unit: "Multivariate regression",
+    def: "A way to estimate out-of-sample predictive accuracy by repeatedly training on part of the data and evaluating on the held-out part." },
+  { term: "Overfitting", notation: null, unit: "Multivariate regression",
+    def: "Fitting the noise in the training data rather than the underlying signal, which produces poor predictions on new data." },
+
+  // ── Unit 3 — Model validation ────────────────────────────────────────────
+  { term: "Train/validation/test split", notation: null, unit: "Model validation",
+    def: "A division of data into training data for fitting, validation data for model selection, and test data for a final performance estimate." },
+  { term: "Validation set", notation: null, unit: "Model validation",
+    def: "Held-out data used during model development to choose among candidate models, features, or tuning parameters." },
+  { term: "Test set", notation: null, unit: "Model validation",
+    def: "Held-out data reserved for a final evaluation after model choices have been made. Reusing the test set for selection makes its performance estimate too optimistic." },
+  { term: "Data leakage", notation: null, unit: "Model validation",
+    def: "A modeling error in which information from validation, test, or future data enters training or model selection, making performance look better than it will be on new data." },
+  { term: "Model selection", notation: null, unit: "Model validation",
+    def: "The process of choosing among candidate models or tuning settings using criteria such as validation error, cross-validation error, complexity, and scientific interpretability." },
+  { term: "One-standard-error rule", notation: null, unit: "Model validation",
+    def: "A model-selection rule that chooses the simplest model whose validation error is within one standard error of the best observed validation error." },
+  { term: "Held-out error", notation: null, unit: "Model validation",
+    def: "Prediction error measured on examples not used to fit the model. It estimates out-of-sample performance more directly than training error." },
+  { term: "Decision threshold", notation: null, unit: "Model validation",
+    def: "A cutoff applied to a score or predicted probability to turn it into an action or classification, such as declaring signal when a score exceeds the threshold." },
+  { term: "ROC curve", notation: null, unit: "Model validation",
+    def: "A curve showing the tradeoff between true positive rate and false positive rate as a classifier's decision threshold varies." },
+  { term: "Residual diagnostics", notation: null, unit: "Model validation",
+    def: "Checks based on residuals, such as residual plots or residual sums, used to detect patterns that suggest the regression model is missing structure." },
+
+  // ── Unit 4 — Hypothesis testing ───────────────────────────────────────────
+  { term: "Null hypothesis", notation: null, unit: "Hypothesis testing",
+    def: "The default statement, often 'no effect' or 'no difference', that a test attempts to find evidence against." },
+  { term: "Alternative hypothesis", notation: null, unit: "Hypothesis testing",
+    def: "The statement accepted when the data provide sufficient evidence against the null hypothesis." },
+  { term: "Test statistic", notation: null, unit: "Hypothesis testing",
+    def: "A number computed from the data whose distribution under the null hypothesis is used to decide whether the observed data are unusually extreme." },
+  { term: "Critical value", notation: null, unit: "Hypothesis testing",
+    def: "A cutoff from the null distribution of a test statistic. If the statistic is beyond the critical value, the test rejects the null hypothesis at the chosen significance level." },
+  { term: "p-value", notation: null, unit: "Hypothesis testing",
+    def: "The probability, computed under the null hypothesis, of observing data at least as extreme as what was seen. Small p-values are evidence against the null." },
+  { term: "Significance level", notation: "α", unit: "Hypothesis testing",
+    def: "A threshold chosen in advance (commonly 0.05) below which the p-value leads to rejecting the null hypothesis." },
+  { term: "Type I and Type II errors", notation: null, unit: "Hypothesis testing",
+    def: "A Type I error rejects a true null (false positive); a Type II error fails to reject a false null (false negative)." },
+  { term: "Power", notation: null, unit: "Hypothesis testing",
+    def: "The probability that a test rejects the null hypothesis when the alternative is true. It is one minus the Type II error probability." },
+  { term: "t-test", notation: null, unit: "Hypothesis testing",
+    def: "A test based on the t-distribution for a mean or a regression coefficient, including the two-sample comparison of means." },
+  { term: "F-test", notation: null, unit: "Hypothesis testing",
+    def: "A test based on the F-distribution that compares nested regression models (or variances) by their explained variation." },
+  { term: "Two-sample test", notation: null, unit: "Hypothesis testing",
+    def: "A test of whether two independent samples come from populations with the same parameter, such as equal means." },
+  { term: "Independence test", notation: null, unit: "Hypothesis testing",
+    def: "A test of whether two categorical variables are associated, most commonly the chi-square test of independence." },
+  { term: "Multiple comparisons", notation: null, unit: "Hypothesis testing",
+    def: "The inflation of false-positive risk when many tests are run at once; corrections such as Bonferroni adjust the threshold to control it." },
+  { term: "Bonferroni correction", notation: null, unit: "Hypothesis testing",
+    def: "A multiple-comparisons method that controls the chance of any false positive by testing each of m hypotheses at level alpha divided by m." },
+  { term: "False discovery rate", notation: "FDR", unit: "Hypothesis testing",
+    def: "The expected fraction of reported discoveries that are false positives. It is less strict than controlling the chance of any false positive." },
+  { term: "Benjamini-Hochberg procedure", notation: null, unit: "Hypothesis testing",
+    def: "A step-up procedure for multiple testing that compares sorted p-values to increasing thresholds in order to control the false discovery rate." },
+  { term: "Positive predictive value", notation: "PPV", unit: "Hypothesis testing",
+    def: "The probability that an effect or condition is truly present given that a test result is positive or statistically significant." },
+  { term: "Mann-Whitney test", notation: null, unit: "Hypothesis testing",
+    def: "A nonparametric two-sample test based on ranks, used to compare two groups when the normality assumption is doubtful." },
+
+];
+
+const UNITS = ["All", ...Object.keys(UNIT_COLORS)];
+let q = "", u = "All";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hi(text, query){const e=esc(text);if(!query.trim())return e;const re=new RegExp("("+query.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi");return e.replace(re,"<mark>$1</mark>");}
+function render(){
+  const ql=q.toLowerCase();
+  const f=T.filter(t=>{const mu=u==="All"||t.unit===u;const mq=!ql||t.term.toLowerCase().includes(ql)||t.def.toLowerCase().includes(ql)||(t.notation&&t.notation.toLowerCase().includes(ql));return mu&&mq;}).sort((a,b)=>a.term.localeCompare(b.term));
+  document.getElementById("gc").textContent=T.length===0?"No terms loaded yet.":`${f.length} term${f.length!==1?"s":""}${q?` matching "${q}"`:""}`;
+  const grps={};f.forEach(t=>{const l=t.term[0].toUpperCase();(grps[l]=grps[l]||[]).push(t);});
+  const gl=document.getElementById("gl");
+  if(!f.length){gl.innerHTML=`<p id="empty">No terms found.</p>`;return;}
+  gl.innerHTML=Object.entries(grps).sort(([a],[b])=>a.localeCompare(b)).map(([letter,terms])=>`
+      <div class="lh" aria-hidden="true">${letter}</div>
+      ${terms.map(t=>`
+        <div class="tr" role="listitem">
+          <div>
+            <p class="tn">${hi(t.term,q)}</p>
+            ${t.notation?`<span class="no">${esc(t.notation)}</span>`:""}
+            <p class="td">${hi(t.def,q)}</p>
+          </div>
+          <span class="ut" aria-label="${esc(t.unit)}">
+            <span class="dot" style="background:${UNIT_COLORS[t.unit]||'#CCC'}"></span>
+            ${esc(t.unit)}
+          </span>
+        </div>`).join("")}`).join("");
+}
+const ufEl=document.getElementById("uf");
+ufEl.innerHTML=UNITS.map(un=>`<button class="ub${u===un?" on":""}" data-unit="${esc(un)}" role="tab" aria-selected="${u===un}">${esc(un)}</button>`).join("");
+ufEl.addEventListener("click",e=>{const b=e.target.closest(".ub");if(!b)return;u=b.dataset.unit;document.querySelectorAll(".ub").forEach(x=>{x.classList.toggle("on",x.dataset.unit===u);x.setAttribute("aria-selected",x.dataset.unit===u);});render();});
+document.getElementById("gs").addEventListener("input",e=>{q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>

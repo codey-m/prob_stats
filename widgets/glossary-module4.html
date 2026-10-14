@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.3710x — Glossary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #FAFAF8; color: #1A1A1A; min-height: 100vh; }
+    #app { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    #header { margin-bottom: 1.75rem; }
+    #header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+    #header p { font-size: 13px; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    #search-wrap { position: relative; margin-bottom: 0.75rem; }
+    #search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #aaa; pointer-events: none; }
+    #gs { width: 100%; padding: 10px 12px 10px 36px; font-size: 15px; font-family: inherit; border: 1px solid #DDD; border-radius: 6px; background: #FFF; color: #1A1A1A; outline: none; transition: border-color 0.15s; }
+    #gs:focus { border-color: #888; }
+    #gs::placeholder { color: #BBB; }
+    #uf { display: flex; flex-wrap: wrap; border-bottom: 1px solid #EEE; margin-bottom: 0.5rem; }
+    .ub { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 14px 6px; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; cursor: pointer; color: #AAA; transition: color 0.12s; }
+    .ub.on { color: #1A1A1A; border-bottom-color: #1A1A1A; font-weight: 600; }
+    .ub:hover { color: #1A1A1A; }
+    #gc { font-size: 11px; color: #BBB; font-family: 'Courier New', monospace; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .lh { font-size: 11px; color: #CCC; padding: 16px 0 5px; border-bottom: 1px solid #EEE; font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+    .tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid #F0F0F0; }
+    .tn { font-size: 18px; font-weight: 600; margin-bottom: 3px; color: #1A1A1A; }
+    .no { font-family: 'Courier New', monospace; font-size: 12px; background: #F4F4F2; color: #666; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .td { font-size: 14px; color: #555; line-height: 1.7; }
+    .ut { font-family: 'Courier New', monospace; font-size: 10px; background: #F4F4F2; color: #999; padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.04em; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    mark { background: #FFF3CC; color: #7A5C00; border-radius: 2px; padding: 0 1px; }
+    #empty { color: #BBB; font-size: 14px; padding: 3rem 0; text-align: center; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>6.3710x — Glossary</h1>
+    <p>MODULE 4 &nbsp;·&nbsp; LIMIT THEOREMS, SAMPLING, AND ESTIMATION</p>
+  </div>
+  <div id="search-wrap">
+    <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="gs" type="search" placeholder="Search terms, definitions, notation…" aria-label="Search glossary" />
+  </div>
+  <div id="uf" role="tablist" aria-label="Filter by unit"></div>
+  <p id="gc" aria-live="polite"></p>
+  <div id="gl" role="list"></div>
+</div>
+
+<script>
+const MODULE = { name: "Module 4", subtitle: "Limit theorems, sampling, and estimation", course: "6.3710x" };
+
+const UNIT_COLORS = {
+  "Limit theorems":         "#378ADD",   // blue  (Lec 1-2: WLLN, CLT)
+  "Sampling distributions": "#1D9E75",   // teal  (sampling, MSE, bootstrap)
+  "Parameter estimation":   "#BA7517",   // amber (MLE, CIs, classical statistics)
+  "Data-driven decisions":  "#7F77DD",   // purple (uncertainty-aware ML choices)
+};
+
+const T = [
+
+  // ── Unit 1 — Limit theorems ───────────────────────────────────────────────
+  { term: "Markov inequality", notation: "P(X ≥ a) ≤ E[X]/a", unit: "Limit theorems",
+    def: "An upper bound on the tail probability of a nonnegative random variable using only its mean. It is the crudest tail bound and the starting point for sharper ones." },
+  { term: "Chebyshev inequality", notation: "P(|X − μ| ≥ c) ≤ σ²/c²", unit: "Limit theorems",
+    def: "Bounds the probability that a random variable deviates from its mean by at least c, using the variance. Sharper than Markov because it uses second-moment information." },
+  { term: "Weak Law of Large Numbers", notation: null, unit: "Limit theorems",
+    def: "The sample mean of independent identically distributed random variables converges in probability to the true mean as the sample size grows." },
+  { term: "Convergence in probability", notation: null, unit: "Limit theorems",
+    def: "A sequence of random variables converges in probability to a value if, for every tolerance, the probability of lying farther than that tolerance from the value tends to zero." },
+  { term: "Central Limit Theorem", notation: null, unit: "Limit theorems",
+    def: "The standardized sum (or sample mean) of many independent identically distributed random variables converges in distribution to a standard normal, almost regardless of the original distribution." },
+  { term: "Normal approximation", notation: null, unit: "Limit theorems",
+    def: "Using the Central Limit Theorem to approximate the distribution of a sum — for example a binomial — by a normal distribution with matching mean and variance." },
+  { term: "Jensen's inequality", notation: "E[g(X)] ≥ g(E[X])", unit: "Limit theorems",
+    def: "For a convex function g, the expectation of the transformed variable is at least the function of the expectation (the inequality reverses for concave g)." },
+
+  // ── Unit 2 — Sampling distributions ───────────────────────────────────────
+  { term: "Sampling distribution", notation: null, unit: "Sampling distributions",
+    def: "The distribution of a statistic, such as the sample mean, considered over repeated samples drawn from the population. It is what makes inference about a statistic possible." },
+  { term: "Estimator", notation: null, unit: "Sampling distributions",
+    def: "A rule or statistic used to infer an unknown parameter from data. Because it is a function of the random sample, an estimator is itself a random variable with its own distribution." },
+  { term: "Bias", notation: null, unit: "Sampling distributions",
+    def: "The difference between an estimator's expected value and the true parameter. An estimator with zero bias is called unbiased." },
+  { term: "Mean squared error", notation: "MSE = Var + Bias²", unit: "Sampling distributions",
+    def: "The expected squared difference between an estimator and the parameter it estimates. It decomposes into the estimator's variance plus the square of its bias." },
+  { term: "Standard error", notation: null, unit: "Sampling distributions",
+    def: "The standard deviation of an estimator's sampling distribution; it quantifies the typical size of the estimation error." },
+  { term: "Bootstrap", notation: null, unit: "Sampling distributions",
+    def: "A resampling method that approximates the sampling distribution of a statistic by repeatedly resampling, with replacement, from the observed data and recomputing the statistic." },
+  { term: "Paired bootstrap", notation: null, unit: "Sampling distributions",
+    def: "A bootstrap method for comparing two procedures on the same cases by resampling cases and preserving each case's paired outcomes. It estimates uncertainty in a difference, such as the accuracy of model B minus the accuracy of model A." },
+  { term: "Bootstrap percentile interval", notation: null, unit: "Sampling distributions",
+    def: "A confidence interval formed from lower and upper percentiles of the bootstrap distribution. It is often useful when a statistic has a skewed or non-normal sampling distribution." },
+  { term: "Consistency", notation: null, unit: "Sampling distributions",
+    def: "An estimator is consistent if it converges in probability to the true parameter as the sample size grows without bound." },
+
+  // ── Unit 3 — Parameter estimation ─────────────────────────────────────────
+  { term: "Classical statistics", notation: null, unit: "Parameter estimation",
+    def: "An approach that treats the unknown parameter as a fixed but unknown constant to be estimated from data, in contrast to the Bayesian view that treats it as a random variable." },
+  { term: "Maximum likelihood estimate", notation: null, unit: "Parameter estimation",
+    def: "The value of the unknown parameter that makes the observed data most probable, i.e. the maximizer of the likelihood function." },
+  { term: "Likelihood function", notation: null, unit: "Parameter estimation",
+    def: "The probability (or density) of the observed data viewed as a function of the unknown parameter, holding the data fixed." },
+  { term: "Confidence interval", notation: null, unit: "Parameter estimation",
+    def: "A data-based interval constructed so that, over repeated sampling, it contains the true parameter with a specified probability (the confidence level)." },
+  { term: "Confidence level", notation: null, unit: "Parameter estimation",
+    def: "The long-run fraction of confidence intervals, all built by the same procedure, that contain the true parameter — for example 95%." },
+  { term: "Margin of error", notation: null, unit: "Parameter estimation",
+    def: "The amount added to and subtracted from a point estimate to form a confidence interval. In a normal approximation it is often a critical value times the standard error." },
+  { term: "Sample variance", notation: null, unit: "Parameter estimation",
+    def: "An estimator of the population variance from a sample. Dividing the sum of squared deviations by n − 1 (rather than n) makes it unbiased." },
+  { term: "Point estimate", notation: null, unit: "Parameter estimation",
+    def: "A single best-guess value for an unknown parameter, as opposed to an interval estimate that expresses a range of plausible values." },
+
+  // ── Multi-dimensional data ───────────────────────────────────────────────
+  { term: "Principal component", notation: null, unit: "Multi-dimensional data",
+    def: "A direction in a multi-dimensional data set along which the data vary the most. Successive components give the next-largest variation among directions orthogonal to the earlier ones." },
+  { term: "Principal component analysis", notation: "PCA", unit: "Multi-dimensional data",
+    def: "A method for finding principal components by taking the top singular vectors of the centered data matrix. Projecting each observation onto the first k components gives a k-dimensional representation that preserves as much variation as possible." },
+  { term: "Proportion of variance explained", notation: null, unit: "Multi-dimensional data",
+    def: "The share of the data's total variation captured by the components retained, read from the squared singular values. Used to decide how many components to keep." },
+  { term: "Model selection", notation: null, unit: "Multi-dimensional data",
+    def: "Choosing among candidate models that all fit the observed data. A more flexible model always fits the sample at least as well, so selection requires weighing fit against complexity." },
+  { term: "Akaike information criterion", notation: "AIC", unit: "Multi-dimensional data",
+    def: "A model selection criterion that corrects the fitted log-likelihood by a penalty for the number of parameters, estimating how well the model would predict new data." },
+
+  // ── Unit 4 — Data-driven decisions ───────────────────────────────────────
+  { term: "Held-out metric", notation: null, unit: "Data-driven decisions",
+    def: "A performance summary computed on data that were not used to fit the model. Held-out metrics help estimate how a model may perform on new cases." },
+  { term: "Model loss", notation: null, unit: "Data-driven decisions",
+    def: "A numerical measure of prediction error or decision cost for a model, with smaller values usually indicating better performance." },
+  { term: "Calibration", notation: null, unit: "Data-driven decisions",
+    def: "Agreement between predicted probabilities and observed event rates. For example, among cases assigned probability 0.80, a well-calibrated model should have the event occur about 80% of the time." },
+  { term: "Empirical event rate", notation: null, unit: "Data-driven decisions",
+    def: "The observed fraction of cases in a group for which an event occurs. It is commonly used to check whether predicted probabilities are calibrated." },
+  { term: "Practical threshold", notation: null, unit: "Data-driven decisions",
+    def: "A minimum effect size or performance improvement required for an action to be worthwhile, beyond merely being statistically detectable." },
+  { term: "Deployment threshold", notation: null, unit: "Data-driven decisions",
+    def: "A rule that determines when evidence is strong enough to deploy a model or policy, often requiring a confidence interval to clear a practical threshold." },
+  { term: "Weighted least squares", notation: null, unit: "Data-driven decisions",
+    def: "A version of least squares that gives different observations different weights, commonly giving less weight to observations with higher error variance." },
+  { term: "Inverse-variance weighting", notation: null, unit: "Data-driven decisions",
+    def: "A weighting rule that gives each estimate weight proportional to one divided by its variance, so more precise estimates receive more influence." },
+
+];
+
+const UNITS = ["All", ...Object.keys(UNIT_COLORS)];
+let q = "", u = "All";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hi(text, query){const e=esc(text);if(!query.trim())return e;const re=new RegExp("("+query.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi");return e.replace(re,"<mark>$1</mark>");}
+function render(){
+  const ql=q.toLowerCase();
+  const f=T.filter(t=>{const mu=u==="All"||t.unit===u;const mq=!ql||t.term.toLowerCase().includes(ql)||t.def.toLowerCase().includes(ql)||(t.notation&&t.notation.toLowerCase().includes(ql));return mu&&mq;}).sort((a,b)=>a.term.localeCompare(b.term));
+  document.getElementById("gc").textContent=T.length===0?"No terms loaded yet.":`${f.length} term${f.length!==1?"s":""}${q?` matching "${q}"`:""}`;
+  const grps={};f.forEach(t=>{const l=t.term[0].toUpperCase();(grps[l]=grps[l]||[]).push(t);});
+  const gl=document.getElementById("gl");
+  if(!f.length){gl.innerHTML=`<p id="empty">No terms found.</p>`;return;}
+  gl.innerHTML=Object.entries(grps).sort(([a],[b])=>a.localeCompare(b)).map(([letter,terms])=>`
+      <div class="lh" aria-hidden="true">${letter}</div>
+      ${terms.map(t=>`
+        <div class="tr" role="listitem">
+          <div>
+            <p class="tn">${hi(t.term,q)}</p>
+            ${t.notation?`<span class="no">${esc(t.notation)}</span>`:""}
+            <p class="td">${hi(t.def,q)}</p>
+          </div>
+          <span class="ut" aria-label="${esc(t.unit)}">
+            <span class="dot" style="background:${UNIT_COLORS[t.unit]||'#CCC'}"></span>
+            ${esc(t.unit)}
+          </span>
+        </div>`).join("")}`).join("");
+}
+const ufEl=document.getElementById("uf");
+ufEl.innerHTML=UNITS.map(un=>`<button class="ub${u===un?" on":""}" data-unit="${esc(un)}" role="tab" aria-selected="${u===un}">${esc(un)}</button>`).join("");
+ufEl.addEventListener("click",e=>{const b=e.target.closest(".ub");if(!b)return;u=b.dataset.unit;document.querySelectorAll(".ub").forEach(x=>{x.classList.toggle("on",x.dataset.unit===u);x.setAttribute("aria-selected",x.dataset.unit===u);});render();});
+document.getElementById("gs").addEventListener("input",e=>{q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>

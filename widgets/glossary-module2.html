@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.3710x — Glossary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #FAFAF8; color: #1A1A1A; min-height: 100vh; }
+    #app { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    #header { margin-bottom: 1.75rem; }
+    #header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+    #header p { font-size: 13px; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    #search-wrap { position: relative; margin-bottom: 0.75rem; }
+    #search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #aaa; pointer-events: none; }
+    #gs { width: 100%; padding: 10px 12px 10px 36px; font-size: 15px; font-family: inherit; border: 1px solid #DDD; border-radius: 6px; background: #FFF; color: #1A1A1A; outline: none; transition: border-color 0.15s; }
+    #gs:focus { border-color: #888; }
+    #gs::placeholder { color: #BBB; }
+    #uf { display: flex; flex-wrap: wrap; border-bottom: 1px solid #EEE; margin-bottom: 0.5rem; }
+    .ub { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 14px 6px; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; cursor: pointer; color: #AAA; transition: color 0.12s; }
+    .ub.on { color: #1A1A1A; border-bottom-color: #1A1A1A; font-weight: 600; }
+    .ub:hover { color: #1A1A1A; }
+    #gc { font-size: 11px; color: #BBB; font-family: 'Courier New', monospace; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .lh { font-size: 11px; color: #CCC; padding: 16px 0 5px; border-bottom: 1px solid #EEE; font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+    .tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid #F0F0F0; }
+    .tn { font-size: 18px; font-weight: 600; margin-bottom: 3px; color: #1A1A1A; }
+    .no { font-family: 'Courier New', monospace; font-size: 12px; background: #F4F4F2; color: #666; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .td { font-size: 14px; color: #555; line-height: 1.7; }
+    .ut { font-family: 'Courier New', monospace; font-size: 10px; background: #F4F4F2; color: #999; padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.04em; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    mark { background: #FFF3CC; color: #7A5C00; border-radius: 2px; padding: 0 1px; }
+    #empty { color: #BBB; font-size: 14px; padding: 3rem 0; text-align: center; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>6.3710x — Glossary</h1>
+    <p>MODULE 2 &nbsp;·&nbsp; CATEGORICAL DATA, COUNTING, AND DISCRETE RANDOM VARIABLES</p>
+  </div>
+  <div id="search-wrap">
+    <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="gs" type="search" placeholder="Search terms, definitions, notation…" aria-label="Search glossary" />
+  </div>
+  <div id="uf" role="tablist" aria-label="Filter by unit"></div>
+  <p id="gc" aria-live="polite"></p>
+  <div id="gl" role="list"></div>
+</div>
+
+<script>
+// ─── Module configuration ───────────────────────────────────────────────────
+const MODULE = {
+  name: "Module 2",
+  subtitle: "Categorical data, counting, and discrete random variables",
+  course: "6.3710x",
+};
+
+// Unit dot colors — the conceptual groupings this module covers (Lectures 4–7).
+const UNIT_COLORS = {
+  "Categorical data":        "#D85C5C",   // red
+  "Counting":                "#BA7517",   // amber  (Lec 4)
+  "Random variables":        "#7F77DD",   // purple (Lec 5)
+  "Expectation":             "#378ADD",   // blue   (Lec 5–6)
+  "Variance & conditioning": "#1D9E75",   // teal   (Lec 6)
+  "Independence":            "#888780",   // gray   (Lec 7)
+};
+
+// ─── Term data (extracted from the Lectures 4–7 content) ─────────────────────
+const T = [
+
+  // ── Categorical data ─────────────────────────────────────────────────────
+  {
+    term: "Categorical variable",
+    notation: null,
+    unit: "Categorical data",
+    def: "A variable whose values are labels or groups rather than numerical measurements, such as delivery status, product category, or class label.",
+  },
+  {
+    term: "Label",
+    notation: null,
+    unit: "Categorical data",
+    def: "A category assigned to an observation. In classification, the label is the outcome category a model tries to predict.",
+  },
+  {
+    term: "Bin",
+    notation: null,
+    unit: "Categorical data",
+    def: "A category or interval used to group values. Binning turns detailed measurements into counts that can be modeled with discrete distributions.",
+  },
+  {
+    term: "Discretization",
+    notation: null,
+    unit: "Categorical data",
+    def: "The process of converting continuous or detailed measurements into a finite set of bins or categories.",
+  },
+  {
+    term: "Count table",
+    notation: null,
+    unit: "Categorical data",
+    def: "A table that records how many observations fall in each category or combination of categories.",
+  },
+  {
+    term: "Contingency table",
+    notation: null,
+    unit: "Categorical data",
+    def: "A count table for two or more categorical variables, used to study association, independence, and conditional distributions.",
+  },
+  {
+    term: "Empirical PMF",
+    notation: null,
+    unit: "Categorical data",
+    def: "A probability mass function estimated from data by dividing category counts by the total number of observations.",
+  },
+  {
+    term: "Count vector",
+    notation: null,
+    unit: "Categorical data",
+    def: "A list of counts across several categories. Count vectors are the observed-data form naturally modeled by multinomial probabilities.",
+  },
+  {
+    term: "Multinomial distribution",
+    notation: null,
+    unit: "Categorical data",
+    def: "The distribution of counts across several categories after a fixed number of independent trials, when each trial falls into exactly one category with fixed category probabilities.",
+  },
+  {
+    term: "Marginal distribution",
+    notation: null,
+    unit: "Categorical data",
+    def: "The distribution of one variable after summing or ignoring the other variables in a joint table or joint distribution.",
+  },
+
+  // ── Lecture 4 — Counting ──────────────────────────────────────────────────
+  {
+    term: "Counting principle",
+    notation: null,
+    unit: "Counting",
+    def: "If a selection is made in r stages, with n₁ choices at the first stage, n₂ at the second, and so on, then the total number of possible selections is the product n₁·n₂···nᵣ, no matter how the earlier choices turned out.",
+  },
+  {
+    term: "Factorial",
+    notation: "n!",
+    unit: "Counting",
+    def: "The product n·(n−1)···2·1, equal to the number of ways to arrange n distinct objects in a sequence. By convention 0! = 1.",
+  },
+  {
+    term: "Permutations",
+    notation: "n!",
+    unit: "Counting",
+    def: "The number of ways of ordering n distinct objects in a row. By the counting principle there are n choices for the first position, n−1 for the second, and so on, giving n! orderings.",
+  },
+  {
+    term: "k-permutations",
+    notation: "n!/(n−k)!",
+    unit: "Counting",
+    def: "The number of ways to form an ordered sequence of k distinct objects taken from a set of n objects, where order matters.",
+  },
+  {
+    term: "Combinations",
+    notation: "C(n,k) = n!/(k!(n−k)!)",
+    unit: "Counting",
+    def: "The number of k-element subsets of an n-element set, where order does not matter. Also called the binomial coefficient 'n choose k'.",
+  },
+  {
+    term: "Binomial coefficient",
+    notation: "(n choose k)",
+    unit: "Counting",
+    def: "The count C(n,k) of ways to choose k items out of n; equivalently the number of binary strings of length n with exactly k ones. The coefficients sum to 2ⁿ over all k.",
+  },
+  {
+    term: "Binomial probabilities",
+    notation: "C(n,k) pᵏ (1−p)ⁿ⁻ᵏ",
+    unit: "Counting",
+    def: "In n independent trials each succeeding with probability p, the probability of exactly k successes, obtained by counting the C(n,k) arrangements of k successes among n trials.",
+  },
+  {
+    term: "Multinomial coefficient",
+    notation: "n!/(n₁!···nᵣ!)",
+    unit: "Counting",
+    def: "The number of ways to partition n distinct objects into r groups of prescribed sizes n₁,…,nᵣ. It generalizes the binomial coefficient, which is the case of two groups.",
+  },
+
+  // ── Lecture 5 — PMFs and expectation ──────────────────────────────────────
+  {
+    term: "Random variable",
+    notation: "X",
+    unit: "Random variables",
+    def: "A real-valued function of the outcome of an experiment, assigning a numerical value to each element of the sample space. A discrete random variable takes values in a finite or countable set.",
+  },
+  {
+    term: "Probability mass function",
+    notation: "p_X(x) = P(X = x)",
+    unit: "Random variables",
+    def: "For a discrete random variable, the function giving the probability of each possible value. It is nonnegative and its values sum to 1 over all x.",
+  },
+  {
+    term: "Bernoulli random variable",
+    notation: null,
+    unit: "Random variables",
+    def: "A random variable taking the value 1 with probability p and 0 with probability 1−p. It models a single trial with two possible outcomes, such as one coin toss.",
+  },
+  {
+    term: "Indicator random variable",
+    notation: "I_A",
+    unit: "Random variables",
+    def: "A Bernoulli random variable equal to 1 when event A occurs and 0 otherwise. Its expectation equals the probability of A, which makes indicators a powerful tool for computing expectations.",
+  },
+  {
+    term: "Discrete uniform random variable",
+    notation: null,
+    unit: "Random variables",
+    def: "A random variable equally likely to take any integer value in a range {a, a+1, …, b}, so each of the b−a+1 values has probability 1/(b−a+1).",
+  },
+  {
+    term: "Binomial random variable",
+    notation: null,
+    unit: "Random variables",
+    def: "The number of successes in n independent Bernoulli(p) trials. Its PMF is C(n,k) pᵏ (1−p)ⁿ⁻ᵏ, and it is the sum of n independent indicator random variables.",
+  },
+  {
+    term: "Geometric random variable",
+    notation: "(1−p)ᵏ⁻¹ p",
+    unit: "Random variables",
+    def: "The number of independent Bernoulli(p) trials up to and including the first success. It takes positive integer values and is the basic model of waiting for a first success.",
+  },
+  {
+    term: "Expectation",
+    notation: "E[X] = Σ x·p_X(x)",
+    unit: "Expectation",
+    def: "The probability-weighted average of the values of a random variable, interpreted as the center of gravity of the PMF and as the average value in a large number of independent repetitions.",
+  },
+  {
+    term: "Expected value rule",
+    notation: "E[g(X)] = Σ g(x)·p_X(x)",
+    unit: "Expectation",
+    def: "A rule for computing the expectation of a function g(X) directly from the PMF of X, without first finding the PMF of the new random variable g(X).",
+  },
+  {
+    term: "Linearity of expectation",
+    notation: "E[aX + b] = a·E[X] + b",
+    unit: "Expectation",
+    def: "Expectation is a linear operation: scaling and shifting X scales and shifts its expectation, and the expectation of a sum of random variables equals the sum of their expectations, even when they are not independent.",
+  },
+
+  // ── Lecture 6 — Variance; conditioning on an event; multiple r.v.'s ────────
+  {
+    term: "Variance",
+    notation: "var(X) = E[(X − E[X])²]",
+    unit: "Variance & conditioning",
+    def: "The expected squared deviation of a random variable from its mean, a measure of the spread of its distribution. It is always nonnegative and equals E[X²] − (E[X])².",
+  },
+  {
+    term: "Standard deviation",
+    notation: "σ_X = √var(X)",
+    unit: "Variance & conditioning",
+    def: "The square root of the variance, a measure of spread expressed in the same units as the random variable itself.",
+  },
+  {
+    term: "Conditional PMF (given an event)",
+    notation: "p_{X|A}(x) = P(X = x | A)",
+    unit: "Variance & conditioning",
+    def: "The PMF of X within the conditional model in which event A is known to have occurred. It is a legitimate PMF, nonnegative and summing to 1 over the outcomes consistent with A.",
+  },
+  {
+    term: "Conditional expectation (given an event)",
+    notation: "E[X | A]",
+    unit: "Variance & conditioning",
+    def: "The expectation of X computed using the conditional PMF given A, that is, the average value of X restricted to the situation in which A has occurred.",
+  },
+  {
+    term: "Total expectation theorem",
+    notation: "E[X] = Σ P(Aᵢ)·E[X | Aᵢ]",
+    unit: "Variance & conditioning",
+    def: "Given a partition of the sample space into scenarios A₁,…,Aₙ, the expectation of X is the weighted average of its conditional expectations under each scenario, with the scenario probabilities as weights.",
+  },
+  {
+    term: "Memorylessness",
+    notation: null,
+    unit: "Variance & conditioning",
+    def: "A defining property of the geometric random variable: given that the first k trials were failures, the additional number of trials needed for the first success has the same geometric distribution as the original, as if counting started afresh.",
+  },
+  {
+    term: "Joint PMF",
+    notation: "p_{X,Y}(x,y) = P(X = x, Y = y)",
+    unit: "Variance & conditioning",
+    def: "The function giving the probability of each pair of values of two discrete random variables. It is nonnegative and sums to 1 over all pairs (x, y).",
+  },
+  {
+    term: "Marginal PMF",
+    notation: "p_X(x) = Σ_y p_{X,Y}(x,y)",
+    unit: "Variance & conditioning",
+    def: "The PMF of one random variable recovered from a joint PMF by summing over all values of the other random variable.",
+  },
+
+  // ── Lecture 7 — Conditioning on a r.v.; independence of r.v.'s ─────────────
+  {
+    term: "Conditional PMF (given a random variable)",
+    notation: "p_{X|Y}(x | y)",
+    unit: "Independence",
+    def: "The PMF of X within the model conditioned on the event Y = y, equal to p_{X,Y}(x,y)/p_Y(y). It is defined for each y with p_Y(y) > 0 and is a legitimate PMF in x.",
+  },
+  {
+    term: "Conditional expectation (given a random variable)",
+    notation: "E[X | Y = y]",
+    unit: "Independence",
+    def: "The expectation of X with respect to the conditional PMF p_{X|Y}(· | y). As y varies, E[X | Y = y] defines a function of y, and averaging it over Y recovers E[X] by the total expectation theorem.",
+  },
+  {
+    term: "Independence of random variables",
+    notation: "p_{X,Y}(x,y) = p_X(x)·p_Y(y)",
+    unit: "Independence",
+    def: "Two random variables are independent if their joint PMF factors into the product of their marginal PMFs for every pair of values, meaning that conditioning on one never changes the distribution of the other.",
+  },
+  {
+    term: "Expectation of a product",
+    notation: "E[XY] = E[X]·E[Y]",
+    unit: "Independence",
+    def: "For independent random variables, the expectation of the product equals the product of the expectations. More generally E[g(X)h(Y)] = E[g(X)]·E[h(Y)]. This need not hold without independence.",
+  },
+  {
+    term: "Variance of a sum",
+    notation: "var(X + Y) = var(X) + var(Y)",
+    unit: "Independence",
+    def: "For independent random variables, variances add. This gives, for example, the variance np(1−p) of the binomial as the sum of the variances of its n independent Bernoulli indicators.",
+  },
+
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
+const UNITS = ["All", ...Object.keys(UNIT_COLORS)];
+
+let q = "", u = "All";
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function hi(text, query) {
+  const e = esc(text);
+  if (!query.trim()) return e;
+  const re = new RegExp(
+    "(" + query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
+    "gi"
+  );
+  return e.replace(re, "<mark>$1</mark>");
+}
+
+function render() {
+  const ql = q.toLowerCase();
+  const f = T.filter(t => {
+    const mu = u === "All" || t.unit === u;
+    const mq = !ql
+      || t.term.toLowerCase().includes(ql)
+      || t.def.toLowerCase().includes(ql)
+      || (t.notation && t.notation.toLowerCase().includes(ql));
+    return mu && mq;
+  }).sort((a, b) => a.term.localeCompare(b.term));
+
+  const countEl = document.getElementById("gc");
+  countEl.textContent = T.length === 0
+    ? "No terms loaded yet."
+    : `${f.length} term${f.length !== 1 ? "s" : ""}${q ? ` matching "${q}"` : ""}`;
+
+  const grps = {};
+  f.forEach(t => {
+    const l = t.term[0].toUpperCase();
+    if (!grps[l]) grps[l] = [];
+    grps[l].push(t);
+  });
+
+  const gl = document.getElementById("gl");
+  if (!f.length) {
+    gl.innerHTML = `<p id="empty">No terms found.</p>`;
+    return;
+  }
+
+  gl.innerHTML = Object.entries(grps)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([letter, terms]) => `
+      <div class="lh" aria-hidden="true">${letter}</div>
+      ${terms.map(t => `
+        <div class="tr" role="listitem">
+          <div>
+            <p class="tn">${hi(t.term, q)}</p>
+            ${t.notation ? `<span class="no">${esc(t.notation)}</span>` : ""}
+            <p class="td">${hi(t.def, q)}</p>
+          </div>
+          <span class="ut" aria-label="${esc(t.unit)}">
+            <span class="dot" style="background:${UNIT_COLORS[t.unit] || '#CCC'}"></span>
+            ${esc(t.unit)}
+          </span>
+        </div>
+      `).join("")}
+    `).join("");
+}
+
+const ufEl = document.getElementById("uf");
+ufEl.innerHTML = UNITS.map(un =>
+  `<button class="ub${u === un ? " on" : ""}" data-unit="${esc(un)}" role="tab" aria-selected="${u === un}">${esc(un)}</button>`
+).join("");
+
+ufEl.addEventListener("click", e => {
+  const b = e.target.closest(".ub");
+  if (!b) return;
+  u = b.dataset.unit;
+  document.querySelectorAll(".ub").forEach(x => {
+    x.classList.toggle("on", x.dataset.unit === u);
+    x.setAttribute("aria-selected", x.dataset.unit === u);
+  });
+  render();
+});
+
+document.getElementById("gs").addEventListener("input", e => {
+  q = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

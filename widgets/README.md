@@ -9,12 +9,14 @@ the lesson.
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Beach Beeps](https://codey-m.github.io/prob_stats/widgets/widget-bayes-base-rate.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Bayes' rule and the base rate |
+| [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module1.html) | Glossary tab | Module 1 Glossary |
 
 ## 6.3710.2x Probability & SDA: Discrete Distributions & Categorical Data
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Discrete distributions: PMF and CDF](https://codey-m.github.io/prob_stats/widgets/widget-discrete-dist.html) | Unit 1, Lec. 1: PMFs and expectation |  |
+| [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module2.html) | Glossary tab | Module 2 Glossary |
 
 ## 6.3710.3x Probability & SDA: Multivariate Statistics & Bayesian Inference
 
@@ -23,18 +25,21 @@ the lesson.
 | [Pairing Bench](https://codey-m.github.io/prob_stats/widgets/widget-pairing-bench.html) | Unit 1 overview | Pairing Bench, arrange six cup-and-saucer sets |
 | [Bivariate normal: correlation and conditioning](https://codey-m.github.io/prob_stats/widgets/widget-bvn-ellipse.html) | Unit 1, Lec. 2: Sums, covariance, and correlation | Correlation and conditioning |
 | [Bayesian updating: prior, likelihood, posterior](https://codey-m.github.io/prob_stats/widgets/widget-bayes-update.html) | Unit 2, Lec. 5: Linear models with normal noise | Bayesian updating |
+| [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module3.html) | Glossary tab | Module 3 Glossary |
 
 ## 6.3710.4x Probability & SDA: Uncertainty Quantification & Data-Driven Decisions
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Tipping Point](https://codey-m.github.io/prob_stats/widgets/widget-clt.html) | Unit 1, Lec. 2: The central limit theorem | The Central Limit Theorem |
+| [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module4.html) | Glossary tab | Module 4 Glossary |
 
 ## 6.3710.5x Probability & SDA: Hypothesis Testing & Machine Learning Model Validation
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Wonder Fold](https://codey-m.github.io/prob_stats/widgets/widget-ht-power.html) | Unit 2, Lec. 6: Power and optimal tests | Significance, error, and power |
+| [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module5.html) | Glossary tab | Module 5 Glossary |
 
 ## Review tips
 

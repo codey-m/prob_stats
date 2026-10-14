@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.3710x — Glossary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #FAFAF8; color: #1A1A1A; min-height: 100vh; }
+    #app { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    #header { margin-bottom: 1.75rem; }
+    #header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+    #header p { font-size: 13px; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    #search-wrap { position: relative; margin-bottom: 0.75rem; }
+    #search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #aaa; pointer-events: none; }
+    #gs { width: 100%; padding: 10px 12px 10px 36px; font-size: 15px; font-family: inherit; border: 1px solid #DDD; border-radius: 6px; background: #FFF; color: #1A1A1A; outline: none; transition: border-color 0.15s; }
+    #gs:focus { border-color: #888; }
+    #gs::placeholder { color: #BBB; }
+    #uf { display: flex; flex-wrap: wrap; border-bottom: 1px solid #EEE; margin-bottom: 0.5rem; }
+    .ub { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 14px 6px; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; cursor: pointer; color: #AAA; transition: color 0.12s; }
+    .ub.on { color: #1A1A1A; border-bottom-color: #1A1A1A; font-weight: 600; }
+    .ub:hover { color: #1A1A1A; }
+    #gc { font-size: 11px; color: #BBB; font-family: 'Courier New', monospace; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .lh { font-size: 11px; color: #CCC; padding: 16px 0 5px; border-bottom: 1px solid #EEE; font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+    .tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid #F0F0F0; }
+    .tn { font-size: 18px; font-weight: 600; margin-bottom: 3px; color: #1A1A1A; }
+    .no { font-family: 'Courier New', monospace; font-size: 12px; background: #F4F4F2; color: #666; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .td { font-size: 14px; color: #555; line-height: 1.7; }
+    .ut { font-family: 'Courier New', monospace; font-size: 10px; background: #F4F4F2; color: #999; padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.04em; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    mark { background: #FFF3CC; color: #7A5C00; border-radius: 2px; padding: 0 1px; }
+    #empty { color: #BBB; font-size: 14px; padding: 3rem 0; text-align: center; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>6.3710x — Glossary</h1>
+    <p>MODULE 1 &nbsp;·&nbsp; EXPLORATORY DATA ANALYSIS AND PROBABILITY MODELS</p>
+  </div>
+  <div id="search-wrap">
+    <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="gs" type="search" placeholder="Search terms, definitions, notation…" aria-label="Search glossary" />
+  </div>
+  <div id="uf" role="tablist" aria-label="Filter by unit"></div>
+  <p id="gc" aria-live="polite"></p>
+  <div id="gl" role="list"></div>
+</div>
+
+<script>
+// ─── Module configuration ───────────────────────────────────────────────────
+// Update MODULE.name and MODULE.subtitle per module.
+// Units should reflect the conceptual groupings covered in this module only.
+const MODULE = {
+  name: "Module 1",
+  subtitle: "Exploratory data analysis and probability models",
+  course: "6.3710x",
+};
+
+// Unit dot colors — add/remove units here to match what this module covers.
+// Values are mid-ramp accent colors; they work on both light backgrounds.
+const UNIT_COLORS = {
+  "Exploratory data analysis": "#BA7517",   // amber
+  "Foundations":       "#888780",   // neutral gray
+  "Conditioning":      "#378ADD",   // blue
+  "Independence":      "#1D9E75",   // teal
+  // Add more units below if this module covers them:
+  // "Random variables":  "#7F77DD",   // purple
+  // "Distributions":     "#BA7517",   // amber
+};
+
+// ─── Term data ───────────────────────────────────────────────────────────────
+//
+// CLAUDE CODE: populate this array from the Module 1 lecture transcripts.
+//
+// Transcript files are at:
+//   /Users/cody/Documents/6.3710.1x/static/transcripts/
+//
+// Module 1 transcript files (add/correct as needed):
+//   L01-*.srt / .txt   — Lecture 1 (probability models and axioms)
+//   L02-*.srt / .txt   — Lecture 2 (conditioning and Bayes)
+//   L03-*.srt / .txt   — Lecture 3 (independence)
+//
+// For each transcript: read it, identify moments where a term is formally
+// introduced or defined, and extract an entry using the schema below.
+// Prefer the professor's own phrasing for the definition; edit for concision.
+//
+// Schema for each entry:
+//   term:      string  — the term name, in natural mixed case
+//   notation:  string | null  — the symbolic notation, e.g. "P(A|B)", or null
+//   unit:      string  — must match a key in UNIT_COLORS above
+//   def:       string  — the definition, 1–3 sentences, third-person present tense
+//
+// Example entry (delete this before deploying):
+// {
+//   term: "Sample space",
+//   notation: "Ω",
+//   unit: "Foundations",
+//   def: "The set of all possible outcomes of a probabilistic experiment. " +
+//        "All events are subsets of Ω.",
+// },
+//
+const T = [
+
+  // ── Exploratory data analysis ─────────────────────────────────────────────
+  {
+    term: "Histogram",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "A plot that groups numerical data into bins and shows how many observations fall in each bin. It helps reveal the shape, center, spread, and unusual features of a distribution.",
+  },
+  {
+    term: "Boxplot",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "A compact plot showing the median, quartiles, and potential outliers of a numerical variable. It is useful for comparing distributions across groups.",
+  },
+  {
+    term: "Empirical proportion",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "The fraction of observed cases in a dataset that satisfy a condition. It is a data-based estimate of the probability of the corresponding event.",
+  },
+  {
+    term: "Sample proportion",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "The proportion of observations in a sample with a specified property, often used to estimate an unknown population proportion.",
+  },
+  {
+    term: "Empirical distribution",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "The distribution described by the observed data themselves. It assigns mass to observed values or summarizes how frequently values fall in different ranges.",
+  },
+  {
+    term: "Venn diagram",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "A diagram that represents events as regions and uses overlap to show intersections, unions, complements, and set relationships.",
+  },
+  {
+    term: "Complement rule",
+    notation: "P(A^c) = 1 - P(A)",
+    unit: "Exploratory data analysis",
+    def: "A probability rule stating that the probability an event does not occur is one minus the probability that it does occur.",
+  },
+  {
+    term: "Inclusion-exclusion",
+    notation: "P(A∪B) = P(A)+P(B)-P(A∩B)",
+    unit: "Exploratory data analysis",
+    def: "A rule for finding the probability of a union by adding the individual probabilities and subtracting the overlap that was counted twice.",
+  },
+  {
+    term: "Base rate",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "The overall or prior frequency of an event in a population before conditioning on additional information. Base rates are essential for interpreting diagnostic and classification results.",
+  },
+  {
+    term: "False positive",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "A case where a test or classifier indicates that a condition is present when it is actually absent.",
+  },
+  {
+    term: "False negative",
+    notation: null,
+    unit: "Exploratory data analysis",
+    def: "A case where a test or classifier indicates that a condition is absent when it is actually present.",
+  },
+
+  // ── Lecture 1 — Probability models and axioms (Foundations) ───────────────
+  {
+    term: "Probabilistic model",
+    notation: null,
+    unit: "Foundations",
+    def: "A model of a random phenomenon or random experiment, put together in two steps: first describing the possible outcomes, then specifying a probability law that captures our beliefs about how likely the different outcomes are.",
+  },
+  {
+    term: "Sample space",
+    notation: "Ω",
+    unit: "Foundations",
+    def: "The set of all possible outcomes of an experiment. Its elements must be mutually exclusive and collectively exhaustive, so that at the end of the experiment you can always point to exactly one outcome that occurred.",
+  },
+  {
+    term: "Mutually exclusive",
+    notation: null,
+    unit: "Foundations",
+    def: "A required property of the outcomes in a sample space: if one outcome has happened, then it is not possible that another outcome also happened. At the end of the experiment only one outcome can have occurred.",
+  },
+  {
+    term: "Collectively exhaustive",
+    notation: null,
+    unit: "Foundations",
+    def: "A required property of the outcomes in a sample space: together they exhaust all the possibilities, so that no matter what happens you will be able to point to one of the listed outcomes as the one that occurred.",
+  },
+  {
+    term: "Tree",
+    notation: null,
+    unit: "Foundations",
+    def: "A sequential description of the sample space for an experiment carried out in stages, drawn starting from a root, with the possible final outcomes corresponding to the leaves. Its branches are annotated with probabilities and conditional probabilities.",
+  },
+  {
+    term: "Event",
+    notation: "A",
+    unit: "Foundations",
+    def: "A subset of the sample space, to which a probability is assigned. Once the experiment is carried out, event A has occurred if the observed outcome lies inside A, and has not occurred otherwise.",
+  },
+  {
+    term: "Probability law",
+    notation: "P(A)",
+    unit: "Foundations",
+    def: "An assignment of probabilities to events that specifies which outcomes are more or less likely. Probabilities are assigned to whole subsets rather than to individual points, which avoids difficulties in continuous models where any single point has zero probability.",
+  },
+  {
+    term: "Probability axioms",
+    notation: null,
+    unit: "Foundations",
+    def: "The basic rules that any legitimate probability model must satisfy: nonnegativity, normalization, and (countable) additivity. They are surprisingly few, yet imply many further properties of probabilities.",
+  },
+  {
+    term: "Nonnegativity axiom",
+    notation: "P(A) ≥ 0",
+    unit: "Foundations",
+    def: "The requirement that the probability of any event is always a non-negative number.",
+  },
+  {
+    term: "Normalization axiom",
+    notation: "P(Ω) = 1",
+    unit: "Foundations",
+    def: "The requirement that the probability of the entire sample space is equal to 1, capturing the certainty that the outcome of the experiment is some element of the sample space.",
+  },
+  {
+    term: "Additivity axiom",
+    notation: "P(A∪B) = P(A) + P(B)",
+    unit: "Foundations",
+    def: "If two events are disjoint, so that their intersection is empty, then the probability of their union is the sum of their individual probabilities.",
+  },
+  {
+    term: "Disjoint events",
+    notation: "A∩B = ∅",
+    unit: "Foundations",
+    def: "Two events with no outcomes in common, i.e. whose intersection is the empty set. The additivity axiom applies precisely to disjoint events.",
+  },
+  {
+    term: "Countable additivity axiom",
+    notation: null,
+    unit: "Foundations",
+    def: "If we have an infinite sequence of disjoint events, then the probability of their union equals the sum of their individual probabilities. The key word is sequence: the events must be arrangeable as a first, a second, a third, and so on.",
+  },
+  {
+    term: "Union bound",
+    notation: "P(A∪B) ≤ P(A) + P(B)",
+    unit: "Foundations",
+    def: "For any two events, the probability of their union is at most the sum of their individual probabilities. It is useful whenever we want to argue that a certain probability is smaller than something.",
+  },
+  {
+    term: "Discrete uniform law",
+    notation: null,
+    unit: "Foundations",
+    def: "A probability law on a finite sample space with n equally likely outcomes, so each outcome has probability 1/n. The probability of an event with k elements is then k/n, which reduces probability calculations to counting.",
+  },
+  {
+    term: "Continuous uniform law",
+    notation: null,
+    unit: "Foundations",
+    def: "A probability law on a continuous sample space in which the probability of a subset is equal to its area (or, more generally, its size). Any individual point has zero probability.",
+  },
+  {
+    term: "Uncountable set",
+    notation: null,
+    unit: "Foundations",
+    def: "A set, such as the unit square or the real line, whose elements cannot be arranged in a sequence; it is contrasted with countable (discrete) sets like the integers, whose elements can. This distinction is why the additivity axiom is stated only for sequences of events.",
+  },
+  {
+    term: "Frequency interpretation",
+    notation: null,
+    unit: "Foundations",
+    def: "An interpretation in which the probability of an event A is the frequency with which A occurs in an infinite number of repetitions of the experiment. It is natural for repeatable experiments like coin tosses, but less so for one-off events, where probabilities are better viewed as describing beliefs.",
+  },
+
+  // ── Lecture 2 — Conditioning and Bayes' rule (Conditioning) ───────────────
+  {
+    term: "Conditional probability",
+    notation: "P(A|B)",
+    unit: "Conditioning",
+    def: "The probability of event A given that event B is known to have occurred, defined as P(A∩B)/P(B). It describes a revised model that takes the new information into account, and is defined only when P(B) is positive.",
+  },
+  {
+    term: "Multiplication rule",
+    notation: "P(A∩B) = P(B)·P(A|B)",
+    unit: "Conditioning",
+    def: "A rule, obtained by rearranging the definition of conditional probability, for computing the probability that several events all occur. Along a tree, the probability of a leaf is the product of the probabilities and conditional probabilities on the branches leading to it.",
+  },
+  {
+    term: "Total probability theorem",
+    notation: "P(B) = Σ P(Aᵢ)·P(B|Aᵢ)",
+    unit: "Conditioning",
+    def: "Given a partition of the sample space into scenarios A₁,…,Aₙ, the probability of an event B is a weighted average of its conditional probabilities under each scenario, with the scenario probabilities as the weights.",
+  },
+  {
+    term: "Bayes' rule",
+    notation: "P(Aᵢ|B)",
+    unit: "Conditioning",
+    def: "A rule that reverses the direction of conditioning, combining the multiplication rule and the total probability theorem to compute P(Aᵢ|B) from the initial probabilities P(Aᵢ) and the conditional probabilities P(B|Aᵢ). It is a systematic way of incorporating new evidence and revising beliefs.",
+  },
+  {
+    term: "Partition",
+    notation: null,
+    unit: "Conditioning",
+    def: "A collection of disjoint events that together cover the entire sample space. Each event is thought of as a possible scenario, and the probabilities of the scenarios sum to 1.",
+  },
+  {
+    term: "Bayesian inference",
+    notation: null,
+    unit: "Conditioning",
+    def: "A major branch of the subject, founded on Bayes' rule, in which the observation that an event occurred is used to draw conclusions about its possible causes by revising the probabilities of the underlying scenarios.",
+  },
+
+  // ── Lecture 3 — Independence (Independence) ───────────────────────────────
+  {
+    term: "Independence",
+    notation: "P(A∩B) = P(A)·P(B)",
+    unit: "Independence",
+    def: "Two events are independent if the probability that both occur equals the product of their individual probabilities. Intuitively, the occurrence of one event provides no information that changes our beliefs about the other; this is completely different from being disjoint.",
+  },
+  {
+    term: "Conditional independence",
+    notation: "P(A∩B|C) = P(A|C)·P(B|C)",
+    unit: "Independence",
+    def: "Independence applied within a conditional model: A and B are conditionally independent given C if, in the model conditioned on C, the probability of their intersection equals the product of their conditional probabilities. Independence does not imply conditional independence.",
+  },
+  {
+    term: "Independence of a collection of events",
+    notation: null,
+    unit: "Independence",
+    def: "A collection of events is independent if the probability of the intersection of any subcollection equals the product of the individual probabilities, for every choice of the indices. This ensures information about some of the events never changes beliefs about the others.",
+  },
+  {
+    term: "Pairwise independence",
+    notation: null,
+    unit: "Independence",
+    def: "A weaker property than independence of a collection, in which every pair of events is independent but the multiplication rule need not hold for three-way or larger intersections. Pairwise independence does not imply independence of the whole collection.",
+  },
+  {
+    term: "De Morgan's laws",
+    notation: null,
+    unit: "Independence",
+    def: "Set-theoretic identities relating unions and intersections through complements, used to turn a union of events into an intersection so that independence can be applied — for instance, the complement of 'at least one unit is up' is 'all units fail'.",
+  },
+  {
+    term: "System reliability",
+    notation: null,
+    unit: "Independence",
+    def: "The probability that a system built from independent components is 'up', meaning a path of working units connects its input to its output. Independence lets us compute it by combining the individual component probabilities.",
+  },
+
+];
+// ─────────────────────────────────────────────────────────────────────────────
+
+const UNITS = ["All", ...Object.keys(UNIT_COLORS)];
+
+let q = "", u = "All";
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function hi(text, query) {
+  const e = esc(text);
+  if (!query.trim()) return e;
+  const re = new RegExp(
+    "(" + query.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")",
+    "gi"
+  );
+  return e.replace(re, "<mark>$1</mark>");
+}
+
+function render() {
+  const ql = q.toLowerCase();
+  const f = T.filter(t => {
+    const mu = u === "All" || t.unit === u;
+    const mq = !ql
+      || t.term.toLowerCase().includes(ql)
+      || t.def.toLowerCase().includes(ql)
+      || (t.notation && t.notation.toLowerCase().includes(ql));
+    return mu && mq;
+  }).sort((a, b) => a.term.localeCompare(b.term));
+
+  const countEl = document.getElementById("gc");
+  countEl.textContent = T.length === 0
+    ? "No terms loaded yet."
+    : `${f.length} term${f.length !== 1 ? "s" : ""}${q ? ` matching "${q}"` : ""}`;
+
+  const grps = {};
+  f.forEach(t => {
+    const l = t.term[0].toUpperCase();
+    if (!grps[l]) grps[l] = [];
+    grps[l].push(t);
+  });
+
+  const gl = document.getElementById("gl");
+  if (!f.length) {
+    gl.innerHTML = `<p id="empty">No terms found.</p>`;
+    return;
+  }
+
+  gl.innerHTML = Object.entries(grps)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([letter, terms]) => `
+      <div class="lh" aria-hidden="true">${letter}</div>
+      ${terms.map(t => `
+        <div class="tr" role="listitem">
+          <div>
+            <p class="tn">${hi(t.term, q)}</p>
+            ${t.notation ? `<span class="no">${esc(t.notation)}</span>` : ""}
+            <p class="td">${hi(t.def, q)}</p>
+          </div>
+          <span class="ut" aria-label="${esc(t.unit)}">
+            <span class="dot" style="background:${UNIT_COLORS[t.unit] || '#CCC'}"></span>
+            ${esc(t.unit)}
+          </span>
+        </div>
+      `).join("")}
+    `).join("");
+}
+
+// Render unit filter buttons
+const ufEl = document.getElementById("uf");
+ufEl.innerHTML = UNITS.map(un =>
+  `<button class="ub${u === un ? " on" : ""}" data-unit="${esc(un)}" role="tab" aria-selected="${u === un}">${esc(un)}</button>`
+).join("");
+
+ufEl.addEventListener("click", e => {
+  const b = e.target.closest(".ub");
+  if (!b) return;
+  u = b.dataset.unit;
+  document.querySelectorAll(".ub").forEach(x => {
+    x.classList.toggle("on", x.dataset.unit === u);
+    x.setAttribute("aria-selected", x.dataset.unit === u);
+  });
+  render();
+});
+
+document.getElementById("gs").addEventListener("input", e => {
+  q = e.target.value;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>6.3710x — Glossary</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #FAFAF8; color: #1A1A1A; min-height: 100vh; }
+    #app { max-width: 760px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    #header { margin-bottom: 1.75rem; }
+    #header h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 2px; }
+    #header p { font-size: 13px; color: #888; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    #search-wrap { position: relative; margin-bottom: 0.75rem; }
+    #search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: #aaa; pointer-events: none; }
+    #gs { width: 100%; padding: 10px 12px 10px 36px; font-size: 15px; font-family: inherit; border: 1px solid #DDD; border-radius: 6px; background: #FFF; color: #1A1A1A; outline: none; transition: border-color 0.15s; }
+    #gs:focus { border-color: #888; }
+    #gs::placeholder { color: #BBB; }
+    #uf { display: flex; flex-wrap: wrap; border-bottom: 1px solid #EEE; margin-bottom: 0.5rem; }
+    .ub { background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; padding: 8px 14px 6px; font-size: 12px; font-family: 'Courier New', monospace; letter-spacing: 0.05em; cursor: pointer; color: #AAA; transition: color 0.12s; }
+    .ub.on { color: #1A1A1A; border-bottom-color: #1A1A1A; font-weight: 600; }
+    .ub:hover { color: #1A1A1A; }
+    #gc { font-size: 11px; color: #BBB; font-family: 'Courier New', monospace; letter-spacing: 0.04em; margin-bottom: 0.25rem; }
+    .lh { font-size: 11px; color: #CCC; padding: 16px 0 5px; border-bottom: 1px solid #EEE; font-family: 'Courier New', monospace; letter-spacing: 0.1em; }
+    .tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 16px; padding: 16px 0; border-bottom: 1px solid #F0F0F0; }
+    .tn { font-size: 18px; font-weight: 600; margin-bottom: 3px; color: #1A1A1A; }
+    .no { font-family: 'Courier New', monospace; font-size: 12px; background: #F4F4F2; color: #666; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 6px; }
+    .td { font-size: 14px; color: #555; line-height: 1.7; }
+    .ut { font-family: 'Courier New', monospace; font-size: 10px; background: #F4F4F2; color: #999; padding: 3px 8px; border-radius: 4px; white-space: nowrap; align-self: start; margin-top: 4px; display: flex; align-items: center; gap: 5px; letter-spacing: 0.04em; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+    mark { background: #FFF3CC; color: #7A5C00; border-radius: 2px; padding: 0 1px; }
+    #empty { color: #BBB; font-size: 14px; padding: 3rem 0; text-align: center; font-family: 'Courier New', monospace; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div id="header">
+    <h1>6.3710x — Glossary</h1>
+    <p>MODULE 3 &nbsp;·&nbsp; CONTINUOUS AND MULTIVARIATE STATISTICS, BAYESIAN INFERENCE</p>
+  </div>
+  <div id="search-wrap">
+    <svg id="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input id="gs" type="search" placeholder="Search terms, definitions, notation…" aria-label="Search glossary" />
+  </div>
+  <div id="uf" role="tablist" aria-label="Filter by unit"></div>
+  <p id="gc" aria-live="polite"></p>
+  <div id="gl" role="list"></div>
+</div>
+
+<script>
+const MODULE = {
+  name: "Module 3",
+  subtitle: "Continuous and multivariate statistics, Bayesian inference",
+  course: "6.3710x",
+};
+
+const UNIT_COLORS = {
+  "Continuous RVs":          "#378ADD",   // blue   (Lec 8-10)
+  "Derived distributions":   "#BA7517",   // amber  (Lec 11)
+  "Covariance & correlation":"#1D9E75",   // teal   (Lec 12)
+  "Conditional expectation": "#7F77DD",   // purple (Lec 13)
+  "Multivariate modeling":   "#D85C5C",   // red    (ML bridge)
+  "Bayesian inference":      "#888780",   // gray   (Lec 14-16)
+};
+
+const T = [
+
+  // ── Lectures 8-10 — Continuous random variables ───────────────────────────
+  { term: "Continuous random variable", notation: null, unit: "Continuous RVs",
+    def: "A random variable that can take a continuum of values. Probabilities are described by a probability density function rather than by a probability mass function, and any single value has probability zero." },
+  { term: "Probability density function", notation: "f_X(x)", unit: "Continuous RVs",
+    def: "A nonnegative function whose integral over a set gives the probability that the random variable falls in that set. It integrates to 1 over the whole line, and its value is a probability per unit length, not a probability." },
+  { term: "Cumulative distribution function", notation: "F_X(x) = P(X ≤ x)", unit: "Continuous RVs",
+    def: "The probability that a random variable is at most x. It is nondecreasing from 0 to 1 and applies to discrete, continuous, and mixed random variables alike; for a continuous RV it is the integral of the PDF." },
+  { term: "Expectation (continuous)", notation: "E[X] = ∫ x f_X(x) dx", unit: "Continuous RVs",
+    def: "The probability-weighted average of a continuous random variable, computed by integrating x against its PDF. The expected value rule and linearity carry over from the discrete case." },
+  { term: "Continuous uniform random variable", notation: null, unit: "Continuous RVs",
+    def: "A random variable with a constant PDF on an interval [a, b] and zero outside it, so probability is proportional to length within the interval." },
+  { term: "Exponential random variable", notation: "λ e^{−λ x}", unit: "Continuous RVs",
+    def: "A continuous random variable on [0, ∞) used to model waiting times. It is memoryless: the remaining wait, given that you have waited a while, has the same distribution as the original." },
+  { term: "Normal (Gaussian) random variable", notation: null, unit: "Continuous RVs",
+    def: "A continuous random variable with the bell-shaped PDF determined by its mean and variance. Affine functions of normals are normal, and sums of independent normals are normal." },
+  { term: "Joint distribution", notation: null, unit: "Continuous RVs",
+    def: "The probability model for two or more random variables considered together. It contains the information needed to compute marginal and conditional distributions." },
+  { term: "Joint PDF", notation: "f_{X,Y}(x,y)", unit: "Continuous RVs",
+    def: "A nonnegative function whose integral over a region of the plane gives the probability that the pair (X, Y) falls in that region. Marginals are obtained by integrating out the other variable." },
+  { term: "Marginal distribution", notation: null, unit: "Continuous RVs",
+    def: "The distribution of one random variable obtained from a joint distribution by summing or integrating over the other variables." },
+  { term: "Marginal PDF", notation: "f_X(x)", unit: "Continuous RVs",
+    def: "A density for one component of a jointly continuous random vector, obtained by integrating the joint PDF over the other components." },
+  { term: "Conditional distribution", notation: null, unit: "Continuous RVs",
+    def: "The distribution of one random variable after the value of another random variable or event is known." },
+  { term: "Conditional PDF", notation: "f_{X|Y}(x|y) = f_{X,Y}(x,y)/f_Y(y)", unit: "Continuous RVs",
+    def: "The density of X within the model conditioned on Y = y, defined where f_Y(y) > 0. It is a legitimate PDF in x for each fixed y." },
+  { term: "Bayes' rule for continuous RVs", notation: null, unit: "Continuous RVs",
+    def: "Relates the two conditional densities f_{X|Y} and f_{Y|X}, combining a prior density with a likelihood to produce a posterior density. It is the continuous analogue of Bayes' rule for events." },
+
+  // ── Lecture 11 — Derived distributions ────────────────────────────────────
+  { term: "Derived distribution", notation: null, unit: "Derived distributions",
+    def: "The distribution of a function Y = g(X) of a random variable, obtained from the distribution of X. The general method finds the CDF of Y first and then differentiates." },
+  { term: "Monotonic case formula", notation: "f_Y(y) = f_X(x)/|g'(x)|", unit: "Derived distributions",
+    def: "For a strictly monotonic and differentiable g with Y = g(X), the PDF of Y is the PDF of X at the corresponding x divided by the absolute derivative of g, evaluated at x = g⁻¹(y)." },
+  { term: "Linear function of a normal", notation: null, unit: "Derived distributions",
+    def: "An affine transformation aX + b of a normal random variable is again normal, with mean and variance scaled accordingly. This is a special case of a derived distribution." },
+
+  // ── Lecture 12 — Sums, covariance, correlation ────────────────────────────
+  { term: "Convolution", notation: null, unit: "Covariance & correlation",
+    def: "The operation that produces the PMF or PDF of the sum of two independent random variables from their individual PMFs or PDFs." },
+  { term: "Covariance", notation: "cov(X,Y) = E[(X−E[X])(Y−E[Y])]", unit: "Covariance & correlation",
+    def: "A measure of the joint variability of two random variables. It is zero when they are independent (though zero covariance does not imply independence) and enters the variance of a sum." },
+  { term: "Correlation coefficient", notation: "ρ = cov(X,Y)/(σ_X σ_Y)", unit: "Covariance & correlation",
+    def: "A dimensionless measure of the strength of the linear relationship between two random variables, always between −1 and 1. Values near ±1 indicate a nearly linear relationship." },
+  { term: "Variance of a sum", notation: "var(X+Y) = var(X)+var(Y)+2cov(X,Y)", unit: "Covariance & correlation",
+    def: "The variance of a sum includes a covariance term, which vanishes when the random variables are uncorrelated, recovering the additive rule for independent variables." },
+
+  // ── Lecture 13 — Conditional expectation and variance revisited ───────────
+  { term: "Conditional expectation as a random variable", notation: "E[X | Y]", unit: "Conditional expectation",
+    def: "The function of Y whose value at Y = y is E[X | Y = y]. Because it depends on the random variable Y, it is itself a random variable, with its own distribution and expectation." },
+  { term: "Law of iterated expectations", notation: "E[E[X|Y]] = E[X]", unit: "Conditional expectation",
+    def: "Averaging the conditional expectation E[X | Y] over the distribution of Y recovers the unconditional expectation of X. It generalizes the total expectation theorem." },
+  { term: "Law of total variance", notation: "var(X) = E[var(X|Y)] + var(E[X|Y])", unit: "Conditional expectation",
+    def: "Decomposes the variance of X into the average within-group variance plus the variance of the group means, where groups are indexed by Y." },
+  { term: "Sum of a random number of random variables", notation: null, unit: "Conditional expectation",
+    def: "For a sum of N independent identically distributed terms, with N independent of the terms, the mean is E[N]·E[X], and the variance combines the variability of the terms with that of N via the law of total variance." },
+
+  // ── Multivariate modeling bridge ─────────────────────────────────────────
+  { term: "Feature vector", notation: null, unit: "Multivariate modeling",
+    def: "A vector whose components are measured features of one case or observation. Machine learning models typically use feature vectors as inputs for prediction or inference." },
+  { term: "Observation", notation: null, unit: "Multivariate modeling",
+    def: "One data case, such as one measurement, subject, trial, or example. In multivariate data, an observation is often represented by a feature vector." },
+  { term: "Parameter", notation: null, unit: "Multivariate modeling",
+    def: "An unknown quantity that indexes a probability model, such as a mean, variance, rate, or class probability. In inference, parameters are estimated or assigned posterior distributions." },
+  { term: "Multivariate normal", notation: null, unit: "Multivariate modeling",
+    def: "A joint normal distribution for a vector of continuous random variables, described by a mean vector and covariance matrix. It is a central model for multivariate prediction and conditioning." },
+  { term: "Decision rule", notation: null, unit: "Multivariate modeling",
+    def: "A rule that maps data or posterior probabilities to an action, estimate, or classification. Decision rules make explicit how uncertainty is turned into a choice." },
+  { term: "Loss", notation: null, unit: "Multivariate modeling",
+    def: "A numerical cost assigned to an error or decision outcome. Different loss functions can lead to different optimal estimates or actions." },
+  { term: "Squared loss", notation: null, unit: "Multivariate modeling",
+    def: "A loss function that penalizes an estimate by the square of its error. Under squared loss, the conditional expectation is the optimal estimator." },
+
+  // ── Lectures 14-16 — Bayesian inference ───────────────────────────────────
+  { term: "Bayesian inference", notation: null, unit: "Bayesian inference",
+    def: "An approach that treats unknown quantities as random variables with a prior distribution, then uses observed data and Bayes' rule to obtain a posterior distribution that captures all remaining uncertainty." },
+  { term: "Likelihood", notation: null, unit: "Bayesian inference",
+    def: "The probability or density of the observed data viewed as a function of an unknown parameter. In Bayesian inference, the likelihood updates the prior into the posterior." },
+  { term: "Prior distribution", notation: null, unit: "Bayesian inference",
+    def: "The distribution assigned to an unknown quantity before any data are observed, expressing initial beliefs about its likely values." },
+  { term: "Posterior distribution", notation: null, unit: "Bayesian inference",
+    def: "The conditional distribution of the unknown given the observed data, obtained from the prior and the likelihood through Bayes' rule. It is the complete output of Bayesian inference." },
+  { term: "Posterior mean", notation: null, unit: "Bayesian inference",
+    def: "The expected value of an unknown quantity under its posterior distribution. It is the Bayesian estimate that minimizes posterior expected squared error." },
+  { term: "Posterior predictive distribution", notation: null, unit: "Bayesian inference",
+    def: "The distribution of a future observation after accounting for posterior uncertainty about the unknown parameter." },
+  { term: "MAP estimate", notation: null, unit: "Bayesian inference",
+    def: "The maximum a posteriori estimate: the value of the unknown that maximizes the posterior distribution, a common point summary of the posterior." },
+  { term: "LMS estimation", notation: "E[Θ | X]", unit: "Bayesian inference",
+    def: "Least mean squares estimation: the estimator that minimizes the mean squared error is the conditional expectation of the unknown given the observation." },
+  { term: "Linear LMS estimation", notation: null, unit: "Bayesian inference",
+    def: "The best estimator among linear functions of the observation, minimizing mean squared error. It depends only on the means, variances, and covariance, not on the full distributions." },
+
+];
+
+const UNITS = ["All", ...Object.keys(UNIT_COLORS)];
+let q = "", u = "All";
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hi(text, query){const e=esc(text);if(!query.trim())return e;const re=new RegExp("("+query.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+")","gi");return e.replace(re,"<mark>$1</mark>");}
+function render(){
+  const ql=q.toLowerCase();
+  const f=T.filter(t=>{const mu=u==="All"||t.unit===u;const mq=!ql||t.term.toLowerCase().includes(ql)||t.def.toLowerCase().includes(ql)||(t.notation&&t.notation.toLowerCase().includes(ql));return mu&&mq;}).sort((a,b)=>a.term.localeCompare(b.term));
+  document.getElementById("gc").textContent=T.length===0?"No terms loaded yet.":`${f.length} term${f.length!==1?"s":""}${q?` matching "${q}"`:""}`;
+  const grps={};f.forEach(t=>{const l=t.term[0].toUpperCase();(grps[l]=grps[l]||[]).push(t);});
+  const gl=document.getElementById("gl");
+  if(!f.length){gl.innerHTML=`<p id="empty">No terms found.</p>`;return;}
+  gl.innerHTML=Object.entries(grps).sort(([a],[b])=>a.localeCompare(b)).map(([letter,terms])=>`
+      <div class="lh" aria-hidden="true">${letter}</div>
+      ${terms.map(t=>`
+        <div class="tr" role="listitem">
+          <div>
+            <p class="tn">${hi(t.term,q)}</p>
+            ${t.notation?`<span class="no">${esc(t.notation)}</span>`:""}
+            <p class="td">${hi(t.def,q)}</p>
+          </div>
+          <span class="ut" aria-label="${esc(t.unit)}">
+            <span class="dot" style="background:${UNIT_COLORS[t.unit]||'#CCC'}"></span>
+            ${esc(t.unit)}
+          </span>
+        </div>`).join("")}`).join("");
+}
+const ufEl=document.getElementById("uf");
+ufEl.innerHTML=UNITS.map(un=>`<button class="ub${u===un?" on":""}" data-unit="${esc(un)}" role="tab" aria-selected="${u===un}">${esc(un)}</button>`).join("");
+ufEl.addEventListener("click",e=>{const b=e.target.closest(".ub");if(!b)return;u=b.dataset.unit;document.querySelectorAll(".ub").forEach(x=>{x.classList.toggle("on",x.dataset.unit===u);x.setAttribute("aria-selected",x.dataset.unit===u);});render();});
+document.getElementById("gs").addEventListener("input",e=>{q=e.target.value;render();});
+render();
+</script>
+</body>
+</html>
