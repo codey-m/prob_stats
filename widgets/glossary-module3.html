@@ -57,6 +57,7 @@ const MODULE = {
 };
 
 const UNIT_COLORS = {
+  "Discrete RVs":            "#B04A8B",   // magenta (Module 2, prerequisite)
   "Continuous RVs":          "#378ADD",   // blue   (Lec 8-10)
   "Derived distributions":   "#BA7517",   // amber  (Lec 11)
   "Covariance & correlation":"#1D9E75",   // teal   (Lec 12)
@@ -66,6 +67,10 @@ const UNIT_COLORS = {
 };
 
 const T = [
+
+  // ── Module 2 prerequisite: discrete random variables ─────────────────────
+  { term: "Indicator random variable", notation: "I_A", unit: "Discrete RVs",
+    def: "A Bernoulli random variable equal to 1 when event A occurs and 0 otherwise. Its expectation equals the probability of A." },
 
   // ── Lectures 8-10 — Continuous random variables ───────────────────────────
   { term: "Continuous random variable", notation: null, unit: "Continuous RVs",
