@@ -1,172 +1,188 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{margin:0}</style>
-<title>Sliding Convolution</title>
+<title>Sliding convolution</title>
 <style>
-/* Layout: one column, controls on top, two stacked plots (boxes, then f_Z), readout between. Projector-first sizes. */
-:root{
-  color-scheme:light;
-  --bg:#f7f8fa; --panel:#ffffff; --fg:#1b2230; --muted:#5b6475; --rule:#d9dde5;
-  --x:#2f6fb0; --y:#c2571f; --ov:#2f9e6e; --ov-fill:rgba(47,158,110,.28); --trace:#6a4fc4;
-  --font-body:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --font-mono:ui-monospace,Menlo,Consolas,monospace;
-}
-body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:17px;line-height:1.5;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 32px}
-.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-h1{font-size:1.6rem;margin:0;text-wrap:balance}
-.sub{color:var(--muted);margin:0;max-width:68ch}
-.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:14px 16px}
-.row{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
-.presets button,.play{font:inherit;font-size:.95rem;padding:6px 12px;border-radius:8px;border:1px solid var(--rule);background:transparent;color:var(--fg);cursor:pointer}
-.presets button[aria-pressed="true"]{border-color:var(--fg);font-weight:700}
-button:focus-visible,input:focus-visible{outline:2px solid var(--trace);outline-offset:2px}
-.dist{display:flex;align-items:center;gap:6px;font-family:var(--font-mono);font-size:.95rem}
-.dist input{width:4.2em;font:inherit;padding:4px 6px;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--fg)}
-.tag{font-weight:700;font-family:var(--font-body)}
-.tx{color:var(--x)} .ty{color:var(--y)}
-.slider{display:flex;align-items:center;gap:12px}
-.slider input{flex:1;min-width:0;accent-color:var(--trace)}
-.zval{font-family:var(--font-mono);font-size:1.3rem;font-weight:600;min-width:5.5ch;text-align:right;font-variant-numeric:tabular-nums}
-svg{width:100%;height:auto;display:block}
-.readout{font-family:var(--font-mono);font-size:1.05rem;line-height:1.8;font-variant-numeric:tabular-nums}
-.readout .big{font-size:1.25rem;font-weight:600;color:var(--trace)}
-.err{color:var(--y);font-size:.9rem}
-.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:.9rem;color:var(--muted)}
-.sw{display:inline-block;width:22px;height:10px;vertical-align:middle;margin-right:6px;border:2px solid}
-.vh{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
-@media (prefers-reduced-motion: reduce){.play{display:none}}
+:root{color-scheme:light;--bg:#f5f6f8;--panel:#fff;--ink:#182333;--muted:#505f70;--rule:#cbd3dd;--x:#2165a0;--y:#a34617;--product:#247250;--result:#6743a3;--fill:#dcebe3;--focus:#1565a8}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}button,input{font:inherit}button{cursor:pointer}button,input{border:1px solid #718195;border-radius:6px}button:focus-visible,input:focus-visible{outline:3px solid var(--focus);outline-offset:3px}button{background:#fff;color:var(--ink);padding:7px 12px;min-height:38px}button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}button:disabled,input:disabled{opacity:.55;cursor:default}input[type=number]{width:6.3rem;padding:6px 8px;background:#fff;color:var(--ink);font-variant-numeric:tabular-nums}input[type=range]{accent-color:var(--result);min-width:0;width:100%;margin:0}.wrap{max-width:850px;margin:auto;padding:22px 18px 28px}h1{font-size:27px;line-height:1.2;letter-spacing:-.025em;margin:0 0 7px}h2{font-size:15px;line-height:1.35;margin:0;font-weight:700}.intro{color:var(--muted);margin:0 0 16px;max-width:68ch}.controls,.plot-card{background:var(--panel);border:1px solid var(--rule);border-radius:12px}.controls{padding:14px;margin-bottom:12px}.row{display:flex;flex-wrap:wrap;gap:7px;align-items:center}.modes{gap:8px;margin-bottom:12px}.presets{gap:6px;margin-bottom:12px}.presets button{font-size:13px;min-height:32px;padding:4px 10px}.small-label{font-size:12px;font-weight:650;color:var(--muted);margin-right:3px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px}.distribution{border:0;margin:0;padding:0;min-width:0}.distribution legend{font-size:13px;font-weight:700;margin-bottom:5px}.distribution label{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;margin:5px 0}.distribution input{width:6.3rem}.x-tag{color:var(--x)}.y-tag{color:var(--y)}.notation{font-size:12px;color:var(--muted);margin:9px 0 0}.z-controls{display:grid;grid-template-columns:auto minmax(70px,1fr) auto auto;gap:12px;align-items:center;border-top:1px solid var(--rule);margin-top:12px;padding-top:12px}.z-controls>label{font-weight:700;font-size:18px}.z-entry{display:flex;align-items:center;gap:6px}.z-entry label{font-size:12px;color:var(--muted)}.z-entry input{width:6.8rem}.range-note{font-size:12px;color:var(--muted);margin:6px 0 0}.error{color:#9a321d;font-size:13px;margin:9px 0 0}.error:empty{display:none}.plots{display:grid;gap:10px}.plot-card{padding:12px 14px 10px;min-width:0}.plot-head{display:flex;align-items:baseline;flex-wrap:wrap;justify-content:space-between;gap:5px 12px}.step{color:var(--muted);font-size:12px;font-weight:650;letter-spacing:.02em;margin-right:7px}.legend{display:flex;flex-wrap:wrap;gap:5px 16px;font-size:12px;color:var(--muted);margin:7px 0 1px}.legend span{display:inline-flex;align-items:center;gap:6px}.swatch{display:inline-block;width:23px;border-top:3px solid var(--x)}.swatch.y{border-color:var(--y);border-top-style:dashed}.swatch.product{width:19px;height:11px;border:1px solid var(--product);background:repeating-linear-gradient(135deg,#dcebe3 0 3px,#247250 3px 4px)}.swatch.result{border-color:var(--result)}svg{display:block;width:100%;height:185px;overflow:hidden}.plot-note{font-size:12px;color:var(--muted);margin:3px 0 0;min-height:18px}.equation{font-size:clamp(16px,2.5vw,21px);line-height:1.6;margin:6px 0 0;padding-top:9px;border-top:1px solid var(--rule);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.equation strong{color:var(--result);font-weight:750}.cross-check{font-size:12px;line-height:1.55;color:var(--muted);margin:3px 0 0;font-variant-numeric:tabular-nums}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}[hidden]{display:none!important}.invalid-state{padding:28px 14px;border:1px dashed var(--rule);border-radius:10px;color:var(--muted);background:#fff;text-align:center}
+@media(max-width:480px){.wrap{padding:17px 10px 20px}h1{font-size:25px}.controls{padding:12px}.fields{gap:12px;grid-template-columns:1fr}.distribution{display:grid;grid-template-columns:1fr 1fr;gap:7px}.distribution legend{grid-column:1/-1;margin-bottom:2px}.distribution label{display:flex;flex-direction:column;align-items:flex-start;gap:3px;margin:0}.distribution input{width:100%}.z-controls{grid-template-columns:auto 1fr auto;gap:9px}.z-controls>input{grid-column:1/-1;grid-row:2}.z-entry{justify-self:end}.z-entry label{display:none}.z-entry input{width:7rem}.plot-card{padding:12px 10px 9px}.legend{gap:4px 10px}svg{height:175px}.cross-check{font-size:12px}.equation{font-size:16px}}
+@media(prefers-reduced-motion:reduce){#play{display:none}}
 </style>
 </head>
 <body>
-
-<div class="wrap">
+<main class="wrap">
   <h1>Sliding convolution</h1>
-  <p class="sub">For Z = X + Y with X and Y independent, f<sub>Z</sub>(z) = ∫ f<sub>X</sub>(x) f<sub>Y</sub>(z − x) dx. Drag z: the flipped Y-box slides across the X-box, and f<sub>Z</sub>(z) is height × height × the length of the overlap.</p>
-
-  <div class="panel row presets" role="group" aria-label="Examples">
-    <button data-p="tri" aria-pressed="true">Same widths: U[0,2] + U[0,2]</button>
-    <button data-p="trap">Different widths: U[0,2] + U[0,3]</button>
-    <button data-p="shift">Shifted: U[0,2] + U[1,4]</button>
-  </div>
-
-  <div class="panel row">
-    <span class="dist"><span class="tag tx">X</span> ~ U[<input id="a0" type="number" step="0.5" value="0" aria-label="X lower end">, <input id="a1" type="number" step="0.5" value="2" aria-label="X upper end">]</span>
-    <span class="dist"><span class="tag ty">Y</span> ~ U[<input id="b0" type="number" step="0.5" value="0" aria-label="Y lower end">, <input id="b1" type="number" step="0.5" value="2" aria-label="Y upper end">]</span>
-    <span id="err" class="err" role="alert"></span>
-  </div>
-
-  <div class="panel slider">
-    <label for="z" style="font-weight:700">z</label>
-    <input id="z" type="range" step="0.01" value="1">
-    <span id="zo" class="zval">1.00</span>
-    <button id="play" class="play" aria-label="Animate z">Play</button>
-  </div>
-
-  <div class="panel">
-    <svg id="top" viewBox="0 0 900 260" role="img" aria-label="The fixed X box, the sliding flipped Y box, and their overlap"></svg>
-    <div class="legend">
-      <span><span class="sw" style="border-color:var(--x)"></span>f<sub>X</sub>(x), fixed</span>
-      <span><span class="sw" style="border-color:var(--y);border-style:dashed"></span>f<sub>Y</sub>(z − x), flipped and shifted</span>
-      <span><span class="sw" style="border-color:var(--ov);background:var(--ov-fill)"></span>overlap = where the integrand is not 0</span>
+  <p class="intro">For independent X and Y, let Z = X + Y. Move z to slide the flipped density of Y across the density of X, then follow their product into the density of the sum.</p>
+  <section class="controls" aria-label="Convolution controls">
+    <div class="row modes" id="modes" role="group" aria-label="Distribution family">
+      <button data-m="unif" aria-pressed="true">Uniform + uniform</button>
+      <button data-m="norm" aria-pressed="false">Normal + normal</button>
     </div>
+    <div class="row presets" id="presU" role="group" aria-label="Uniform examples"><span class="small-label">Examples</span><button data-p="tri" aria-pressed="true">Equal widths</button><button data-p="trap" aria-pressed="false">Different widths</button><button data-p="shift" aria-pressed="false">Shifted</button></div>
+    <div class="row presets" id="presN" role="group" aria-label="Normal examples" hidden><span class="small-label">Examples</span><button data-p="std" aria-pressed="true">Standard normals</button><button data-p="spread" aria-pressed="false">Different spreads</button><button data-p="means" aria-pressed="false">Different means</button></div>
+    <div class="fields" id="inU">
+      <fieldset class="distribution"><legend class="x-tag">X · uniform interval</legend><label for="a0">Lower end<input id="a0" type="number" step="any" min="-20" max="20" value="0"></label><label for="a1">Upper end<input id="a1" type="number" step="any" min="-20" max="20" value="2"></label></fieldset>
+      <fieldset class="distribution"><legend class="y-tag">Y · uniform interval</legend><label for="b0">Lower end<input id="b0" type="number" step="any" min="-20" max="20" value="0"></label><label for="b1">Upper end<input id="b1" type="number" step="any" min="-20" max="20" value="2"></label></fieldset>
+    </div>
+    <div class="fields" id="inN" hidden>
+      <fieldset class="distribution"><legend class="x-tag">X · normal distribution</legend><label for="mx"><span>Mean μ<sub>X</sub></span><input id="mx" type="number" step="any" min="-10" max="10" value="0"></label><label for="sx"><span>SD σ<sub>X</sub></span><input id="sx" type="number" step="any" min=".25" max="5" value="1"></label></fieldset>
+      <fieldset class="distribution"><legend class="y-tag">Y · normal distribution</legend><label for="my"><span>Mean μ<sub>Y</sub></span><input id="my" type="number" step="any" min="-10" max="10" value="0"></label><label for="sy"><span>SD σ<sub>Y</sub></span><input id="sy" type="number" step="any" min=".25" max="5" value="1"></label></fieldset>
+    </div>
+    <p class="notation" id="notation"></p>
+    <div class="z-controls"><label for="z">z</label><input id="z" type="range" min="-.5" max="4.5" step="any" value="1" aria-describedby="range-note"><div class="z-entry"><label for="zExact">Exact value</label><input id="zExact" type="number" step="any" value="1" aria-label="Exact z value" aria-describedby="range-note"></div><button id="play" aria-label="Animate z">Play</button></div>
+    <p class="range-note" id="range-note"></p><p class="error" id="err" role="alert"></p>
+  </section>
+  <p class="invalid-state" id="invalid" hidden>Update the highlighted input to show the convolution.</p>
+  <div class="plots" id="plots">
+    <section class="plot-card" aria-labelledby="factor-title"><div class="plot-head"><h2 id="factor-title"><span class="step">1</span>Slide the factors</h2></div><div class="legend"><span><i class="swatch"></i>f<sub>X</sub>(x), fixed</span><span><i class="swatch y"></i>f<sub>Y</sub>(z − x), flipped and shifted</span></div><svg id="top" role="img" aria-labelledby="factor-title" aria-describedby="factor-note"></svg><p class="plot-note" id="factor-note"></p></section>
+    <section class="plot-card" aria-labelledby="product-title"><h2 id="product-title"><span class="step">2</span>Integrate their product</h2><div class="legend"><span><i class="swatch product"></i>f<sub>X</sub>(x) · f<sub>Y</sub>(z − x)</span><span>Shaded area = density of Z at z</span></div><svg id="mid" role="img" aria-labelledby="product-title" aria-describedby="product-note"></svg><p class="plot-note" id="product-note"></p><p class="equation" id="read"></p><p class="cross-check" id="cross-check"></p></section>
+    <section class="plot-card" aria-labelledby="result-title"><div class="plot-head"><h2 id="result-title"><span class="step">3</span>Trace the density of the sum</h2><span class="small-label" id="sum-label"></span></div><svg id="bot" role="img" aria-labelledby="result-title" aria-describedby="sum-note"></svg><p class="plot-note" id="sum-note"></p></section>
   </div>
-
-  <div class="panel readout" id="read"></div>
-  <p id="sr" class="vh" role="status" aria-live="polite"></p>
-
-  <div class="panel">
-    <svg id="bot" viewBox="0 0 900 230" role="img" aria-label="The PDF of Z, traced as z moves"></svg>
-  </div>
-</div>
-
+  <p id="sr" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></p>
+</main>
 <script>
-const $=id=>document.getElementById(id);
-const PRESETS={tri:[0,2,0,2],trap:[0,2,0,3],shift:[0,2,1,4]};
-let a0=0,a1=2,b0=0,b1=2,zmin,zmax,xmin,xmax,fmax,timer=null;
-const NS='http://www.w3.org/2000/svg';
-function el(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;return e;}
-function label(x,y,s,anchor,col,size){return el('text',{x,y,'text-anchor':anchor||'middle','font-size':size||15,'font-family':'ui-monospace, Menlo, Consolas, monospace',fill:col||'var(--muted)'},s);}
-const fmt=v=>{const r=Math.round(v*100)/100;return (Object.is(r,-0)?0:r).toString();};
-const zm=v=>v<0?'z+'+fmt(-v):'z−'+fmt(v);
-function overlap(z){const lo=Math.max(a0,z-b1),hi=Math.min(a1,z-b0),L=Math.max(0,hi-lo);return {lo,hi,L,v:L/((a1-a0)*(b1-b0))};}
-function setup(){
-  zmin=a0+b0-0.5; zmax=a1+b1+0.5;
-  xmin=Math.min(a0,a0-(b1-b0))-1; xmax=a1+(b1-b0)+1;
-  fmax=1/Math.max(a1-a0,b1-b0);
-  const Z=$('z');Z.min=zmin;Z.max=zmax;
-}
-function ticks(lo,hi){const out=[];const step=(hi-lo)>9?2:1;for(let t=Math.ceil(lo);t<=hi;t+=step)out.push(t);return out;}
-function draw(){
-  const z=+$('z').value;$('zo').textContent=z.toFixed(2);
-  const ha=1/(a1-a0),hb=1/(b1-b0),hmax=Math.max(ha,hb);
-  const T=$('top');T.innerHTML='';
-  const X=x=>50+(x-xmin)/(xmax-xmin)*800,base=210,Y=h=>base-h/hmax*150;
-  T.appendChild(el('line',{x1:40,y1:base,x2:860,y2:base,stroke:'var(--muted)','stroke-width':1.5}));
-  for(const t of ticks(xmin,xmax)){T.appendChild(el('line',{x1:X(t),y1:base,x2:X(t),y2:base+6,stroke:'var(--muted)'}));T.appendChild(label(X(t),base+26,t));}
-  T.appendChild(label(875,base+5,'x','start','var(--fg)',17));
-  const r=overlap(z),s0=z-b1,s1=z-b0;
-  if(r.L>0){
-    T.appendChild(el('rect',{x:X(r.lo),y:Y(Math.min(ha,hb)),width:X(r.hi)-X(r.lo),height:base-Y(Math.min(ha,hb)),fill:'var(--ov-fill)',stroke:'none'}));
-    T.appendChild(el('line',{x1:X(r.lo),y1:28,x2:X(r.hi),y2:28,stroke:'var(--ov)','stroke-width':3}));
-    T.appendChild(label((X(r.lo)+X(r.hi))/2,20,'overlap '+fmt(r.L),'middle','var(--ov)',15));
+/* Pure mathematics, retaining Sabrina's presets, support overlap, normal PDF,
+   product integration and known-normal cross-check. No DOM dependency. */
+(function(root){
+  'use strict';
+  const PRESETS={tri:[0,2,0,2],trap:[0,2,0,3],shift:[0,2,1,4]},NPRESETS={std:[0,1,0,1],spread:[0,1,0,.5],means:[-1,1,2,1]};
+  const npdf=(x,m,s)=>Math.exp(-.5*((x-m)/s)**2)/(s*Math.sqrt(2*Math.PI));
+  function validateUniform(p){
+    const v=[p.a0,p.a1,p.b0,p.b1];if(!v.every(Number.isFinite))return 'Enter a finite number in every interval field.';
+    const wa=p.a1-p.a0,wb=p.b1-p.b0;
+    if(wa<=0||wb<=0)return 'Each upper end must be larger than its lower end.';
+    if(wa<.01-1e-12||wb<.01-1e-12)return 'Each interval must be at least 0.01 wide.';
+    if(Math.max(...v.map(Math.abs))>20||wa>10||wb>10)return 'Keep interval ends between −20 and 20, and widths no larger than 10.';
+    return '';
   }
-  T.appendChild(el('rect',{x:X(a0),y:Y(ha),width:X(a1)-X(a0),height:base-Y(ha),fill:'none',stroke:'var(--x)','stroke-width':3}));
-  T.appendChild(label(X(a0)-4,Y(ha)+18,'h='+fmt(ha),'end','var(--x)',14));
-  T.appendChild(el('rect',{x:X(s0),y:Y(hb),width:X(s1)-X(s0),height:base-Y(hb),fill:'none',stroke:'var(--y)','stroke-width':3,'stroke-dasharray':'9 6'}));
-  T.appendChild(label((X(s0)+X(s1))/2,Y(hb)-8,'['+fmt(s0)+', '+fmt(s1)+']','middle','var(--y)',14));
-  T.appendChild(el('line',{x1:X(s1),y1:base-4,x2:X(s1),y2:base+4,stroke:'var(--y)','stroke-width':3}));
-  const R=$('read');
-  const lims='∫ from max('+fmt(a0)+', '+zm(b1)+') = <b>'+fmt(Math.max(a0,z-b1))+'</b> to min('+fmt(a1)+', '+zm(b0)+') = <b>'+fmt(Math.min(a1,z-b0))+'</b>';
-  R.innerHTML=(r.L>0
-    ?lims+'<br>f<sub>Z</sub>('+z.toFixed(2)+') = '+fmt(ha)+' × '+fmt(hb)+' × '+fmt(r.L)+' = <span class="big">'+r.v.toFixed(3)+'</span>'
-    :lims+'<br>The limits cross: no overlap, so f<sub>Z</sub>('+z.toFixed(2)+') = <span class="big">0</span>');
-  const Bt=$('bot');Bt.innerHTML='';
-  const U=v=>50+(v-zmin)/(zmax-zmin)*800,bb=190,V=h=>bb-h/fmax*150;
-  Bt.appendChild(el('line',{x1:40,y1:bb,x2:860,y2:bb,stroke:'var(--muted)','stroke-width':1.5}));
-  for(const t of ticks(zmin,zmax)){Bt.appendChild(el('line',{x1:U(t),y1:bb,x2:U(t),y2:bb+6,stroke:'var(--muted)'}));Bt.appendChild(label(U(t),bb+26,t));}
-  Bt.appendChild(label(875,bb+5,'z','start','var(--fg)',17));
-  Bt.appendChild(el('line',{x1:44,y1:V(fmax),x2:56,y2:V(fmax),stroke:'var(--muted)'}));
-  Bt.appendChild(label(40,V(fmax)+5,fmt(fmax),'end'));
-  const ttl=label(60,22,'f','start','var(--fg)',15);
-  ttl.appendChild(el('tspan',{'baseline-shift':'sub','font-size':11},'Z'));
-  ttl.appendChild(el('tspan',{},'(z), traced as z moves'));
-  Bt.appendChild(ttl);
-  let d='',dd='';for(let i=0;i<=400;i++){const zz=zmin+i/400*(zmax-zmin),p=U(zz).toFixed(1)+','+V(overlap(zz).v).toFixed(1);d+=(i?'L':'M')+p;if(zz<=z)dd+=(dd?'L':'M')+p;}
-  Bt.appendChild(el('path',{d,fill:'none',stroke:'var(--rule)','stroke-width':2,'stroke-dasharray':'4 4'}));
-  if(dd)Bt.appendChild(el('path',{d:dd,fill:'none',stroke:'var(--trace)','stroke-width':3.5}));
-  Bt.appendChild(el('circle',{cx:U(z),cy:V(r.v),r:7,fill:'var(--trace)'}));
-}
-function readInputs(){
-  const v=['a0','a1','b0','b1'].map(k=>parseFloat($(k).value));
-  if(v.some(isNaN)){$('err').textContent='Enter a number in every box.';return false;}
-  if(!(v[1]>v[0])||!(v[3]>v[2])){$('err').textContent='Each upper end must be larger than its lower end.';return false;}
-  if(Math.max(v[1]-v[0],v[3]-v[2])>10||Math.max(...v.map(Math.abs))>20){$('err').textContent='Keep the ends between −20 and 20 and widths up to 10.';return false;}
-  $('err').textContent='';[a0,a1,b0,b1]=v;return true;
-}
-// Screen readers hear the result once per settled z (drag end, Play pause or end, new boxes), not every frame.
-function announce(){
-  const z=+$('z').value,r=overlap(z);
-  $('sr').textContent='At z = '+z.toFixed(2)+(r.L>0?', the overlap has length '+fmt(r.L)+' and the density of Z is '+r.v.toFixed(3)+'.':', there is no overlap and the density of Z is 0.');
-}
-function stopPlay(){if(!timer)return false;clearInterval(timer);timer=null;$('play').textContent='Play';return true;}
-function apply(z0,quiet){stopPlay();if(!readInputs())return;setup();$('z').value=z0??(a0+b0+Math.min(a1-a0,b1-b0)/2);draw();if(!quiet)announce();}
-document.querySelectorAll('.presets button').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll('.presets button').forEach(o=>o.setAttribute('aria-pressed',o===b));
-  const p=PRESETS[b.dataset.p];['a0','a1','b0','b1'].forEach((k,i)=>$(k).value=p[i]);apply();
-}));
-['a0','a1','b0','b1'].forEach(k=>$(k).addEventListener('input',()=>{document.querySelectorAll('.presets button').forEach(o=>o.setAttribute('aria-pressed','false'));apply();}));
-$('z').addEventListener('input',draw);
-$('z').addEventListener('change',announce);
-$('play').addEventListener('click',()=>{
-  if(stopPlay()){announce();return;}
-  $('play').textContent='Pause';if(+$('z').value>=zmax-0.01)$('z').value=zmin;
-  timer=setInterval(()=>{let z=+$('z').value+(zmax-zmin)/240;const end=z>=zmax;if(end)z=zmax;$('z').value=z;draw();if(end){stopPlay();announce();}},25);
-});
-apply(1,true);
-</script>
+  function validateNormal(p){
+    if(![p.mx,p.sx,p.my,p.sy].every(Number.isFinite))return 'Enter a finite number in every normal field.';
+    if(p.sx<.25||p.sx>5||p.sy<.25||p.sy>5)return 'Keep each standard deviation between 0.25 and 5.';
+    if(Math.abs(p.mx)>10||Math.abs(p.my)>10)return 'Keep each mean between −10 and 10.';
+    return '';
+  }
+  function overlap(z,p){const lo=Math.max(p.a0,z-p.b1),hi=Math.min(p.a1,z-p.b0),L=Math.max(0,hi-lo);return {lo,hi,L,v:(L/(p.a1-p.a0))/(p.b1-p.b0)};}
+  function normalSum(p){return {mean:p.mx+p.my,variance:p.sx*p.sx+p.sy*p.sy,sd:Math.hypot(p.sx,p.sy)};}
+  function normalWindow(z,p){
+    // Product location and scale choose a finite quadrature window. The area is
+    // still integrated from the two source PDFs, independently of the sum PDF.
+    const px=1/(p.sx*p.sx),py=1/(p.sy*p.sy),sd=1/Math.sqrt(px+py),mean=p.mx*(px/(px+py))+(z-p.my)*(py/(px+py));
+    return {mean,sd,lo:mean-10*sd,hi:mean+10*sd};
+  }
+  function integrandArea(z,p){
+    const w=normalWindow(z,p),n=640,h=(w.hi-w.lo)/n;if(h===0)return 0;let s=0;
+    for(let i=0;i<=n;i++){const x=w.lo+i*h,weight=(i===0||i===n)?1:(i%2?4:2);s+=weight*npdf(x,p.mx,p.sx)*npdf(z-x,p.my,p.sy);}
+    return s*h/3;
+  }
+  function domain(mode,p){
+    if(mode==='unif'){const lo=p.a0+p.b0,hi=p.a1+p.b1,pad=Math.max(.05,(hi-lo)*.08);return {lo:lo-pad,hi:hi+pad};}
+    const s=normalSum(p);return {lo:s.mean-4*s.sd,hi:s.mean+4*s.sd};
+  }
+  function product(x,z,p,mode){if(mode==='norm')return npdf(x,p.mx,p.sx)*npdf(z-x,p.my,p.sy);return x>=p.a0&&x<=p.a1&&z-x>=p.b0&&z-x<=p.b1?(1/(p.a1-p.a0))/(p.b1-p.b0):0;}
+  function evaluate(mode,p,z){
+    const error=mode==='unif'?validateUniform(p):validateNormal(p);if(error)throw new RangeError(error);if(!Number.isFinite(z))throw new RangeError('z must be finite.');
+    if(mode==='unif'){const o=overlap(z,p);return {...o,area:o.v,exact:o.v};}
+    const s=normalSum(p),area=integrandArea(z,p),exact=npdf(z,s.mean,s.sd);return {...s,area,exact,error:Math.abs(area-exact)};
+  }
+  root.Convolution=Object.freeze({PRESETS,NPRESETS,npdf,validateUniform,validateNormal,overlap,normalSum,normalWindow,integrandArea,domain,product,evaluate});
+})(globalThis);
 
+(function(){
+  'use strict';
+  const C=globalThis.Convolution,$=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg',U=['a0','a1','b0','b1'],N=['mx','sx','my','sy'];
+  const uniformOnly=new URLSearchParams(location.search).get('mode')==='uniform';
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
+  let mode='unif',p={},z=1,zmin=-.5,zmax=4.5,timer=null,valid=true;
+  const fmt=(v,d=3)=>{if(v===0||Object.is(v,-0))return '0';if(Math.abs(v)<.001||Math.abs(v)>=1e5)return v.toExponential(3).replace('e-',' × 10^−').replace('e+',' × 10^');return Number(v.toFixed(d)).toString().replace(/^-/, '−');};
+  const probability=v=>v===0?'0.00000':(Math.abs(v)<.00001?v.toExponential(5):v.toFixed(5));
+  function el(t,a,txt){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!==undefined)e.textContent=txt;return e;}
+  function label(S,x,y,t,anchor='middle',color='var(--muted)',size=12){S.appendChild(el('text',{x,y,'text-anchor':anchor,fill:color,'font-size':size,'font-family':'system-ui, sans-serif'},t));}
+  function ticks(lo,hi,count){const raw=(hi-lo)/count,scale=10**Math.floor(Math.log10(raw)),m=raw/scale,step=(m<=1?1:m<=2?2:m<=5?5:10)*scale,out=[];for(let i=Math.ceil(lo/step);i*step<=hi+step*1e-8&&out.length<20;i++)out.push(i*step);return out;}
+  function frame(id,lo,hi,peak,name){
+    const S=$(id),w=Math.max(250,Math.round(S.getBoundingClientRect().width)),h=w<400?175:185,left=43,right=17,top=16,base=h-31;
+    S.setAttribute('viewBox',`0 0 ${w} ${h}`);S.replaceChildren();
+    const X=x=>left+(x-lo)/(hi-lo)*(w-left-right),Y=y=>base-y/peak*(base-top),defs=el('defs',{}),clip=el('clipPath',{id:`clip-${id}`});clip.appendChild(el('rect',{x:left,y:top,width:w-left-right,height:base-top}));defs.appendChild(clip);
+    const pattern=el('pattern',{id:`hatch-${id}`,width:7,height:7,patternUnits:'userSpaceOnUse',patternTransform:'rotate(35)'});pattern.appendChild(el('rect',{width:7,height:7,fill:'var(--fill)'}));pattern.appendChild(el('line',{x1:0,y1:0,x2:0,y2:7,stroke:'var(--product)','stroke-width':1}));defs.appendChild(pattern);S.appendChild(defs);
+    S.appendChild(el('line',{x1:left,y1:base,x2:w-right,y2:base,stroke:'var(--muted)','stroke-width':1}));
+    S.appendChild(el('line',{x1:left,y1:top,x2:left,y2:base,stroke:'var(--rule)','stroke-width':1}));
+    label(S,left-6,base+4,'0','end');label(S,left-6,top+4,fmt(peak,2),'end');
+    for(const t of ticks(lo,hi,w<400?4:7)){const x=X(t);S.appendChild(el('line',{x1:x,y1:base,x2:x,y2:base+4,stroke:'var(--muted)'}));label(S,x,base+18,fmt(t,2));}
+    label(S,w-right,base+29,name,'end','var(--ink)',12);
+    const g=el('g',{'clip-path':`url(#clip-${id})`});S.appendChild(g);return {S,g,X,Y,lo,hi,base,w};
+  }
+  function points(lo,hi,extras=[]){const pts=Array.from({length:501},(_,i)=>lo+(hi-lo)*i/500);return pts.concat(extras.filter(x=>x>=lo&&x<=hi)).sort((a,b)=>a-b);}
+  function curve(f,fn,xs,color,dashed=false,fill=false){
+    let d='';for(const x of xs)d+=(d?'L':'M')+f.X(x).toFixed(3)+','+f.Y(fn(x)).toFixed(3);
+    if(fill&&xs.length){const area=d+`L${f.X(xs[xs.length-1])},${f.base}L${f.X(xs[0])},${f.base}Z`;f.g.appendChild(el('path',{d:area,fill:`url(#hatch-${f.S.id})`,stroke:'none'}));}
+    f.g.appendChild(el('path',{d,fill:'none',stroke:color,'stroke-width':2.5,...(dashed?{'stroke-dasharray':'8 5'}:{})}));
+  }
+  function box(f,lo,hi,height,color,dashed=false,fill=false){if(hi<=lo)return;f.g.appendChild(el('path',{d:`M${f.X(lo)},${f.base}V${f.Y(height)}H${f.X(hi)}V${f.base}`,fill:fill?`url(#hatch-${f.S.id})`:'none',stroke:color,'stroke-width':2.5,...(dashed?{'stroke-dasharray':'8 5'}:{})}));}
+  function render(){
+    if(!valid)return;
+    const result=C.evaluate(mode,p,z);let xlo,xhi,hmax,pmax,peak,s0,s1;
+    if(mode==='unif'){
+      const span=(p.a1-p.a0)+(p.b1-p.b0),pad=span*.06;xlo=Math.min(p.a0,zmin-p.b1)-pad;xhi=Math.max(p.a1,zmax-p.b0)+pad;
+      hmax=Math.max(1/(p.a1-p.a0),1/(p.b1-p.b0));pmax=(1/(p.a1-p.a0))/(p.b1-p.b0);peak=1/Math.max(p.a1-p.a0,p.b1-p.b0);s0=z-p.b1;s1=z-p.b0;
+    }else{
+      xlo=Math.min(p.mx-5*p.sx,zmin-p.my-5*p.sy);xhi=Math.max(p.mx+5*p.sx,zmax-p.my+5*p.sy);
+      hmax=Math.max(C.npdf(p.mx,p.mx,p.sx),C.npdf(p.my,p.my,p.sy));pmax=C.npdf(p.mx,p.mx,p.sx)*C.npdf(p.my,p.my,p.sy);peak=C.npdf(result.mean,result.mean,result.sd);
+    }
+    const top=frame('top',xlo,xhi,hmax*1.12,'x'),mid=frame('mid',xlo,xhi,pmax*1.12,'x');
+    if(mode==='unif'){
+      box(top,p.a0,p.a1,1/(p.a1-p.a0),'var(--x)');box(top,s0,s1,1/(p.b1-p.b0),'var(--y)',true);
+      if(result.L>0)box(mid,result.lo,result.hi,pmax,'var(--product)',false,true);
+      $('factor-note').textContent=`X stays on [${fmt(p.a0)}, ${fmt(p.a1)}]; the flipped Y interval is [${fmt(s0)}, ${fmt(s1)}].`;
+      $('product-note').textContent=result.L>0?`Overlap: ${fmt(result.lo)} to ${fmt(result.hi)}, length ${fmt(result.L)}. Product height: ${fmt(pmax)}.`:'The supports do not overlap, so the product is zero everywhere.';
+      $('cross-check').textContent=result.L>0?`Area = ${fmt(1/(p.a1-p.a0))} × ${fmt(1/(p.b1-p.b0))} × ${fmt(result.L)}.`:'With no overlap, the integral is zero.';
+      $('sum-label').textContent='Z = X + Y';
+    }else{
+      const win=C.normalWindow(z,p),extra=[p.mx,z-p.my];for(let i=-40;i<=40;i++)extra.push(win.mean+i*win.sd/5,p.mx+i*p.sx/5,z-p.my+i*p.sy/5);
+      const xs=points(xlo,xhi,extra);
+      curve(top,x=>C.npdf(x,p.mx,p.sx),xs,'var(--x)');curve(top,x=>C.npdf(z-x,p.my,p.sy),xs,'var(--y)',true);
+      curve(mid,x=>C.product(x,z,p,mode),xs,'var(--product)',false,true);
+      $('factor-note').textContent=`Fixed X is centered at ${fmt(p.mx)}. Flipped Y is centered at z − μY = ${fmt(z-p.my)}.`;
+      $('product-note').textContent='Both factors are positive for every x. Integrate their product over the whole real line.';
+      $('cross-check').textContent=`Known result: Z ~ N(${fmt(result.mean)}, ${fmt(result.variance)}). Its density here is ${probability(result.exact)}.`;
+      $('sum-label').textContent=`N(${fmt(result.mean)}, ${fmt(result.variance)}) · variance second`;
+    }
+    $('read').innerHTML=`f<sub>Z</sub>(${fmt(z,5)}) = ∫ f<sub>X</sub>(x) f<sub>Y</sub>(${fmt(z,5)} − x) dx ${mode==='norm'?'≈':'='} <strong>${probability(result.area)}</strong>`;
+    const bottom=frame('bot',zmin,zmax,peak*1.12,'z'),sumDensity=zz=>mode==='unif'?C.overlap(zz,p).v:C.npdf(zz,result.mean,result.sd),extra=mode==='unif'?[p.a0+p.b0,p.a1+p.b0,p.a0+p.b1,p.a1+p.b1,z]:[result.mean,z],xs=points(zmin,zmax,extra);
+    curve(bottom,sumDensity,xs,'#7e8997',true);curve(bottom,sumDensity,xs.filter(x=>x<=z),'var(--result)');
+    bottom.g.appendChild(el('line',{x1:bottom.X(z),y1:bottom.base,x2:bottom.X(z),y2:bottom.Y(result.area),stroke:'var(--result)','stroke-width':1.5,'stroke-dasharray':'3 3'}));
+    bottom.g.appendChild(el('circle',{cx:bottom.X(z),cy:bottom.Y(result.area),r:5,fill:'var(--result)',stroke:'#fff','stroke-width':1.5}));
+    $('sum-note').textContent=`At z = ${fmt(z,5)}, the density is ${probability(result.area)}. The point traces fZ as z moves.`;
+    $('z').setAttribute('aria-valuetext',`${fmt(z,5)}; density ${probability(result.area)}`);
+  }
+  function announce(){if(!valid)return;const r=C.evaluate(mode,p,z);$('sr').textContent=`${mode==='unif'?'Uniform':'Normal'} sum. At z = ${fmt(z,5)}, the density of Z is ${probability(r.area)}.${mode==='unif'?` The support overlap has length ${fmt(r.L)}.`:''}`;}
+  function stop(announceResult=false){if(timer!==null){clearInterval(timer);timer=null;}$('play').textContent='Play';$('play').setAttribute('aria-label','Animate z');if(announceResult)announce();}
+  function invalid(message,field){stop();valid=false;$('err').textContent=message;$('plots').hidden=true;$('invalid').hidden=false;$('z').disabled=true;$('play').disabled=true;$('sr').textContent='';if(field)$(field).setAttribute('aria-invalid','true');}
+  function clearError(){valid=true;$('err').textContent='';$('plots').hidden=false;$('invalid').hidden=true;$('z').disabled=false;$('play').disabled=false;document.querySelectorAll('[aria-invalid]').forEach(e=>e.removeAttribute('aria-invalid'));}
+  function apply(z0,settled=true){
+    stop();const ids=mode==='unif'?U:N,values=Object.fromEntries(ids.map(id=>[id,$(id).value.trim()===''?NaN:Number($(id).value)])),error=mode==='unif'?C.validateUniform(values):C.validateNormal(values);
+    if(error){invalid(error,ids.find(id=>!Number.isFinite(values[id])));return;}
+    p=values;const d=C.domain(mode,p);zmin=d.lo;zmax=d.hi;
+    clearError();z=z0===undefined?(mode==='unif'?p.a0+p.b0+Math.min(p.a1-p.a0,p.b1-p.b0)/2:C.normalSum(p).mean-C.normalSum(p).sd):Math.max(zmin,Math.min(zmax,z0));
+    $('z').min=zmin;$('z').max=zmax;$('z').value=z;$('zExact').min=zmin;$('zExact').max=zmax;$('zExact').value=Number(z.toPrecision(12));
+    $('range-note').textContent=`z range: ${fmt(zmin,5)} to ${fmt(zmax,5)}. Drag the slider or enter an exact value.`;
+    $('notation').textContent=mode==='unif'?`X ~ U[${fmt(p.a0)}, ${fmt(p.a1)}], Y ~ U[${fmt(p.b0)}, ${fmt(p.b1)}].`:`X ~ N(${fmt(p.mx)}, ${fmt(p.sx*p.sx,5)}), Y ~ N(${fmt(p.my)}, ${fmt(p.sy*p.sy,5)}). N(mean, variance); input fields use standard deviation.`;
+    render();if(settled)announce();
+  }
+  function setMode(next,settled=true){if(uniformOnly&&next!=='unif')return;mode=next;document.querySelectorAll('[data-m]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.m===mode));const u=mode==='unif';$('presU').hidden=!u;$('inU').hidden=!u;$('presN').hidden=u;$('inN').hidden=u;apply(u?1:undefined,settled);}
+  document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.m)));
+  for(const [id,presets,ids] of [['presU',C.PRESETS,U],['presN',C.NPRESETS,N]]){
+    $(id).querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{$(id).querySelectorAll('button').forEach(o=>o.setAttribute('aria-pressed',String(o===b)));presets[b.dataset.p].forEach((v,i)=>$(ids[i]).value=v);apply();}));
+    ids.forEach(field=>{$(field).addEventListener('input',()=>{$(id).querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed','false'));apply(undefined,false);});$(field).addEventListener('change',announce);});
+  }
+  $('z').addEventListener('input',()=>{stop();z=Number($('z').value);$('zExact').value=Number(z.toPrecision(12));render();});$('z').addEventListener('change',announce);
+  $('zExact').addEventListener('input',()=>{stop();const raw=$('zExact').value.trim(),v=raw===''?NaN:Number(raw);if(!Number.isFinite(v)||v<zmin||v>zmax){invalid(`Enter z between ${fmt(zmin,5)} and ${fmt(zmax,5)}.`,'zExact');return;}const ids=mode==='unif'?U:N,current=Object.fromEntries(ids.map(id=>[id,$(id).value.trim()===''?NaN:Number($(id).value)])),error=mode==='unif'?C.validateUniform(current):C.validateNormal(current);if(error){invalid(error);return;}clearError();p=current;z=v;$('z').value=z;render();});$('zExact').addEventListener('change',announce);
+  $('play').addEventListener('click',()=>{if(timer!==null){stop(true);return;}if(reduced.matches){announce();return;}if(z>=zmax)z=zmin;$('play').textContent='Pause';$('play').setAttribute('aria-label','Pause animation');timer=setInterval(()=>{z=Math.min(zmax,z+(zmax-zmin)/180);$('z').value=z;$('zExact').value=Number(z.toPrecision(10));render();if(z>=zmax)stop(true);},35);});
+  reduced.addEventListener('change',()=>{if(reduced.matches)stop(true);});
+  let resizeTimer;new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(render,80);}).observe($('plots'));
+  if(uniformOnly)$('modes').hidden=true;
+  setMode('unif',false);
+})();
+</script>
 </body>
 </html>
