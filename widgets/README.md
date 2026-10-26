@@ -16,6 +16,7 @@ the lesson.
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Discrete distributions: PMF and CDF](https://codey-m.github.io/prob_stats/widgets/widget-discrete-dist.html) | Unit 1, Lec. 1: PMFs and expectation |  |
+| [Normal probabilities](https://codey-m.github.io/prob_stats/widgets/widget-normal-probability.html) | Unit 2, Lec. 3: Probability density functions | Standard normal probability lookup |
 | [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module2.html) | Glossary tab | Module 2 Glossary |
 
 ## 6.3710.3x Probability & SDA: Multivariate Statistics & Bayesian Inference
@@ -23,7 +24,7 @@ the lesson.
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Pairing Bench](https://codey-m.github.io/prob_stats/widgets/widget-pairing-bench.html) | Unit 1 overview | Pairing Bench, arrange six cup-and-saucer sets |
-| [Sliding Convolution](https://codey-m.github.io/prob_stats/widgets/widget-sliding-convolution.html) | Unit 1, Lec. 2: Sums, covariance, and correlation |  |
+| [Sliding convolution](https://codey-m.github.io/prob_stats/widgets/widget-sliding-convolution.html) | Unit 1, Lec. 2: Sums, covariance, and correlation |  |
 | [Bivariate normal: correlation and conditioning](https://codey-m.github.io/prob_stats/widgets/widget-bvn-ellipse.html) | Unit 1, Lec. 2: Sums, covariance, and correlation | Correlation and conditioning |
 | [Bayesian updating: prior, likelihood, posterior](https://codey-m.github.io/prob_stats/widgets/widget-bayes-update.html) | Unit 2, Lec. 5: Linear models with normal noise | Bayesian updating |
 | [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module3.html) | Glossary tab | Module 3 Glossary |
