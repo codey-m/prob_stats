@@ -53,6 +53,7 @@
 const MODULE = { name: "Module 4", subtitle: "Limit theorems, sampling, and estimation", course: "6.3710x" };
 
 const UNIT_COLORS = {
+  "Continuous RVs":         "#B04A8B",   // magenta (Module 2, prerequisite)
   "Limit theorems":         "#378ADD",   // blue  (Lec 1-2: WLLN, CLT)
   "Sampling distributions": "#1D9E75",   // teal  (sampling, MSE, bootstrap)
   "Parameter estimation":   "#BA7517",   // amber (MLE, CIs, classical statistics)
@@ -60,6 +61,10 @@ const UNIT_COLORS = {
 };
 
 const T = [
+
+  // ── Module 2 prerequisite: continuous random variables ──────────────────
+  { term: "Continuous uniform random variable", notation: "U[a, b]", unit: "Continuous RVs",
+    def: "A random variable whose PDF is constant on an interval [a, b] and zero outside it. Its mean is (a + b)/2 and its variance is (b − a)²/12." },
 
   // ── Unit 1 — Limit theorems ───────────────────────────────────────────────
   { term: "Markov inequality", notation: "P(X ≥ a) ≤ E[X]/a", unit: "Limit theorems",

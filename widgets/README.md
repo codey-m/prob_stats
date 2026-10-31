@@ -8,6 +8,7 @@ the lesson.
 
 | Widget | Where | What it shows |
 | --- | --- | --- |
+| [Standard notation for entering answers](https://codey-m.github.io/prob_stats/widgets/notation-guide.html) | 39 places across 6.3710.1x, 6.3710.2x, 6.3710.3x, 6.3710.4x, 6.3710.5x |  |
 | [Beach Beeps](https://codey-m.github.io/prob_stats/widgets/widget-bayes-base-rate.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Bayes' rule and the base rate |
 | [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module1.html) | Glossary tab | Module 1 Glossary |
 
