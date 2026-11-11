@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bootstrap: code a resample</title><link rel="stylesheet" href="style.css"><!-- editor-importmap: canonical copy in _shared/editor-importmap.json -->
+<script type="importmap">
+{
+ "imports": {
+  "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.4/dist/index.js",
+  "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+  "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.1/dist/index.js",
+  "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+  "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+  "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+  "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.15/dist/index.js",
+  "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.5/dist/index.js",
+  "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+  "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.12/dist/index.js",
+  "@lezer/python": "https://cdn.jsdelivr.net/npm/@lezer/python@1.1.19/dist/index.js",
+  "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+  "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+  "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+  "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+ }
+}
+</script>
+</head>
+<body><main>
+<header><p class="eyebrow">Probability &amp; Statistical Data Analysis · Coding practice</p><h1>How much can the mean move?</h1><p>Write one resampling step. Watch the observations it selects, then see where the means of repeated resamples land.</p></header>
+<div class="controls"><label>Observations<select id="case"></select></label><label>Resamples<select id="count"><option>100</option><option selected>300</option><option>1000</option></select></label><label>Seed<input id="seed" type="number" min="0" max="999999" value="17"></label></div>
+<div class="layout"><section class="code"><h2>Your resampling rule</h2><p>Complete <code>resample(data, rng)</code>. Select observations with replacement and return a list of the same length. Keep <code>data</code> unchanged. Use the supplied Python <code>random.Random</code> generator so a seed reproduces your draws.</p>
+<label for="editor">Python</label><div class="editor-shell"><pre id="line-numbers" aria-hidden="true">1</pre><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="shortcut"></textarea></div><p id="shortcut" class="small">Command/Ctrl + Enter runs. Tab indents; Escape then Tab leaves the editor.</p>
+<details><summary>Generator interface and hint</summary><p><code>rng.choice(sequence)</code> returns one randomly selected member. <code>rng.choices(sequence, k=count)</code> returns a list of selections. A selected observation remains available for the next selection.</p></details>
+<div class="actions"><button id="run">Run Python</button><button id="reference" class="secondary">Run reference</button><button id="stop" class="secondary" disabled>Stop</button></div>
+<button id="test" class="secondary">Test other cases</button><p id="status" role="status">Python loads when you run.</p><pre id="error" class="error" tabindex="0" role="region" aria-label="Python error" hidden></pre><details id="output" hidden><summary>Python output</summary><pre id="stdout" tabindex="0" role="region" aria-label="Python output"></pre></details>
+</section><section class="visual"><h2 id="view-title">Resampling the mean</h2><p id="original"></p><div id="empty">Run your function or the reference to see the selected observations and their means.</div>
+<div id="results" hidden>
+<p id="source-note"></p><h3>Original observations</h3><div id="source-values" class="tokens"></div>
+<h3 id="sample-title">Selected resample</h3><div id="sample-values" class="tokens"></div><p id="selection-note"></p>
+<p id="equation" class="equation"></p>
+<h3 id="histogram-title">Distribution of resample means</h3><p id="contribution"></p>
+<svg id="plot" viewBox="0 0 600 260" role="img" aria-labelledby="plot-title plot-description"><title id="plot-title">Distribution of resample means</title><desc id="plot-description"></desc><g id="drawing"></g></svg>
+<p id="spread"></p><p id="comparison"></p>
+<div class="actions"><button id="step" class="secondary">Next step</button><button id="play" class="secondary">Replay</button><button id="all" class="secondary">Show all means</button></div>
+<label for="progress">Resample <output id="position"></output></label><input id="progress" type="range" min="1" value="1">
+<p id="reading" role="status"></p><details><summary>Read the current resample as text</summary><p id="text-sample"></p><p id="text-distribution"></p></details>
+<p id="feedback"></p></div></section></div>
+<footer><p>Change the observations and rerun the same function. Which change affects the spread of the means, and why?</p><p class="small">The reference runs independently and leaves your code in place. Refreshing resets this activity. Python runs on your device; the runtime downloads on first use.</p></footer>
+</main><script type="module" src="app.js"></script></body></html>

@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maximum likelihood in code</title><link rel="stylesheet" href="style.css"><!-- editor-importmap: canonical copy in _shared/editor-importmap.json -->
+<script type="importmap">
+{
+ "imports": {
+  "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.4/dist/index.js",
+  "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+  "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.1/dist/index.js",
+  "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+  "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+  "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+  "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.15/dist/index.js",
+  "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.5/dist/index.js",
+  "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+  "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.12/dist/index.js",
+  "@lezer/python": "https://cdn.jsdelivr.net/npm/@lezer/python@1.1.19/dist/index.js",
+  "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+  "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+  "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+  "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+ }
+}
+</script>
+</head><body><main>
+<header><p class="eyebrow">Probability &amp; Statistical Data Analysis · Coding practice</p><h1>Does your estimate maximize your likelihood?</h1><p>Write an exponential log-likelihood and its rate estimate. Inspect the curve they produce, including nearby candidate rates.</p></header>
+<div class="controls"><label>Waiting times<select id="case"></select></label></div>
+<div class="layout"><section><h2>Your likelihood and estimate</h2><p>Use the exponential rate model <code>f(x | θ) = θ exp(−θx)</code> for nonnegative waiting times and <code>θ &gt; 0</code>. Return a scalar from <code>loglik(theta, data)</code> and a positive rate from <code>mle(data)</code>. For a nonpositive theta, return <code>-math.inf</code> or raise <code>ValueError</code>. Keep the supplied data unchanged.</p>
+<label for="editor">Python</label><div class="editor-shell"><pre id="line-numbers" aria-hidden="true"></pre><textarea id="editor" spellcheck="false" autocapitalize="off" autocomplete="off" aria-describedby="shortcut"></textarea></div><p id="shortcut" class="small">Command/Ctrl + Enter runs. Tab indents; Escape then Tab leaves the editor.</p><details><summary>Hint: from density to log-likelihood</summary><p>Independent observations contribute a product of densities. Taking its logarithm turns that product into a sum. Find the positive rate at which its derivative is zero, and check whether nearby rates give lower values.</p></details>
+<div class="actions"><button id="run">Run Python</button><button id="reference" class="secondary">Run reference</button><button id="stop" class="secondary" disabled>Stop</button><button id="test" class="secondary">Test other cases</button></div><p id="status" role="status">Python loads when you run.</p><pre id="error" class="error" tabindex="0" role="region" aria-label="Python error" hidden></pre><details id="output" hidden><summary>Python output</summary><pre id="stdout" tabindex="0" role="region" aria-label="Python output"></pre></details></section>
+<section><h2 id="view-title">Log-likelihood over candidate rates</h2><p id="inputs"></p><div id="empty">Run your functions or the reference to reveal the curve and estimate.</div><div id="results" hidden><svg id="plot" viewBox="0 0 600 300" role="img" aria-labelledby="plot-title plot-description"><title id="plot-title">Returned log-likelihood with estimate and candidate markers</title><desc id="plot-description"></desc><g id="drawing"></g></svg><p class="small">Solid curve: returned log-likelihood. Dashed line and diamond: returned estimate. Circle: inspected candidate.</p><p id="estimate" class="equation"></p><label for="candidate">Inspect a candidate rate</label><input id="candidate" type="range" min="0" max="120" value="60"><p id="candidate-value" role="status"></p><div class="actions"><button id="inspect-estimate" class="secondary">Inspect estimate</button><button id="left" class="secondary">20% lower rate</button><button id="right" class="secondary">20% higher rate</button></div><p id="comparison"></p><p id="feedback"></p><details><summary>Read the curve as text</summary><p id="text-curve" tabindex="0" role="region" aria-label="Sampled curve values"></p></details><details id="suite-panel" hidden><summary>Changed-case checks</summary><p id="suite" tabindex="0" role="region" aria-label="Changed-case results"></p></details></div></section></div>
+<footer><p>Run the same functions after doubling every waiting time. Then try twice as many observations with the same empirical distribution.</p><p class="small">Run reference leaves your code in place. Python runs on your device; the runtime downloads on first use. Refreshing resets this activity.</p></footer></main><script type="module" src="app.js"></script></body></html>
