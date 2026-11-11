@@ -22,7 +22,7 @@ export function render($,c,v,t,selection,inspect,previous){
  element('p',scene,`Shaded tail area beyond ±|returned z| = ${fmt(v.tail_area)}. ${Math.abs(v.tail_area-v.p)<1e-10?'The returned p is consistent with your returned z.':'The returned p is not consistent with your returned z.'}`);
  // Magnification preserves the same tail density; it is explicitly not a second probability scale.
  const detail=element('details',scene);element('summary',detail,'Magnify the tails');
- if(bound<=8){element('p',detail,`Both tails have the same shape by symmetry. This magnifies the right tail from |z| = ${fmt(bound)}; its area is ${fmt(v.tail_area/2)}. The vertical scale is magnified, not a new probability.`);
+ if(bound<=8){element('p',detail,`Both tails have the same shape by symmetry. Total right-tail probability beyond |z| = ${fmt(bound)} is ${fmt(v.tail_area/2)}. This close-up shows density near that boundary on a magnified vertical scale.`);
   const inset=svg(detail,'Magnified right-tail standard normal density from the absolute returned z. The left tail has equal area.');inset.e.setAttribute('viewBox',`0 0 ${inset.w} 180`);inset.e.style.height='180px';
   const upper=bound+Math.max(.8,2/(bound+1)),xx=a=>40+(a-bound)/(upper-bound)*(inset.w-60),peak=phi(bound),yy=b=>137-(b/peak)*110;
   const xs=Array.from({length:121},(_,i)=>bound+(upper-bound)*i/120);inset.add('path',{d:`M ${xx(bound)},137 `+xs.map(a=>`L ${xx(a)},${yy(phi(a))}`).join(' ')+` L ${xx(upper)},137 Z`,fill:'#e5c5a8',stroke:'#9a3d08','stroke-width':2});inset.add('text',{x:40,y:163},fmt(bound));inset.add('text',{x:inset.w-20,y:163,'text-anchor':'end'},fmt(upper));
