@@ -1,0 +1,42 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>PCA: rows, columns, coordinates</title><link rel="stylesheet" href="style.css">
+<script type="importmap">
+{
+ "imports": {
+  "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.4/dist/index.js",
+  "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+  "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.1/dist/index.js",
+  "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+  "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+  "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+  "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.15/dist/index.js",
+  "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.5/dist/index.js",
+  "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+  "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.12/dist/index.js",
+  "@lezer/python": "https://cdn.jsdelivr.net/npm/@lezer/python@1.1.19/dist/index.js",
+  "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+  "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+  "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+  "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+ }
+}
+</script>
+<script type="module" src="app.js"></script></head><body><main>
+<header><p class="eyebrow">PROBABILITY &amp; STATISTICAL DATA ANALYSIS</p><h1>Rows, columns, coordinates</h1><p>Code can run and still move the wrong numbers. Follow one observation from its feature values to its PCA coordinates.</p></header>
+<nav aria-label="Activity stage"><button data-stage="center" aria-pressed="true">1. Center each feature</button><button data-stage="project" aria-pressed="false">2. Project one observation</button></nav>
+<section aria-labelledby="task-title"><h2 id="task-title"></h2><p id="task"></p><p>Subscripts match array indices: X<sub>ij</sub> means <code>X[i, j]</code>. The same convention applies to C, V, and Z.</p><div id="formula" class="formula" role="group" aria-label="Formulas for this stage"></div><button id="new-case">Change table</button><p id="case-name"></p>
+<p id="input-help"></p><div id="input-grid"></div><div id="directions" hidden><h3>Supplied PCA directions V</h3><p>Each column is one unit direction: PC1, then PC2. The directions have already been computed for this table.</p><div id="v-grid"></div></div>
+<p id="hand-help"></p><div class="controls"><button id="check-selection">Check my selection</button><button id="clear-selection">Clear selection</button></div>
+<div class="controls"><label id="value-label" for="hand-value">Your calculated value</label><input id="hand-value" type="number" step="any" inputmode="decimal"><button id="check-value">Check calculation</button></div><p id="hand-feedback" role="status"></p>
+</section>
+<section aria-labelledby="code-title"><h2 id="code-title">Try it with NumPy</h2><p id="interface"></p>
+<div class="editor-shell"><pre id="line-numbers" aria-hidden="true"></pre><textarea id="code" spellcheck="false" autocapitalize="off" aria-label="Python PCA function" aria-describedby="editor-keys"></textarea></div>
+<p id="editor-keys" class="small">Command/Ctrl + Enter runs. Tab indents; Escape then Tab leaves the editor.</p>
+<div class="controls"><button id="run" class="primary">Run Python</button><button id="stop" disabled>Stop</button><button id="reference">Run reference</button><button id="suite">Test other tables</button></div>
+<p id="runtime" role="status">Python and NumPy load on the first run. You can work by hand while they load.</p><button id="retry" hidden>Retry loading Python</button>
+<details><summary>Hint</summary><p id="hint"></p></details><details><summary>Copy the inputs</summary><pre id="input-code"></pre></details>
+<div class="controls"><button id="reset">Reset this rule</button><button id="download">Download Python</button></div>
+</section>
+<section aria-labelledby="visual-title"><h2 id="visual-title">Follow the coordinates</h2><p class="legend">○ input observation &nbsp; ◆ returned observation</p><div id="plots"></div><p id="run-label" role="status">Run your function or the reference to reveal its output.</p>
+<div id="result-panel" hidden><p id="verdict"></p><p id="pattern"></p><pre id="error" hidden></pre><div id="shape-diagram" hidden></div><p id="inspect">Select a returned point to inspect its coordinates.</p><details><summary>Inspect numeric entries</summary><div id="output-grid"></div></details><details id="test-details" hidden><summary id="test-summary"></summary><div id="test-results"></div></details><details id="stdout-details" hidden><summary>Printed output</summary><pre id="stdout"></pre></details></div>
+</section><p id="transfer"></p><p class="small">These are disclosed practice tables. Passing them is evidence about these cases, not a proof for every array.</p>
+</main></body></html>

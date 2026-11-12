@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bootstrap: one result per resample</title><link rel="stylesheet" href="style.css"><script type="importmap">
+{
+ "imports": {
+  "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.4/dist/index.js",
+  "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+  "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.1/dist/index.js",
+  "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+  "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+  "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+  "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.15/dist/index.js",
+  "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.5/dist/index.js",
+  "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+  "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.12/dist/index.js",
+  "@lezer/python": "https://cdn.jsdelivr.net/npm/@lezer/python@1.1.19/dist/index.js",
+  "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+  "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+  "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+  "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+ }
+}
+</script>
+<script type="module" src="app.js"></script></head><body><main>
+<header><p class="eyebrow">PROBABILITY &amp; STATISTICAL DATA ANALYSIS</p><h1>One result per resample</h1><p>Each row holds a paired observation (x, y). Build repeated samples and record how their covariance varies.</p></header>
+<section aria-labelledby="source-title"><div class="heading"><h2 id="source-title">Source observations</h2><button id="new-case">Change table</button></div><p id="case-name"></p><div id="source"></div>
+<details><summary>The supplied statistic</summary><p><code>statistic(sample)</code> returns the sample covariance of the paired x and y values. It computes both means again for the supplied sample. A positive value means the two features tend to increase together; a negative value means they tend to move in opposite directions.</p><div id="formula" class="formula"></div><p>Here n is the number of sampled rows. Repeated source rows count each time they appear. The bars denote the means within this sample.</p></details>
+<details><summary>Disclosed draw plans</summary><p>Each row of the plan holds source indices for one resample. Indices start at zero. Rows may appear more than once, and a resample has the same number of rows as the source.</p><pre id="plans"></pre></details>
+</section>
+<section aria-labelledby="workflow-title"><h2 id="workflow-title">Assemble a workflow</h2><p>Choose what repeats for each resample. Run the workflow, then step through its returned samples and stored results.</p>
+<div class="choices"><label>1. Build a sample <select id="sample-rule"><option value="">Choose a rule</option><option value="rows">Draw complete rows</option><option value="shift">Shift y by one slot</option></select></label><label>2. Compute a statistic <select id="stat-rule"><option value="">Choose a rule</option><option value="sample">Evaluate this sample</option><option value="original">Reuse source statistic</option></select></label><label>3. Record a result <select id="store-rule"><option value="">Choose a rule</option><option value="scalar">Store one statistic</option><option value="rows">Store sampled rows</option></select></label></div>
+<div class="controls"><button id="run-workflow" class="primary">Run my workflow</button><button id="reference">Run reference</button><button id="stop" disabled>Stop</button></div><p id="choice-status" role="status"></p>
+<details id="code-panel"><summary>Try the loop in Python</summary><p>Define <code>bootstrap(rows, draw_plan, statistic)</code>. <code>rows</code> is a list of [x, y] pairs. Each entry of <code>draw_plan</code> lists the row indices for one replicate. <code>statistic(sample)</code> is supplied. Return one <code>(sample, value)</code> pair per replicate, in plan order. Leave both input lists unchanged.</p>
+<div class="editor-shell"><pre id="line-numbers" aria-hidden="true"></pre><textarea id="code" spellcheck="false" autocapitalize="off" aria-label="Python bootstrap workflow" aria-describedby="editor-keys"></textarea></div><p id="editor-keys" class="small">Command/Ctrl + Enter runs. Tab indents; Escape then Tab leaves the editor.</p><div class="controls"><button id="run">Run Python</button><button id="suite">Test other tables</button></div>
+<details><summary>Hint</summary><p>Each pass needs a newly assembled sample and one result added to the collection. Which quantities belong to this pass, and which collection needs to survive the whole loop?</p></details><div class="controls"><button id="reset">Reset this rule</button><button id="download">Download Python</button></div></details>
+<p id="runtime" role="status">Python loads only for a code or reference run. The assembled workflow runs immediately.</p><button id="retry" hidden>Retry loading Python</button>
+</section>
+<section aria-labelledby="result-title"><h2 id="result-title">Follow one replicate</h2><p id="run-label" role="status">Run a workflow, your code, or the reference to reveal results.</p><div id="results" hidden>
+<p id="verdict"></p><pre id="error" hidden></pre><div class="controls"><button id="step">Step</button><button id="replay">Replay</button><button id="show-all">Show all</button><label>Replicate <select id="replicate"></select></label></div>
+<p id="phase" role="status"></p><p id="plan-label"></p><div id="sample-grid"></div><div id="calculation" hidden></div><div id="distribution"></div><p id="inspection"></p>
+<details><summary>Inspect the stored values</summary><pre id="stored"></pre></details><details id="test-details" hidden><summary id="test-summary"></summary><div id="test-results"></div></details><details id="stdout-details" hidden><summary>Printed output</summary><pre id="stdout"></pre></details>
+</div></section><p class="small">Twelve disclosed resamples make the workflow visible. They are practice cases, not a precision estimate of uncertainty.</p><p>Would the same loop still work if the supplied helper fitted a model and returned one measurement of that fit?</p>
+</main></body></html>
