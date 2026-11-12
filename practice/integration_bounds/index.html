@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresher: limits of a double integral</title>
+<link rel="stylesheet" href="style.css?v=4">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math refresher · ungraded · optional</p>
+    <h1>Limits of a double integral</h1>
+    <p>Problem Set 2 asks you to integrate over regions that are not rectangles. This page checks one move: reading the limits off a region, in the order you need.</p>
+    <p class="time">About 3 minutes if you remember it. About 10 if you use the reminder.</p>
+    <p id="progress" class="progress" role="status">Start with the task below. If you get it right, you are done.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>The method, without the interactive parts</h2>
+      <p>To integrate over one variable first, hold the other variable fixed and picture a slice across the region. The inner limits are where the slice enters and where it leaves, each written as a function of the fixed variable. The outer limits are the first and last values of the fixed variable at which a slice still crosses the region. If the slice leaves through a different edge partway across, split the integral at that point.</p>
+      <p>The practice on this page needs JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section id="case-A" aria-labelledby="hA">
+    <h2 id="hA">Try this first</h2>
+    <p>A region is described by <span class="math">0 &lt; <i>x</i> &lt; 2</span> and <span class="math"><i>x</i>/2 &lt; <i>y</i> &lt; 1</span>. That description suits integrating over <i>y</i> first.</p>
+    <p><strong>Write the limits for integrating over <i>x</i> first.</strong> Limits may use numbers, <i>x</i> and <i>y</i>, for example <code>3y</code> or <code>1 - x/2</code>.</p>
+    <div class="figure" id="fig-A"></div>
+    <div class="slicebox" id="slicebox-A" hidden>
+      <label for="slice-A">Move the slice: <span class="math"><i>y</i> = <output id="slice-A-val">0.40</output></span></label>
+      <input type="range" id="slice-A" min="0" max="1" step="0.05" value="0.4">
+      <p id="slice-A-read" class="readout"></p>
+      <p id="slice-A-status" class="sr-only" role="status"></p>
+    </div>
+    <div class="entry" id="entry-A"></div>
+    <div class="actions">
+      <button type="button" id="check-A" class="primary">Check my limits</button>
+      <button type="button" id="remind-A" aria-expanded="false" aria-controls="recovery-A">I need a reminder</button>
+    </div>
+    <p id="feedback-A" class="feedback" role="status"></p>
+
+    <div id="recovery-A" class="recovery" hidden>
+      <h3>Reminder</h3>
+      <p>Use as much of this as you need. Nothing here is scored.</p>
+      <ol id="hints-A" class="hints"></ol>
+      <div class="actions">
+        <button type="button" id="hint-A">Give me a hint</button>
+      </div>
+      <details id="explain-A">
+        <summary>Show the full worked explanation</summary>
+        <ol>
+          <li>Integrating over <i>x</i> first means holding <i>y</i> fixed. Picture a horizontal slice across the region at height <i>y</i>.</li>
+          <li>The slice enters the triangle through its left edge, the line <span class="math"><i>x</i> = 0</span>. The lower inner limit is 0.</li>
+          <li>The slice leaves through the slanted edge, <span class="math"><i>y</i> = <i>x</i>/2</span>. The inner variable is <i>x</i>, so solve that edge for <i>x</i>: <span class="math"><i>x</i> = 2<i>y</i></span>. The upper inner limit is 2<i>y</i>.</li>
+          <li>Slices cross the triangle for heights between 0 and 1. Those numbers are the outer limits.</li>
+        </ol>
+        <math display="block" aria-label="The integral from y equals 0 to 1, of the integral from x equals 0 to 2 y, of f of x and y, d x d y">
+          <msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup>
+          <msubsup><mo>∫</mo><mn>0</mn><mrow><mn>2</mn><mi>y</mi></mrow></msubsup>
+          <mi>f</mi><mo>(</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>)</mo>
+          <mspace width="0.3em"/><mi>d</mi><mi>x</mi><mspace width="0.2em"/><mi>d</mi><mi>y</mi>
+        </math>
+        <p>A quick check: with <span class="math"><i>f</i> = 1</span>, both orders give the triangle's area, 1.</p>
+      </details>
+    </div>
+  </section>
+
+  <section id="case-C" aria-labelledby="hC" hidden>
+    <h2 id="hC">Now one on your own</h2>
+    <p>This case completes the refresher. It has no walkthrough; the slice is there if you ask for it.</p>
+    <p>A different region is described by <span class="math">0 &lt; <i>y</i> &lt; 1</span> and <span class="math">0 &lt; <i>x</i> &lt; 2 − 2<i>y</i></span>. That description suits integrating over <i>x</i> first.</p>
+    <p><strong>Write the limits for integrating over <i>y</i> first.</strong></p>
+    <div class="figure" id="fig-C"></div>
+    <div class="slicebox" id="slicebox-C" hidden>
+      <label for="slice-C">Move the slice: <span class="math"><i>x</i> = <output id="slice-C-val">0.60</output></span></label>
+      <input type="range" id="slice-C" min="0" max="2" step="0.1" value="0.6">
+      <p id="slice-C-read" class="readout"></p>
+      <p id="slice-C-status" class="sr-only" role="status"></p>
+    </div>
+    <div class="entry" id="entry-C"></div>
+    <div class="actions">
+      <button type="button" id="check-C" class="primary">Check my limits</button>
+      <button type="button" id="stuck-C">Show me the slice</button>
+    </div>
+    <p id="feedback-C" class="feedback" role="status"></p>
+  </section>
+
+  <section id="done" hidden aria-labelledby="hD">
+    <h2 id="hD">Done</h2>
+    <p id="done-text"></p>
+    <p>The method in one line: fix the outer variable, send a slice through the region, and read where it enters and where it leaves.</p>
+  </section>
+
+  <section id="case-B" aria-labelledby="hB" hidden>
+    <h2 id="hB">Extension: when the slice changes edge</h2>
+    <p>Optional. Some regions need one more idea: partway across, the slice starts leaving through a different edge.</p>
+    <p>A region is described by <span class="math">0 &lt; <i>y</i> &lt; 1</span> and <span class="math"><i>y</i> &lt; <i>x</i> &lt; 2 − <i>y</i></span>. Write the limits for integrating over <i>y</i> first.</p>
+    <div class="figure" id="fig-B"></div>
+    <div class="slicebox" id="slicebox-B" hidden>
+      <label for="slice-B">Move the slice: <span class="math"><i>x</i> = <output id="slice-B-val">0.50</output></span></label>
+      <input type="range" id="slice-B" min="0" max="2" step="0.1" value="0.5">
+      <p id="slice-B-read" class="readout"></p>
+      <p id="slice-B-status" class="sr-only" role="status"></p>
+    </div>
+    <fieldset id="edge-B">
+      <legend>1. As a vertical slice moves from left to right, does it leave the region through the same edge the whole way?</legend>
+      <label><input type="radio" name="edge-B" value="same"> Yes, always the same edge</label>
+      <label><input type="radio" name="edge-B" value="changes"> No, it changes edge partway</label>
+    </fieldset>
+    <fieldset id="pieces-B">
+      <legend>2. How will you write the limits?</legend>
+      <label><input type="radio" name="pieces-B" value="1"> As one integral (a limit may use <code>min</code> or <code>max</code>)</label>
+      <label><input type="radio" name="pieces-B" value="2"> As two integrals, added</label>
+    </fieldset>
+    <div class="entry" id="entry-B"></div>
+    <div class="actions">
+      <button type="button" id="check-B" class="primary" disabled>Check my answer</button>
+      <button type="button" id="stuck-B" aria-expanded="false" aria-controls="support-B">Help with this one</button>
+    </div>
+    <p id="feedback-B" class="feedback" role="status"></p>
+    <div id="support-B" class="recovery" hidden>
+      <p>The slice is now above the figure. Move it across the middle of the region and watch which edge it leaves through.</p>
+      <details id="explain-B">
+        <summary>Show the full worked explanation</summary>
+        <ol>
+          <li>Integrating over <i>y</i> first means holding <i>x</i> fixed: a vertical slice. Every slice enters through the bottom edge, so the lower inner limit is 0.</li>
+          <li>Left of <span class="math"><i>x</i> = 1</span>, the slice leaves through <span class="math"><i>x</i> = <i>y</i></span>. Solved for <i>y</i>, that is <span class="math"><i>y</i> = <i>x</i></span>.</li>
+          <li>Right of <span class="math"><i>x</i> = 1</span>, it leaves through <span class="math"><i>x</i> = 2 − <i>y</i></span>, which is <span class="math"><i>y</i> = 2 − <i>x</i></span>.</li>
+          <li>The exit edge changes at <span class="math"><i>x</i> = 1</span>, so split the integral there. Or keep one integral and write the upper limit as whichever edge is lower: <code>min(x, 2 - x)</code>.</li>
+        </ol>
+        <math display="block" aria-label="The integral from x equals 0 to 1 of the integral from y equals 0 to x, plus the integral from x equals 1 to 2 of the integral from y equals 0 to 2 minus x, of f of x and y, d y d x">
+          <msubsup><mo>∫</mo><mn>0</mn><mn>1</mn></msubsup><msubsup><mo>∫</mo><mn>0</mn><mi>x</mi></msubsup><mi>f</mi><mspace width="0.2em"/><mi>d</mi><mi>y</mi><mspace width="0.2em"/><mi>d</mi><mi>x</mi>
+          <mo>+</mo>
+          <msubsup><mo>∫</mo><mn>1</mn><mn>2</mn></msubsup><msubsup><mo>∫</mo><mn>0</mn><mrow><mn>2</mn><mo>−</mo><mi>x</mi></mrow></msubsup><mi>f</mi><mspace width="0.2em"/><mi>d</mi><mi>y</mi><mspace width="0.2em"/><mi>d</mi><mi>x</mi>
+        </math>
+      </details>
+    </div>
+  </section>
+</main>
+<script src="model.js?v=4"></script>
+<script src="app.js?v=4"></script>
+</body>
+</html>
