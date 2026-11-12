@@ -10,14 +10,44 @@ export const fmt=x=>Math.abs(x)<1e-9?'0':Math.abs(x)>=10000?x.toExponential(1):N
 export const cov=sample=>{const n=sample.length,mx=sample.reduce((s,r)=>s+r[0],0)/n,my=sample.reduce((s,r)=>s+r[1],0)/n;return sample.reduce((s,r)=>s+(r[0]-mx)*(r[1]-my),0)/(n-1);};
 export function oracle(sample){let sum=0;for(let i=0;i<sample.length;i++)for(let j=0;j<i;j++)sum+=(sample[i][0]-sample[j][0])*(sample[i][1]-sample[j][1]);return sum/(sample.length*(sample.length-1));}
 const close=(a,b)=>Math.abs(a-b)<=1e-8+1e-8*Math.abs(b);
+// One vocabulary for both routes. The menus run these rules directly; code results are classified
+// against the same rules, so a learner's function is described in the menu's terms.
+export const SAMPLE_RULES={
+ rows:{label:'Draw complete rows',sample:(c,r)=>c.draws[r].map(i=>c.rows[i].slice())},
+ separate:{label:'Draw x and y separately',sample:(c,r)=>{const y=c.draws[(r+1)%c.draws.length];return c.draws[r].map((i,k)=>[c.rows[i][0],c.rows[y[k]][1]]);}},
+ once:{label:'Use each source row once',sample:c=>c.rows.map(row=>row.slice())}
+};
+export const STAT_RULES={sample:{label:'Evaluate this sample'},original:{label:'Reuse source statistic'}};
+export const STORE_RULES={scalar:{label:'Store each statistic'},rows:{label:'Store sampled rows'},latest:{label:'Keep only the latest statistic'}};
+const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
 export function workflow(c,{sample:sampleRule,stat:statRule,store:storeRule}){
- if(!['rows','shift'].includes(sampleRule)||!['sample','original'].includes(statRule)||!['scalar','rows'].includes(storeRule))throw Error('Choose a rule for each of the three steps.');
- const records=c.draws.map(indices=>{
-  const wanted=indices.map(i=>c.rows[i].slice());
-  const sample=indices.map((i,k)=>[c.rows[i][0],c.rows[sampleRule==='rows'?i:indices[(k+1)%indices.length]][1]]);
-  const computed=cov(statRule==='sample'?sample:c.rows),value=storeRule==='scalar'?computed:null;
-  return {sample,value,computed,stored:JSON.stringify(storeRule==='scalar'?computed:sample),sample_ok:JSON.stringify(sample)===JSON.stringify(wanted),value_ok:value!==null&&close(value,oracle(sample)),intended_value_ok:value!==null&&close(value,oracle(wanted)),error:value===null?'The stored item is not one finite numeric statistic.':null};
+ if(!has(SAMPLE_RULES,sampleRule)||!has(STAT_RULES,statRule)||!has(STORE_RULES,storeRule))throw Error('Choose a rule for each of the three steps.');
+ let records=c.draws.map((indices,r)=>{
+  const wanted=indices.map(i=>c.rows[i].slice()),sample=SAMPLE_RULES[sampleRule].sample(c,r);
+  const computed=cov(statRule==='sample'?sample:c.rows),value=storeRule==='rows'?null:computed;
+  return {plan:r,sample,value,computed,stored:JSON.stringify(storeRule==='rows'?sample:computed),sample_ok:JSON.stringify(sample)===JSON.stringify(wanted),value_ok:value!==null&&close(value,oracle(sample)),intended_value_ok:value!==null&&close(value,oracle(wanted)),error:value===null?'The stored item is not one finite numeric statistic.':null};
  });
- return {records,count_ok:true,passed:records.every(r=>r.sample_ok&&r.value_ok&&!r.error),mutated:false,error:null,stdout:''};
+ // Overwriting one variable instead of appending keeps only the final replicate's result.
+ if(storeRule==='latest')records=records.slice(-1);
+ const count_ok=records.length===c.draws.length;
+ return {records,count_ok,passed:count_ok&&records.every(r=>r.sample_ok&&r.value_ok&&!r.error),mutated:false,error:null,stdout:''};
+}
+const sameRows=(a,b)=>Array.isArray(a)&&a.length===b.length&&a.every((r,i)=>Math.abs(r[0]-b[i][0])<1e-9&&Math.abs(r[1]-b[i][1])<1e-9);
+// Describes returned records only; it does not trace the learner's code. Null means no menu rule explains every record.
+export function classify(c,records){
+ if(!records.length)return null;
+ const D=c.draws.length,numeric=records.every(r=>r.value!==null);
+ const store=records.length===D&&numeric?'scalar':records.length===D&&records.every(r=>r.value===null&&r.sample)?'rows':records.length===1&&D>1&&numeric?'latest':null;
+ const planOf=i=>store==='latest'?D-1:i;
+ const sample=Object.keys(SAMPLE_RULES).find(k=>records.every((r,i)=>planOf(i)<D&&sameRows(r.sample,SAMPLE_RULES[k].sample(c,planOf(i)))))||null;
+ const own=numeric&&records.every(r=>r.sample&&close(r.value,cov(r.sample))),source=numeric&&records.every(r=>close(r.value,cov(c.rows)));
+ // When every sample is the source table, the two statistic rules return the same values and cannot be told apart.
+ const stat=own&&source?'either':own?'sample':source?'original':null;
+ return {sample,stat,store,planOf};
+}
+export function describeWorkflow(k){
+ const part=(rules,key,missing)=>key?`“${rules[key].label}”`:missing;
+ const stat=k.store==='rows'?'no statistic stored, so this step cannot be read from the output':k.stat==='either'?`“${STAT_RULES.sample.label}” or “${STAT_RULES.original.label}”, identical here because each sample is the source table`:part(STAT_RULES,k.stat,'a statistic that is not in the menu');
+ return `Your function behaves like this workflow: 1. ${part(SAMPLE_RULES,k.sample,'a sample rule that is not in the menu')} → 2. ${stat} → 3. ${part(STORE_RULES,k.store,'a storage pattern that is not in the menu')}. This describes the returned records, not a trace of your code.`;
 }
 export const FORMULA=`<math display="block" displaystyle="true" aria-label="Sample covariance equals one over n minus one times the sum over sampled rows of x minus its sample mean times y minus its sample mean"><mrow><msub><mi>s</mi><mrow><mi>x</mi><mi>y</mi></mrow></msub><mo>=</mo><mfrac><mn>1</mn><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></mfrac><munderover><mo largeop="true" movablelimits="false">∑</mo><mrow><mi>i</mi><mo>=</mo><mn>0</mn></mrow><mrow><mi>n</mi><mo>−</mo><mn>1</mn></mrow></munderover><mo>(</mo><msub><mi>x</mi><mi>i</mi></msub><mo>−</mo><mover><mi>x</mi><mo>¯</mo></mover><mo>)</mo><mo>(</mo><msub><mi>y</mi><mi>i</mi></msub><mo>−</mo><mover><mi>y</mi><mo>¯</mo></mover><mo>)</mo></mrow></math>`;
