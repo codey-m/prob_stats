@@ -55,7 +55,8 @@ def evaluate_submission(code,case,stage):
             finally:result['mutated']=any(not np.array_equal(a,b) for a,b in zip(args,originals))
             arr=np.asarray(returned);result['shape']=list(arr.shape)
             if arr.dtype.kind not in 'iuf':raise TypeError('Return real numbers, not Boolean, text, or complex values.')
-            if arr.ndim not in (1,2) or arr.size>64 or any(d>8 for d in arr.shape):raise ValueError('Return a small vector or matrix, at most 8 by 8.')
+            cap=max(8,n)
+            if arr.ndim not in (1,2) or arr.size>cap*cap or any(d>cap for d in arr.shape):raise ValueError(f'Return a vector or matrix with at most {cap} entries along each dimension.')
             if not np.all(np.isfinite(arr)) or np.any(np.abs(arr)>1e6):raise ValueError('Return finite values up to 1,000,000 in magnitude.')
             result['values']=arr.tolist()
             if list(arr.shape)!=result['required_shape']:
@@ -91,13 +92,16 @@ def residuals(y, predicted):
 
 
 def evaluate_request(request):
+    # The check table belongs to a course check: no reference output, and no suite verdict for it.
+    if request.get('mode')=='reference' and request.get('case',{}).get('check'):raise ValueError('Run reference is off for the check table.')
     code=REFERENCE if request.get('mode')=='reference' else request['code']
     result=evaluate_submission(code,request['case'],request['stage'])
     if request.get('suite'):
         result['suite']=[]
         for case in CASES:
+            if case.get('check'):continue
             row=evaluate_submission(code,case,request['stage'])
             result['suite'].append(dict(name=case['name'],passed=row['passed'],error=row['error'],shape=row['shape']))
     return result
 
-CASES = [{'id': 'six', 'name': 'Six observations', 'x': [0, 1, 3, 0, 1, 3], 'g': [0, 0, 0, 1, 1, 1], 'y': [1.5, 2.8, 4.5, 3, 5.2, 9.5], 'beta': [1, 1, 2, 1]}, {'id': 'five', 'name': 'Five observations, changed coefficients', 'x': [-2, 0, 2, -1, 3], 'g': [1, 0, 1, 0, 0], 'y': [2.5, -0.5, 0.2, -1, 1.2], 'beta': [-1, 0.5, 3, -1]}, {'id': 'square', 'name': 'Four observations: square design matrix', 'x': [-1, 2, 0, 3], 'g': [0, 1, 1, 0], 'y': [-1, 3, 0, 5], 'beta': [0.5, 1.5, -1, 0.5]}]
+CASES = [{'id': 'six', 'name': 'Six observations', 'x': [0, 1, 3, 0, 1, 3], 'g': [0, 0, 0, 1, 1, 1], 'y': [1.5, 2.8, 4.5, 3, 5.2, 9.5], 'beta': [1, 1, 2, 1]}, {'id': 'five', 'name': 'Five observations, changed coefficients', 'x': [-2, 0, 2, -1, 3], 'g': [1, 0, 1, 0, 0], 'y': [2.5, -0.5, 0.2, -1, 1.2], 'beta': [-1, 0.5, 3, -1]}, {'id': 'square', 'name': 'Four observations: square design matrix', 'x': [-1, 2, 0, 3], 'g': [0, 1, 1, 0], 'y': [-1, 3, 0, 5], 'beta': [0.5, 1.5, -1, 0.5]}, {'id': 'check', 'name': 'Check table: 40 observations', 'check': True, 'x': [0, 0, 0, -1, 0, 3, 5, 5, -2, 5, 2, 3, -3, 1, -2, 5, 3, 1, -1, 5, 4, -1, -2, 0, 5, 5, 2, 3, 0, 2, 2, -2, -3, 2, -1, 4, -1, 2, 3, 1], 'g': [0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0], 'y': [0.8, -0.8, 2.0, -0.3, 0.8, 5.8, 4.2, 7.9, 1.6, 8.8, 1.8, 5.8, 1.1, 1.5, -0.6, 8.5, 3.4, 1.1, 0.8, 8.1, 6.6, 2.1, -2.5, 1.6, 7.9, 7.7, 4.6, 8.2, 0.1, 3.2, 2.7, 0.9, -0.5, 4.8, 0.1, 4.4, -0.1, 3.2, 6.1, 2.9], 'beta': [1.5, 0.5, -1, 1.2]}]

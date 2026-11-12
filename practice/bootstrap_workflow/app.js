@@ -4,9 +4,10 @@ import {createEditor} from './editor.mjs';
 const $=id=>document.getElementById(id),params=new URLSearchParams(location.search);
 const el=(tag,attrs={},text)=>{const e=document.createElement(tag);for(const[k,v]of Object.entries(attrs))e.setAttribute(k,v);if(text!==undefined)e.textContent=text;return e;};
 let ci=0,version=0,busy=false,active=null,last=null,ri=0,phase=0,revealed=0,timer=null,focusSlot=null;
-// Either route completes the activity: the correct menu workflow, or Python that passes every table.
+// Foundation activity: the menus plan the loop (step 1); the Python loop passing every practice table completes it.
 const done={menus:false,code:false};
-function progress(){const m=x=>x?'done':'not yet';$('progress').textContent=`Menus, ${m(done.menus)}; Python (all tables pass), ${m(done.code)}. Either route completes the activity.`;}
+function progress(){const m=x=>x?'done':'not yet';$('progress').textContent=`Plan the loop with the menus, ${m(done.menus)}; write the loop in Python (all practice tables pass), ${m(done.code)}. The Python loop completes the activity.`;}
+const isCheck=()=>!!current().check;
 const current=()=>CASES[ci],reduced=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
 const policies=()=>({sample:$('sample-rule').value,stat:$('stat-rule').value,store:$('store-rule').value});
 const currentRecord=()=>last?.result.records[ri];
@@ -14,7 +15,8 @@ function status(ex,{state,message}){if(active!==ex)return;$('runtime').textConte
 const metrics=m=>window.dispatchEvent(new CustomEvent('python-run-measured',{detail:m}));
 const student=new PythonExecutor({role:'student',onStatus:s=>status(student,s),onMetrics:metrics});
 const reference=new PythonExecutor({role:'reference',onStatus:s=>status(reference,s),onMetrics:metrics});
-function controlState(){for(const id of ['run','reference','suite','run-workflow'])$(id).disabled=busy;$('stop').disabled=!busy;}
+// The check table belongs to a course check: reference and menu runs are off there, and results carry no verdict.
+function controlState(){for(const id of ['run','reference','suite','run-workflow'])$(id).disabled=busy;if(isCheck()){$('reference').disabled=true;$('run-workflow').disabled=true;}$('stop').disabled=!busy;$('check-note').hidden=!isCheck();}
 function stopReplay(){clearTimeout(timer);timer=null;$('replay').textContent='Replay';}
 function clear(message){version++;stopReplay();if(busy){busy=false;if(active&&!active.isLoading)active.cancel();}last=null;focusSlot=null;ri=0;phase=0;revealed=0;$('results').hidden=true;$('run-label').textContent=message;$('choice-status').textContent='';controlState();drawSource();}
 const origin=(value,j)=>current().rows.flatMap((row,i)=>Math.abs(row[j]-value)<1e-9?[i]:[]);
@@ -58,9 +60,9 @@ function show(result,mode,selectedPolicies=null){stopReplay();
  if(k?.store==='latest')result.records.forEach((r,i)=>{if(r.plan===undefined){r.plan=k.planOf(i);r.sample_ok=JSON.stringify(r.sample)===JSON.stringify(current().draws[r.plan].map(j=>current().rows[j]));}});last={result,mode,policies:selectedPolicies};ri=0;phase=0;revealed=0;focusSlot=null;
  $('run-label').textContent=mode==='reference'?'Reference result · current table':mode==='workflow'?'Assembled workflow · current rules':'Your result · current code and table';
  const n=result.records.length,samples=result.records.filter(r=>!r.sample_ok).length,values=result.records.filter(r=>!r.value_ok).length;
- $('verdict').className=result.passed?'pass':'fail'; $('pattern').textContent=k?describeWorkflow(k):'';
+ $('verdict').className=isCheck()?'':result.passed?'pass':'fail'; $('pattern').textContent=k&&!isCheck()?describeWorkflow(k):'';
  if(mode==='workflow'&&result.passed)done.menus=true;if(mode==='student'&&result.suite?.length&&result.suite.every(r=>r.passed))done.code=true;progress();
- $('verdict').textContent=result.error?'The function did not return a usable collection.':`${n} record${n===1?'':'s'} returned for ${current().draws.length} plans. ${samples} samples differ from their row plans; ${values} stored values differ from the covariance of their returned sample.${result.mutated?' A supplied input was changed.':''}`;
+ $('verdict').textContent=result.error?'The function did not return a usable collection.':isCheck()?`${n} record${n===1?'':'s'} returned for ${current().draws.length} plans. The check table has no verdict: use your stored values to answer the course check.`:`${n} record${n===1?'':'s'} returned for ${current().draws.length} plans. ${samples} samples differ from their row plans; ${values} stored values differ from the covariance of their returned sample.${result.mutated?' A supplied input was changed.':''}`;
  $('error').hidden=!result.error;$('error').textContent=result.error||'';$('stdout-details').hidden=!result.stdout;$('stdout').textContent=result.stdout||'';$('inspection').textContent='Select a sampled value to highlight its source matches, or a distribution point to inspect its replicate.';
  $('replicate').replaceChildren(...result.records.map((_,i)=>el('option',{value:i},String(i+1))));
  $('test-details').hidden=!result.suite;if(result.suite){$('test-summary').textContent=`Other tables: ${result.suite.filter(r=>r.passed).length} of ${result.suite.length} passed`;$('test-results').replaceChildren(...result.suite.map(r=>el('p',{},`${r.name}: ${r.passed?'matches the workflow':'differs or raised an error'}`)));$('test-details').open=true;}
@@ -77,10 +79,10 @@ async function run(suite=false,mode='student'){
 }
 $('code').value=STARTER;const editor=createEditor({textarea:$('code'),gutter:$('line-numbers'),manage:true,enhance:!params.has('plain_editor'),onRun:()=>run(),onChange:()=>{if((busy&&active===student)||last?.mode==='student'||!last&&active!==reference)clear('Code changed. Run again to reveal its result.');}});window.pythonEditor=editor;
 $('formula').innerHTML=FORMULA;
-$('run-workflow').onclick=()=>{if(busy)return;try{const p=policies(),result=workflow(current(),p);active=null;show(result,'workflow',p);$('choice-status').textContent='';}catch(e){$('choice-status').textContent=e.message;}};
+$('run-workflow').onclick=()=>{if(busy||isCheck())return;try{const p=policies(),result=workflow(current(),p);active=null;show(result,'workflow',p);$('choice-status').textContent='';}catch(e){$('choice-status').textContent=e.message;}};
 for(const id of ['sample-rule','stat-rule','store-rule'])$(id).onchange=()=>clear('Workflow changed. Run again to reveal its result.');
-$('new-case').onclick=()=>{ci=(ci+1)%CASES.length;clear('New table and plans. Run again to reveal results.');};
-$('run').onclick=()=>run();$('reference').onclick=()=>run(false,'reference');$('suite').onclick=()=>run(true);$('stop').onclick=()=>{const ex=active;clear('Stopped. Your code is preserved.');ex?.cancel();};$('retry').onclick=()=>active?.load().catch(()=>{});
+$('new-case').onclick=()=>{ci=(ci+1)%CASES.length;clear(isCheck()?'Check table. Run your Python loop to reveal its results.':'New table and plans. Run again to reveal results.');};
+$('run').onclick=()=>run();$('reference').onclick=()=>{if(!isCheck())run(false,'reference');};$('suite').onclick=()=>run(true);$('stop').onclick=()=>{const ex=active;clear('Stopped. Your code is preserved.');ex?.cancel();};$('retry').onclick=()=>active?.load().catch(()=>{});
 $('step').onclick=()=>{stopReplay();step();};$('show-all').onclick=()=>{stopReplay();ri=last.result.records.length-1;phase=2;focusSlot=null;render();};
 $('replay').onclick=()=>{if(timer){stopReplay();return;}ri=0;phase=0;revealed=0;focusSlot=null;if(reduced()){ri=last.result.records.length-1;phase=2;render();return;}render();$('replay').textContent='Pause';timer=setTimeout(replayTick,750);};
 $('replicate').onchange=()=>{stopReplay();ri=Number($('replicate').value);phase=2;focusSlot=null;render();};
