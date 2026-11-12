@@ -1,3 +1,4 @@
+import {installReasoning,describeTest,resetProgress} from './reasoning.mjs';
 import {config,cases,render,inputs,transfer} from './model.mjs';
 import {createEditor} from './editor.mjs';
 import {PythonExecutor} from './execution.mjs';
@@ -10,10 +11,11 @@ if($('threshold-control'))$('threshold-control').hidden=config.kind!=='classific
 const selected=()=>cases.find(c=>c.id===$('case').value),status=({message})=>{$('status').textContent=message;};
 const student=new PythonExecutor({onStatus:status}),reference=new PythonExecutor({onStatus:status,role:'reference'});
 function lock(value){busy=value;for(const id of ['run','reference','test'])$(id).disabled=value;$('stop').disabled=!value;}
-function clear(){result=null;$('results').hidden=true;$('empty').hidden=false;$('error').hidden=true;$('output').hidden=true;$('inputs').textContent=inputs(selected());}
+function clear(){resetProgress();result=null;$('results').hidden=true;$('empty').hidden=false;$('error').hidden=true;$('output').hidden=true;$('inputs').textContent=inputs(selected());}
 function invalidate(){revision++;if(busy){const e=mode==='reference'?reference:student;if(!e.isLoading)e.cancel();lock(false);}clear();}
 function lines(){const e=$('editor');$('line-numbers').textContent=e.value.split('\n').map((_,i)=>i+1).join('\n');$('line-numbers').scrollTop=e.scrollTop;}
 function draw(){if(!result)return;const focus=document.activeElement?.getAttribute('data-focus');const disclosures=new Map([...$('scene').querySelectorAll('details')].map(d=>[d.querySelector('summary')?.textContent,d.open]));
+ describeTest(selected(),result,mode);
  const eligible=[...completed.values()].filter(row=>row.signature===signature&&row.case.id!==selected().id);
  $('comparison-control').hidden=config.kind==='classification'||!eligible.length;
  const previous=eligible.find(row=>row.case.id===comparisonId)||null;
@@ -39,8 +41,9 @@ async function run(nextMode,suite=false){
 $('run').onclick=()=>run('student');$('reference').onclick=()=>run('reference');$('test').onclick=()=>run('student',true);$('stop').onclick=()=>{++runId;(mode==='reference'?reference:student).cancel();lock(false);};
 $('compare').onchange=()=>{comparisonId=$('compare').value;draw();};
 $('case').onchange=invalidate;if($('threshold'))$('threshold').onchange=invalidate;
-$('editor').addEventListener('input',()=>{lines();if(mode!=='reference')invalidate();});$('editor').addEventListener('scroll',lines);
+$('editor').addEventListener('input',()=>{lines();if(mode==='student')invalidate();});$('editor').addEventListener('scroll',lines);
 let escapeTab=false;$('editor').addEventListener('keydown',event=>{const e=$('editor');if(event.key==='Escape'){escapeTab=true;return;}if(event.key==='Tab'&&!event.shiftKey&&!escapeTab){event.preventDefault();const start=e.selectionStart,end=e.selectionEnd,line=e.value.lastIndexOf('\n',start-1)+1;if(start===end){e.setRangeText('    ',start,end,'end');}else{const block=e.value.slice(line,end);e.setRangeText(block.split('\n').map(s=>'    '+s).join('\n'),line,end,'select');}e.dispatchEvent(new Event('input'));}else if(event.key!=='Shift')escapeTab=false;if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();run('student');}});$('editor').addEventListener('blur',()=>{escapeTab=false;});
 window.addEventListener('resize',()=>{if(result)draw();});window.addEventListener('pagehide',()=>{student.dispose('Page closed');reference.dispose('Page closed');});lines();clear();
+installReasoning({selected,clear:invalidate,apply:response=>{invalidate();mode='choices';signature='choices';result=response;$('view-title').textContent='Your test';$('results').hidden=false;$('empty').hidden=true;draw();}});
 // Shared CodeMirror editor (../_shared/editor.mjs). The textarea keeps working as before; its value now proxies the editor.
 window.pythonEditor=createEditor({textarea:$('editor'),gutter:$('line-numbers'),manage:false,enhance:!new URLSearchParams(location.search).has('plain_editor')});

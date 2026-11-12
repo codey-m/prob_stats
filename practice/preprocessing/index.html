@@ -1,0 +1,41 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Should the holdout move the scale?</title><link rel="stylesheet" href="style.css"><script type="importmap">{
+ "imports": {
+  "@codemirror/autocomplete": "https://cdn.jsdelivr.net/npm/@codemirror/autocomplete@6.20.4/dist/index.js",
+  "@codemirror/commands": "https://cdn.jsdelivr.net/npm/@codemirror/commands@6.11.1/dist/index.js",
+  "@codemirror/lang-python": "https://cdn.jsdelivr.net/npm/@codemirror/lang-python@6.2.1/dist/index.js",
+  "@codemirror/language": "https://cdn.jsdelivr.net/npm/@codemirror/language@6.13.1/dist/index.js",
+  "@codemirror/state": "https://cdn.jsdelivr.net/npm/@codemirror/state@6.7.6/dist/index.js",
+  "@codemirror/streamparser": "https://cdn.jsdelivr.net/npm/@codemirror/streamparser@6.0.0/dist/index.js",
+  "@codemirror/view": "https://cdn.jsdelivr.net/npm/@codemirror/view@6.43.15/dist/index.js",
+  "@lezer/common": "https://cdn.jsdelivr.net/npm/@lezer/common@1.5.5/dist/index.js",
+  "@lezer/highlight": "https://cdn.jsdelivr.net/npm/@lezer/highlight@1.2.5/dist/index.js",
+  "@lezer/lr": "https://cdn.jsdelivr.net/npm/@lezer/lr@1.4.12/dist/index.js",
+  "@lezer/python": "https://cdn.jsdelivr.net/npm/@lezer/python@1.1.19/dist/index.js",
+  "@marijn/find-cluster-break": "https://cdn.jsdelivr.net/npm/@marijn/find-cluster-break@1.0.4/src/index.js",
+  "crelt": "https://cdn.jsdelivr.net/npm/crelt@1.0.7/index.js",
+  "style-mod": "https://cdn.jsdelivr.net/npm/style-mod@4.1.4/src/style-mod.js",
+  "w3c-keyname": "https://cdn.jsdelivr.net/npm/w3c-keyname@2.2.8/index.js"
+ }
+}</script></head><body><main>
+<header><p class="eyebrow">PSDA · Preprocessing</p><h1>Should the holdout move the scale?</h1></header>
+<select id="case" hidden aria-hidden="true" tabindex="-1"></select>
+<section id="reasoning">
+<p class="task"><b>Task:</b> scale this feature so the holdout is treated like new data, then check that the training scale holds when the holdout shifts.</p>
+<p class="key"><span><b aria-hidden="true">●</b> training rows: the model learns from these</span><span><b aria-hidden="true" class="sq">■</b> holdout rows: stand-in for new data</span></p>
+<fieldset class="step" id="step-fit"><legend>1. Which rows should set μ and s? <span class="mark" id="mark-fit"></span></legend>
+<label class="option"><input type="radio" name="fit" value="train"><span><b aria-hidden="true">●</b> Training rows only</span></label>
+<label class="option"><input type="radio" name="fit" value="all"><span><b aria-hidden="true">● ■</b> Training and holdout rows</span></label>
+<label class="option"><input type="radio" name="fit" value="holdout"><span><b aria-hidden="true">■</b> Holdout rows only</span></label>
+<p id="fit-msg" class="anchor-msg" aria-live="polite"></p></fieldset>
+<fieldset class="step" id="step-apply"><legend>2. How should the holdout be scaled? <span class="mark" id="mark-apply"></span></legend>
+<label class="option"><input type="radio" name="apply" value="reuse"><span>With the training μ and s</span></label>
+<label class="option"><input type="radio" name="apply" value="refit"><span>With its own μ and s</span></label>
+<p id="apply-msg" class="anchor-msg" aria-live="polite"></p></fieldset>
+<fieldset class="step" id="step-shift"><legend>3. Test it: new data arrives <span class="mark" id="mark-shift"></span></legend>
+<button type="button" id="shift" class="secondary" aria-pressed="false">Shift the holdout →</button></fieldset>
+<p id="progress" role="status"></p>
+<details class="info"><summary>ⓘ Scaling</summary><math display="block" aria-label="z equals x minus mu, divided by s"><mi>z</mi><mo>=</mo><mfrac><mrow><mi>x</mi><mo>−</mo><mi>μ</mi></mrow><mi>s</mi></mfrac></math><p>s is the population spread (ddof = 0).</p></details>
+</section>
+<section><h2 id="view-title">Feature values</h2><div id="empty">Answer steps 1 and 2 to see the scaled values.</div><div id="results" hidden><p id="parameters" class="readout"></p><div id="scene"></div><p id="reading" class="small" role="status"></p><p id="feedback"></p><p id="recipe-description" class="small"></p><details id="suite-panel" hidden><summary>Case checks</summary><p id="suite"></p></details></div></section>
+<section class="code"><details id="code-panel"><summary>Optional Python</summary><p class="small">Write <code>standardize(train, holdout)</code> → <code>(mean, spread, train_scaled, holdout_scaled)</code>. Keep the lists unchanged.</p><label for="editor">Python</label><div class="editor-shell"><pre id="line-numbers" aria-hidden="true"></pre><textarea id="editor" spellcheck="false" autocapitalize="off" aria-describedby="shortcut"></textarea></div><p id="shortcut" class="small">⌘/Ctrl + Enter runs · Tab indents · Esc then Tab leaves</p><details><summary>Hint</summary><p>Follow where each fitted parameter comes from. The holdout stands in for new rows.</p></details><div class="actions"><button id="run">Run Python</button><button id="reference" class="secondary">Run reference</button><button id="stop" class="secondary" disabled>Stop</button><button id="test" class="secondary">Test other cases</button><button id="reset" class="secondary">Reset this rule</button><button id="download" class="secondary">Download Python</button></div><p id="status" role="status" class="small">Python loads when you run.</p><pre id="error" class="error" tabindex="0" hidden></pre><details id="output" hidden><summary>Python output</summary><pre id="stdout" tabindex="0"></pre></details></details></section>
+<footer><p class="small">Python runs on your device. Refreshing resets this activity.</p></footer></main><script type="module" src="app.js"></script></body></html>
