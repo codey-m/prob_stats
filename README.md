@@ -6,19 +6,7 @@ The five labs follow one dataset through the whole sequence: rock crabs, from We
 
 ## Optional reviews
 
-These ungraded activities revisit methods from earlier units, with reminders and practice that unfolds as you work. No programming is needed.
-
-Mathematics refreshers: [limits of a double integral](https://codey-m.github.io/prob_stats/practice/integration_bounds/), [integrating a density](https://codey-m.github.io/prob_stats/practice/density_integrals/), [finding a maximum or minimum](https://codey-m.github.io/prob_stats/practice/max_min/), [limits as something grows](https://codey-m.github.io/prob_stats/practice/limits/), and [the chain rule](https://codey-m.github.io/prob_stats/practice/chain_rule_cdf/). Before Problem Set 2 of `6.3710.2x`, the [calculus check](https://codey-m.github.io/prob_stats/practice/ps2_calculus_check/) has one short task for each piece the set uses and points to the refresher for any you miss.
-
-| Spiral review | What you practice |
-| --- | --- |
-| [Spread and precision](https://codey-m.github.io/prob_stats/practice/spread_and_precision/) | Distinguish individual variation from the precision of a sample mean. |
-| [Conditioning and independence](https://codey-m.github.io/prob_stats/practice/conditioning_and_independence/) | Retain cases matching a known event and normalize their probabilities. |
-| [Variance of sums and averages](https://codey-m.github.io/prob_stats/practice/variance_of_sums/) | Track shared components and account for covariance and scaling. |
-| [Posterior summaries](https://codey-m.github.io/prob_stats/practice/posterior_summaries/) | Choose estimates for exact matches or squared error, and retain uncertainty. |
-| [Combining conditional results](https://codey-m.github.io/prob_stats/practice/total_probability_and_expectation/) | Weight within-group results to recover population probabilities and means. |
-| [Comparing likelihoods](https://codey-m.github.io/prob_stats/practice/likelihood_and_fit/) | Compare candidate means using the same observations. |
-| [Counting successes](https://codey-m.github.io/prob_stats/practice/binomial_counts/) | Build sequence probabilities and count arrangements of successes. |
+Ungraded math refreshers and spiral reviews run in the browser, with reminders and practice that unfolds as you work. No programming is needed. See the [optional reviews catalog](practice/README.md).
 
 ## Open a notebook
 
