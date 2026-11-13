@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "reviews": [
+    {
+      "title": "Spread and precision",
+      "path": "practice/spread_and_precision",
+      "source_bundle": "method-refreshers/spread-and-precision",
+      "files": {
+        "index.html": "b2cef8cb1c550c0f092bff2f3f3fe21f18feb80ade559ad22dd566b4ea7ce8a4",
+        "model.js": "018c92b0af70b2b832062764913086dd9fc7e843a13944107d498394e784564b",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Conditioning and independence",
+      "path": "practice/conditioning_and_independence",
+      "source_bundle": "method-refreshers/conditioning-and-independence",
+      "files": {
+        "index.html": "949ed2b3ebe2b36565dcccb2b10d2d8135518f1b7438ad6a8f2bde973fdf0941",
+        "model.js": "a22c7cfa5318db76bf07041fe607bbcd5c1688173dceea0d46a638b2e3c79efd",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Variance of sums and averages",
+      "path": "practice/variance_of_sums",
+      "source_bundle": "method-refreshers/variance-of-sums",
+      "files": {
+        "index.html": "6817cabd05224a74a7ad9bc729542ede42a5c669f7d2a7c1b91356dba03d589a",
+        "model.js": "81ad57539074ada31c0f9715ed719d027ba162ff57be98706c35e6bf07f8838e",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Posterior summaries",
+      "path": "practice/posterior_summaries",
+      "source_bundle": "method-refreshers/posterior-summaries",
+      "files": {
+        "index.html": "604cbb832c026435c3a128d9d1689874be4351f950a7b9dee57fcc70a4adbd7d",
+        "model.js": "48112d81efa0910e92154e0da3d545630b795f896b8547a73bc85f9195029afd",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Combining conditional results",
+      "path": "practice/total_probability_and_expectation",
+      "source_bundle": "method-refreshers/total-probability-and-expectation",
+      "files": {
+        "index.html": "4ff035723d7f412e6f26baa1475dab80cbe1459bd061ebdf9ddec266831b5418",
+        "model.js": "52cf6b0beefe874a9eb458b513314c5be2b9d8350fc9673f4d71f3b3629cc6ab",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Comparing likelihoods",
+      "path": "practice/likelihood_and_fit",
+      "source_bundle": "method-refreshers/likelihood-and-fit",
+      "files": {
+        "index.html": "f9ce753f128547d1208e0c735c96cc74c349b9f5f272b6fb4f3ddc9fa8e9b2b0",
+        "model.js": "fc7a376041b1bf82887effcb28e5f4e4bd7a46bf945e699f492d51f711d32ae6",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    },
+    {
+      "title": "Counting successes",
+      "path": "practice/binomial_counts",
+      "source_bundle": "method-refreshers/binomial-counts",
+      "files": {
+        "index.html": "b2e3c16557818d1a1cf45a4752b3ee46c4108e3704902af99674be9c9763a1b7",
+        "model.js": "b16b6e5e1126910861b9dfea67a2ba729e1317e2a0ac6355f8d7067d97efd188",
+        "review.js": "a30a5b622ff1028d356f4e7233062cfc747653e8c5b426f62e2d1ccedf8867cd",
+        "visuals.js": "f1831336077c9ceb447ef8cd092ab066ec5f8a59525e257d449fc01e17715ecc",
+        "review.css": "061b0799b74f44dfcba59073b3fbc1290a9395802ea7d580919bfa24ca7c51be"
+      }
+    }
+  ]
+}

@@ -1,14 +1,30 @@
-# Probability & SDA coding activities
+# Probability & SDA activities
 
-Labs, coding practices, and the final-project notebook for the five Probability & Statistical Data Analysis courses on MIT Learn, `6.3710.1x` through `6.3710.5x`.
+Labs, coding practices, optional reviews, and the final-project notebook for the five Probability & Statistical Data Analysis courses on MIT Learn, `6.3710.1x` through `6.3710.5x`.
 
 The five labs follow one dataset through the whole sequence: rock crabs, from Weldon's 1893 question about ordinary variation to a model comparison on 200 measured specimens. Short practices focus on one procedure. The final project asks what a single analysis of real CMS data from the 2012 Higgs search can support. For the course's interactive widgets, glossaries and notation guide, see the [widget catalog](widgets/README.md).
+
+## Optional reviews
+
+These ungraded activities revisit methods from earlier units, with reminders and practice that unfolds as you work. No programming is needed.
+
+Mathematics refresher: [Limits of a double integral](https://codey-m.github.io/prob_stats/practice/integration_bounds/).
+
+| Spiral review | What you practice |
+| --- | --- |
+| [Spread and precision](https://codey-m.github.io/prob_stats/practice/spread_and_precision/) | Distinguish individual variation from the precision of a sample mean. |
+| [Conditioning and independence](https://codey-m.github.io/prob_stats/practice/conditioning_and_independence/) | Retain cases matching a known event and normalize their probabilities. |
+| [Variance of sums and averages](https://codey-m.github.io/prob_stats/practice/variance_of_sums/) | Track shared components and account for covariance and scaling. |
+| [Posterior summaries](https://codey-m.github.io/prob_stats/practice/posterior_summaries/) | Choose estimates for exact matches or squared error, and retain uncertainty. |
+| [Combining conditional results](https://codey-m.github.io/prob_stats/practice/total_probability_and_expectation/) | Weight within-group results to recover population probabilities and means. |
+| [Comparing likelihoods](https://codey-m.github.io/prob_stats/practice/likelihood_and_fit/) | Compare candidate means using the same observations. |
+| [Counting successes](https://codey-m.github.io/prob_stats/practice/binomial_counts/) | Build sequence probabilities and count arrangements of successes. |
 
 ## Open a notebook
 
 Use a notebook's **Colab** link below, then choose **File → Save a copy in Drive** to keep your own editable copy. Follow its setup cells. Each lab loads its data file (`crabs_module1.csv` through `crabs_module5.csv`) from this repository when it is not beside the notebook. Course pages contain the associated assessment and submission instructions.
 
-Some short practices also have a **Browser** link, and a few run only in the browser. A browser activity runs Python on your device, with no account or setup, and shows what your functions return. Where there is also a notebook, the browser version may use a simpler interface. Your code stays in that page; use **Download Python** to keep a copy.
+Some short coding practices also have a **Browser** link, and a few run only in the browser. A browser activity runs Python on your device, with no account or setup, and shows what your functions return. Where there is also a notebook, the browser version may use a simpler interface. Your code stays in that page; use **Download Python** to keep a copy.
 
 ## 6.3710.1x Probability & SDA: Foundations & Exploratory Data Analysis
 
