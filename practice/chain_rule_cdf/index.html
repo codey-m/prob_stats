@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresher: the chain rule</title>
+<link rel="stylesheet" href="kit.css?v=2">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math refresher · ungraded · optional</p>
+    <h1>The chain rule</h1>
+    <p>To find the density of a transformed variable, you differentiate a CDF whose argument is itself a function. This page checks one move: differentiate the outer function, evaluate it at the inner function, and multiply by the inner function's derivative.</p>
+    <p class="time">About 3 minutes if you remember it. About 10 if you use the reminder.</p>
+    <p id="progress" class="progress" role="status">Start with the task below. If you get it right, you are done.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>The method, without the interactive parts</h2>
+      <p>If y ↦ G(h(y)) is an outer function G applied to an inner function h, its derivative is G′(h(y)) · h′(y): the outer derivative evaluated at the inner function, times the inner derivative. For a CDF F with density f, d/dy F(h(y)) = f(h(y)) · h′(y). A decreasing inner function makes h′ negative.</p>
+      <p>The practice on this page needs JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section id="case-A" aria-labelledby="hA">
+    <h2 id="hA">Try this first</h2>
+    <p>A random variable <i>Y</i> has CDF <span class="math"><i>F</i>(<i>y</i>) = 1 − <i>e</i><sup>−<i>y</i>³</sup></span> for <i>y</i> ≥ 0. Find its density, the derivative of the CDF:</p>
+    <math display="block" aria-label="f of y equals the derivative with respect to y of 1 minus e to the minus y cubed">
+      <mi>f</mi><mo>(</mo><mi>y</mi><mo>)</mo><mo>=</mo><mfrac><mi>d</mi><mrow><mi>d</mi><mi>y</mi></mrow></mfrac><mrow><mo>[</mo><mn>1</mn><mo>−</mo><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>y</mi><mn>3</mn></msup></mrow></msup><mo>]</mo></mrow>
+    </math>
+    <p>Type an expression in <i>y</i>, such as <code>2y*exp(-y^2)</code>.</p>
+    <div class="line" id="entry-A"><span><i>f</i>(<i>y</i>) =</span><input class="blank" data-field="a" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="f of y equals"></div>
+    <div class="actions">
+      <button type="button" id="check-A" class="primary">Check</button>
+      <button type="button" id="remind-A" aria-expanded="false" aria-controls="recovery-A">I need a reminder</button>
+    </div>
+    <p id="feedback-A" class="feedback" role="status"></p>
+
+    <div id="recovery-A" class="recovery" hidden>
+      <h3>Reminder</h3>
+      <p>Use as much of this as you need. Nothing here is scored.</p>
+      <div class="panel">
+        <p><strong>The rules you need</strong></p>
+        <ul class="rules">
+          <li>Chain rule: <span class="math">d/d<i>y</i> <i>G</i>(<i>h</i>(<i>y</i>)) = <i>G</i>′(<i>h</i>(<i>y</i>)) · <i>h</i>′(<i>y</i>)</span>. The outer derivative is evaluated at the inner function.</li>
+          <li><span class="math">d/d<i>u</i> <i>e</i><sup><i>u</i></sup> = <i>e</i><sup><i>u</i></sup></span>, so <span class="math">d/d<i>u</i> <i>e</i><sup>−<i>u</i></sup> = −<i>e</i><sup>−<i>u</i></sup></span>. A constant has derivative 0.</li>
+          <li><span class="math">d/d<i>y</i> <i>y</i><sup><i>n</i></sup> = <i>n y</i><sup><i>n</i>−1</sup></span>.</li>
+          <li>For a CDF <i>F</i> with density <i>f</i>: <span class="math">d/d<i>y</i> <i>F</i>(<i>h</i>(<i>y</i>)) = <i>f</i>(<i>h</i>(<i>y</i>)) · <i>h</i>′(<i>y</i>)</span>.</li>
+        </ul>
+      </div>
+      <p><strong>Work it one step at a time.</strong></p>
+      <div id="ladder-A">
+        <div class="line"><span>Inner function: <i>u</i> =</span><input class="blank" data-field="s0" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 1: the inner function u equals"></div>
+        <div class="line"><span><sup>d<i>u</i></sup>⁄<sub>d<i>y</i></sub> =</span><input class="blank" data-field="s1" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 2: du by dy equals"></div>
+        <div class="line"><span><sup>d</sup>⁄<sub>d<i>u</i></sub> (1 − <i>e</i><sup>−<i>u</i></sup>) =</span><input class="blank" data-field="s2" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 3: the derivative with respect to u of 1 minus e to the minus u equals"></div>
+        <div class="line"><span><i>f</i>(<i>y</i>) =</span><input class="blank" data-field="s3" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 4: f of y equals"></div>
+      </div>
+      <div class="actions"><button type="button" id="check-ladder">Check my steps</button></div>
+      <p id="feedback-ladder" class="feedback" role="status"></p>
+      <ol id="hints-A" class="hints"></ol>
+      <div class="actions"><button type="button" id="hint-A">Give me a hint</button><button type="button" id="solution-A">Show the first step of the solution</button></div>
+      <ol id="steps-A" class="solution" aria-live="polite"></ol>
+    </div>
+  </section>
+
+  <section id="case-C" aria-labelledby="hC" hidden>
+    <h2 id="hC">Now one on your own</h2>
+    <p>This case completes the refresher. It has no walkthrough; the rules are there if you ask for them.</p>
+    <math display="block" aria-label="the derivative with respect to t of 1 plus t squared, all cubed">
+      <mfrac><mi>d</mi><mrow><mi>d</mi><mi>t</mi></mrow></mfrac><msup><mrow><mo>(</mo><mn>1</mn><mo>+</mo><msup><mi>t</mi><mn>2</mn></msup><mo>)</mo></mrow><mn>3</mn></msup>
+    </math>
+    <div class="line" id="entry-C"><span><sup>d</sup>⁄<sub>d<i>t</i></sub> (1 + <i>t</i>²)³ =</span><input class="blank" data-field="c" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the derivative equals"></div>
+    <div class="actions">
+      <button type="button" id="check-C" class="primary">Check</button>
+      <button type="button" id="stuck-C">Show me the rules</button>
+    </div>
+    <p id="feedback-C" class="feedback" role="status"></p>
+    <div id="rules-C" class="panel" hidden>
+      <ul class="rules">
+        <li>Outer function <span class="math"><i>u</i>³</span>, inner function <span class="math"><i>u</i> = 1 + <i>t</i>²</span>.</li>
+        <li>Outer derivative at the inner function, times the inner derivative.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="done" hidden aria-labelledby="hD">
+    <h2 id="hD">Done</h2>
+    <p id="done-text"></p>
+    <p>The method in one line: outer derivative, evaluated at the inner function, times the inner derivative.</p>
+  </section>
+
+  <section id="case-X" aria-labelledby="hX" hidden>
+    <h2 id="hX">More practice (optional)</h2>
+    <p>Three short cases, the first two in CDF notation. Each is checked on its own.</p>
+    <div class="item" id="item-X1">
+      <fieldset>
+        <legend><i>F</i> is a CDF with density <i>f</i>. Which is <span class="math">d/d<i>y</i> <i>F</i>(<i>y</i>³)</span>?</legend>
+        <label><input type="radio" name="X1" value="outer"> <span class="math"><i>f</i>(<i>y</i>³)</span></label>
+        <label><input type="radio" name="X1" value="right"> <span class="math"><i>f</i>(<i>y</i>³) · 3<i>y</i>²</span></label>
+        <label><input type="radio" name="X1" value="cdf"> <span class="math"><i>F</i>(<i>y</i>³) · 3<i>y</i>²</span></label>
+        <label><input type="radio" name="X1" value="swap"> <span class="math"><i>f</i>(3<i>y</i>²) · <i>y</i>³</span></label>
+      </fieldset>
+      <div class="actions"><button type="button" id="check-X1">Check</button></div>
+      <p id="feedback-X1" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X2">
+      <fieldset>
+        <legend>Which is <span class="math">d/d<i>y</i> <i>F</i>(2 − <i>y</i>)</span>?</legend>
+        <label><input type="radio" name="X2" value="pos"> <span class="math"><i>f</i>(2 − <i>y</i>)</span></label>
+        <label><input type="radio" name="X2" value="cdf"> <span class="math">−<i>F</i>(2 − <i>y</i>)</span></label>
+        <label><input type="radio" name="X2" value="neg"> <span class="math">−<i>f</i>(2 − <i>y</i>)</span></label>
+      </fieldset>
+      <div class="actions"><button type="button" id="check-X2">Check</button></div>
+      <p id="feedback-X2" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X3">
+      <h3>A product</h3>
+      <p>Find <span class="math">d/d<i>x</i> [<i>x</i>² <i>e</i><sup>−<i>x</i></sup>]</span>.</p>
+      <div class="line"><span><sup>d</sup>⁄<sub>d<i>x</i></sub> [<i>x</i>² <i>e</i><sup>−<i>x</i></sup>] =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the derivative equals"></div>
+      <div class="actions"><button type="button" id="check-X3">Check</button></div>
+      <p id="feedback-X3" class="feedback" role="status"></p>
+    </div>
+  </section>
+</main>
+<script src="kit.js?v=2"></script>
+<script src="model.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

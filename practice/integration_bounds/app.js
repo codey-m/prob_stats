@@ -280,4 +280,6 @@
     showSliceB();
   });
   render();
+  // Opened from a problem set's entry check after a miss: start with the reminder open (recovery route).
+  if (/[?&]from=entry(&|$)/.test(location.search)) { openRecovery(); render(); }
 })();

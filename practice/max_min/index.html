@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresher: finding a maximum</title>
+<link rel="stylesheet" href="kit.css?v=2">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math refresher · ungraded · optional</p>
+    <h1>Finding a maximum or minimum</h1>
+    <p>Estimation problems ask for the parameter value that makes a likelihood or posterior as large as possible. This page checks the move: take logs if the function is a product, differentiate, set the derivative to zero, then check that you found a maximum inside the allowed range.</p>
+    <p class="time">About 3 minutes if you remember it. About 10 if you use the reminder.</p>
+    <p id="progress" class="progress" role="status">Start with the task below. If you get it right, you are done.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>The method, without the interactive parts</h2>
+      <p>To maximize a positive function that is a product, maximize its natural log instead: ln is increasing, so the largest value is at the same point, and the log turns products into sums. Differentiate, set the derivative to zero and solve. Keep only solutions in the allowed range. Then check the sign of the derivative on each side (positive then negative means a maximum) and compare with the ends of the range.</p>
+      <p>The practice on this page needs JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section id="case-A" aria-labelledby="hA">
+    <h2 id="hA">Try this first</h2>
+    <p>Find the value of <i>θ</i> &gt; 0 that maximizes</p>
+    <math display="block" aria-label="g of theta equals theta times e to the minus theta squared over 18">
+      <mi>g</mi><mo>(</mo><mi>θ</mi><mo>)</mo><mo>=</mo><mi>θ</mi><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>θ</mi><mn>2</mn></msup><mo>/</mo><mn>18</mn></mrow></msup>
+    </math>
+    <p>Enter an exact form or a decimal to three places.</p>
+    <div class="line" id="entry-A"><span><i>θ</i> =</span><input class="blank" data-field="a" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="theta equals"></div>
+    <div class="actions">
+      <button type="button" id="check-A" class="primary">Check</button>
+      <button type="button" id="remind-A" aria-expanded="false" aria-controls="recovery-A">I need a reminder</button>
+    </div>
+    <p id="feedback-A" class="feedback" role="status"></p>
+
+    <div id="recovery-A" class="recovery" hidden>
+      <h3>Reminder</h3>
+      <p>Use as much of this as you need. Nothing here is scored.</p>
+      <div class="panel">
+        <p><strong>The rules you need</strong></p>
+        <ul class="rules">
+          <li>ln is increasing, so a positive function and its log have their largest value at the same point. Logs turn products into sums: <span class="math">ln(<i>ab</i>) = ln <i>a</i> + ln <i>b</i></span> and <span class="math">ln(<i>e</i><sup><i>u</i></sup>) = <i>u</i></span>.</li>
+          <li><span class="math">d/d<i>θ</i> ln <i>θ</i> = 1/<i>θ</i></span>, and <span class="math">d/d<i>θ</i> <i>θ</i><sup><i>n</i></sup> = <i>n θ</i><sup><i>n</i>−1</sup></span>.</li>
+          <li>At an interior maximum the derivative is zero. Zero alone is not enough: it must change from positive to negative there.</li>
+          <li>Keep only solutions in the allowed range, and compare with the ends of the range. The largest value can sit at an end.</li>
+        </ul>
+      </div>
+      <div class="figure">
+        <svg id="plot-A" viewBox="0 0 520 230" role="img" aria-labelledby="plot-A-desc"></svg>
+        <p id="plot-A-desc" class="figdesc">The graph of g(θ) for θ from 0 to 10. It rises from 0, reaches one peak, and falls back toward 0. <span id="plot-A-learner"></span></p>
+      </div>
+      <p><strong>Work it one step at a time.</strong> Type θ or <code>theta</code>.</p>
+      <div id="ladder-A">
+        <div class="line"><span>ln g(<i>θ</i>) =</span><input class="blank" data-field="s0" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 1: ln g of theta equals"></div>
+        <div class="line"><span><sup>d</sup>⁄<sub>d<i>θ</i></sub> ln g(<i>θ</i>) =</span><input class="blank" data-field="s1" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 2: derivative of ln g with respect to theta equals"></div>
+        <div class="line"><span>Set it to 0: <i>θ</i> =</span><input class="blank" data-field="s2" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 3: setting the derivative to zero, theta equals"></div>
+        <fieldset>
+          <legend>Line 4: why is this point the maximum?</legend>
+          <label><input type="radio" name="s3" value="zero"> The derivative is zero there.</label>
+          <label><input type="radio" name="s3" value="sign"> The derivative is positive just below it and negative just above it.</label>
+          <label><input type="radio" name="s3" value="positive"> g is positive there.</label>
+        </fieldset>
+      </div>
+      <div class="actions"><button type="button" id="check-ladder">Check my steps</button></div>
+      <p id="feedback-ladder" class="feedback" role="status"></p>
+      <ol id="hints-A" class="hints"></ol>
+      <div class="actions"><button type="button" id="hint-A">Give me a hint</button><button type="button" id="solution-A">Show the first step of the solution</button></div>
+      <ol id="steps-A" class="solution" aria-live="polite"></ol>
+    </div>
+  </section>
+
+  <section id="case-C" aria-labelledby="hC" hidden>
+    <h2 id="hC">Now one on your own</h2>
+    <p>This case completes the refresher. It has no walkthrough; the rules are there if you ask for them.</p>
+    <p>Find the value of <i>x</i> &gt; 0 that maximizes</p>
+    <math display="block" aria-label="h of x equals x squared times e to the minus x squared over 4">
+      <mi>h</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><msup><mi>x</mi><mn>2</mn></msup><msup><mi>e</mi><mrow><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup><mo>/</mo><mn>4</mn></mrow></msup>
+    </math>
+    <div class="line" id="entry-C"><span><i>x</i> =</span><input class="blank" data-field="c" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="x equals"></div>
+    <div class="actions">
+      <button type="button" id="check-C" class="primary">Check</button>
+      <button type="button" id="stuck-C">Show me the rules</button>
+    </div>
+    <p id="feedback-C" class="feedback" role="status"></p>
+    <div id="rules-C" class="panel" hidden>
+      <ul class="rules">
+        <li>Take ln first: ln of a product is the sum of the logs, and <span class="math">ln(<i>e</i><sup><i>u</i></sup>) = <i>u</i></span>.</li>
+        <li>Differentiate, set to zero, keep the positive solution, and check the derivative changes from positive to negative.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="done" hidden aria-labelledby="hD">
+    <h2 id="hD">Done</h2>
+    <p id="done-text"></p>
+    <p>The method in one line: take logs if it is a product, differentiate, set to zero, then check the sign change and the ends of the range.</p>
+  </section>
+
+  <section id="case-X" aria-labelledby="hX" hidden>
+    <h2 id="hX">More practice (optional)</h2>
+    <p>Two short cases where the last check matters. Each is checked on its own.</p>
+    <div class="item" id="item-X1">
+      <h3>When the zero is outside the range</h3>
+      <p>Find the value of <i>θ</i> in <span class="math">0 ≤ <i>θ</i> ≤ 2</span> that maximizes <span class="math"><i>k</i>(<i>θ</i>) = ln(1 + <i>θ</i>) − <i>θ</i>/4</span>.</p>
+      <div class="line"><span><i>θ</i> =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="theta equals"></div>
+      <div class="actions"><button type="button" id="check-X1">Check</button></div>
+      <p id="feedback-X1" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X2">
+      <h3>A minimum</h3>
+      <p>Find the value of <i>t</i> &gt; 0 that minimizes <span class="math"><i>r</i>(<i>t</i>) = <i>t</i> + 16/<i>t</i></span>.</p>
+      <div class="line"><span><i>t</i> =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="t equals"></div>
+      <div class="actions"><button type="button" id="check-X2">Check</button></div>
+      <p id="feedback-X2" class="feedback" role="status"></p>
+    </div>
+  </section>
+</main>
+<script src="kit.js?v=2"></script>
+<script src="model.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

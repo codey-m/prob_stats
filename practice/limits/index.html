@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresher: limits</title>
+<link rel="stylesheet" href="kit.css?v=2">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math refresher · ungraded · optional</p>
+    <h1>Limits as something grows</h1>
+    <p>Problem sets ask what happens to a quantity as a sample size grows, or whether it settles at a value at all. This page checks one move: find the term that grows fastest, and see what it leaves behind.</p>
+    <p class="time">About 3 minutes if you remember it. About 10 if you use the reminder.</p>
+    <p id="progress" class="progress" role="status">Start with the task below. If you get it right, you are done.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>The method, without the interactive parts</h2>
+      <p>For a ratio of two expressions that both grow, find the fastest-growing term on top and on the bottom. Divide every term by that power: terms such as 3/n or 1/n² shrink to 0, and the limit is the ratio of the leading coefficients. If the top grows faster the ratio grows without bound; if the bottom grows faster it goes to 0. An exponential eⁿ grows faster than any power of n.</p>
+      <p>The practice on this page needs JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section id="case-A" aria-labelledby="hA">
+    <h2 id="hA">Try this first</h2>
+    <p>Find the limit as <i>n</i> grows without bound:</p>
+    <math display="block" aria-label="the limit as n goes to infinity of 2 n squared plus 3 n, over 5 n squared minus 1">
+      <munder><mo>lim</mo><mrow><mi>n</mi><mo>→</mo><mi>∞</mi></mrow></munder><mfrac><mrow><mn>2</mn><msup><mi>n</mi><mn>2</mn></msup><mo>+</mo><mn>3</mn><mi>n</mi></mrow><mrow><mn>5</mn><msup><mi>n</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow></mfrac>
+    </math>
+    <p>Enter an exact form or a decimal to four places.</p>
+    <div class="line" id="entry-A"><span>limit =</span><input class="blank" data-field="a" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the limit equals"></div>
+    <div class="actions">
+      <button type="button" id="check-A" class="primary">Check</button>
+      <button type="button" id="remind-A" aria-expanded="false" aria-controls="recovery-A">I need a reminder</button>
+    </div>
+    <p id="feedback-A" class="feedback" role="status"></p>
+
+    <div id="recovery-A" class="recovery" hidden>
+      <h3>Reminder</h3>
+      <p>Use as much of this as you need. Nothing here is scored.</p>
+      <div class="panel">
+        <p><strong>The rules you need</strong></p>
+        <ul class="rules">
+          <li>A fixed number divided by a growing quantity shrinks to 0: <span class="math">3/<i>n</i> → 0</span> and <span class="math">1/<i>n</i>² → 0</span>.</li>
+          <li>For a ratio, divide every term on top and bottom by the fastest-growing power. That leaves the ratio of the leading coefficients when both grow at the same rate.</li>
+          <li>If the top grows faster, the ratio grows without bound. If the bottom grows faster, the ratio goes to 0.</li>
+          <li>An exponential <span class="math"><i>e</i><sup><i>n</i></sup></span> grows faster than any power of <i>n</i>.</li>
+        </ul>
+      </div>
+      <table class="values" id="table-A">
+        <caption>The expression at a few values of n</caption>
+        <thead><tr><th scope="col">n</th><th scope="col">value</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p><strong>Work it one step at a time.</strong> Divide every term by <i>n</i>².</p>
+      <div id="ladder-A">
+        <div class="line"><span>top ÷ <i>n</i>² =</span><input class="blank" data-field="s0" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 1: the top divided by n squared equals"></div>
+        <div class="line"><span>bottom ÷ <i>n</i>² =</span><input class="blank" data-field="s1" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 2: the bottom divided by n squared equals"></div>
+        <div class="line"><span>As <i>n</i> → ∞, 3/<i>n</i> →</span><input class="blank" data-field="s2" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 3: as n goes to infinity, 3 over n goes to"></div>
+        <div class="line"><span>limit =</span><input class="blank" data-field="s3" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 4: the limit equals"></div>
+      </div>
+      <div class="actions"><button type="button" id="check-ladder">Check my steps</button></div>
+      <p id="feedback-ladder" class="feedback" role="status"></p>
+      <ol id="hints-A" class="hints"></ol>
+      <div class="actions"><button type="button" id="hint-A">Give me a hint</button><button type="button" id="solution-A">Show the first step of the solution</button></div>
+      <ol id="steps-A" class="solution" aria-live="polite"></ol>
+    </div>
+  </section>
+
+  <section id="case-C" aria-labelledby="hC" hidden>
+    <h2 id="hC">Now one on your own</h2>
+    <p>This case completes the refresher. It has no walkthrough; the rules are there if you ask for them.</p>
+    <math display="block" aria-label="the limit as n goes to infinity of 4 n cubed minus n, over 2 n cubed plus 7 n squared">
+      <munder><mo>lim</mo><mrow><mi>n</mi><mo>→</mo><mi>∞</mi></mrow></munder><mfrac><mrow><mn>4</mn><msup><mi>n</mi><mn>3</mn></msup><mo>−</mo><mi>n</mi></mrow><mrow><mn>2</mn><msup><mi>n</mi><mn>3</mn></msup><mo>+</mo><mn>7</mn><msup><mi>n</mi><mn>2</mn></msup></mrow></mfrac>
+    </math>
+    <div class="line" id="entry-C"><span>limit =</span><input class="blank" data-field="c" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the limit equals"></div>
+    <div class="actions">
+      <button type="button" id="check-C" class="primary">Check</button>
+      <button type="button" id="stuck-C">Show me the rules</button>
+    </div>
+    <p id="feedback-C" class="feedback" role="status"></p>
+    <div id="rules-C" class="panel" hidden>
+      <ul class="rules">
+        <li>Find the fastest-growing power on top and bottom, and divide every term by it.</li>
+        <li>Terms like <span class="math">1/<i>n</i></span> and <span class="math">1/<i>n</i>²</span> shrink to 0 as <i>n</i> grows.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="done" hidden aria-labelledby="hD">
+    <h2 id="hD">Done</h2>
+    <p id="done-text"></p>
+    <p>The method in one line: find the fastest-growing term, divide by it, and see what is left.</p>
+  </section>
+
+  <section id="case-X" aria-labelledby="hX" hidden>
+    <h2 id="hX">More practice (optional)</h2>
+    <p>Two short cases. Each is checked on its own.</p>
+    <div class="item" id="item-X1">
+      <h3>A power against an exponential</h3>
+      <p>Find <span class="math">lim<sub><i>x</i>→∞</sub> <i>x</i>³<i>e</i><sup>−<i>x</i></sup></span>.</p>
+      <div class="line"><span>limit =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the limit equals"></div>
+      <div class="actions"><button type="button" id="check-X1">Check</button></div>
+      <p id="feedback-X1" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X2">
+      <h3>Does it settle?</h3>
+      <fieldset>
+        <legend>As <i>n</i> grows without bound, (<i>n</i> + 1)/√<i>n</i>…</legend>
+        <label><input type="radio" name="X2" value="zero"> approaches 0</label>
+        <label><input type="radio" name="X2" value="one"> approaches 1</label>
+        <label><input type="radio" name="X2" value="grows"> grows without bound</label>
+      </fieldset>
+      <div class="actions"><button type="button" id="check-X2">Check</button></div>
+      <p id="feedback-X2" class="feedback" role="status"></p>
+    </div>
+  </section>
+</main>
+<script src="kit.js?v=2"></script>
+<script src="model.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

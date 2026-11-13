@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Refresher: integrating a density</title>
+<link rel="stylesheet" href="kit.css?v=2">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math refresher · ungraded · optional</p>
+    <h1>Integrating a density</h1>
+    <p>Problem sets ask you to find a normalizing constant, a probability or a mean by integrating a density. This page checks one move: find an antiderivative and evaluate it at the limits, using the fact that a density's total area is 1.</p>
+    <p class="time">About 3 minutes if you remember it. About 10 if you use the reminder.</p>
+    <p id="progress" class="progress" role="status">Start with the task below. If you get it right, you are done.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>The method, without the interactive parts</h2>
+      <p>To integrate a function from a to b, find an antiderivative F (a function whose derivative is the integrand), then compute F(b) − F(a). Powers: an antiderivative of xⁿ is xⁿ⁺¹/(n + 1) for n ≠ −1, and of 1/x it is ln x for x &gt; 0. A density's total area is 1, so a normalizing constant c makes c times the area equal 1.</p>
+      <p>The practice on this page needs JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section id="case-A" aria-labelledby="hA">
+    <h2 id="hA">Try this first</h2>
+    <p>The function below is a density, and is zero outside <span class="math">0 ≤ <i>x</i> ≤ 2</span>. Find <i>c</i>.</p>
+    <math display="block" aria-label="f of x equals c times 4 minus x squared, for x from 0 to 2">
+      <mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>c</mi><mo>(</mo><mn>4</mn><mo>−</mo><msup><mi>x</mi><mn>2</mn></msup><mo>)</mo><mo>,</mo><mspace width="0.6em"/><mn>0</mn><mo>≤</mo><mi>x</mi><mo>≤</mo><mn>2</mn>
+    </math>
+    <p>Enter an exact form such as <code>5/32</code>, or a decimal to four places.</p>
+    <div class="line" id="entry-A"><span><i>c</i> =</span><input class="blank" data-field="a" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="c equals"></div>
+    <div class="actions">
+      <button type="button" id="check-A" class="primary">Check</button>
+      <button type="button" id="remind-A" aria-expanded="false" aria-controls="recovery-A">I need a reminder</button>
+    </div>
+    <p id="feedback-A" class="feedback" role="status"></p>
+
+    <div id="recovery-A" class="recovery" hidden>
+      <h3>Reminder</h3>
+      <p>Use as much of this as you need. Nothing here is scored.</p>
+      <div class="panel">
+        <p><strong>The rules you need</strong></p>
+        <ul class="rules">
+          <li>To integrate from <i>a</i> to <i>b</i>, find an antiderivative <i>F</i> (its derivative is the integrand) and compute <span class="math"><i>F</i>(<i>b</i>) − <i>F</i>(<i>a</i>)</span>.</li>
+          <li>An antiderivative of <span class="math"><i>x</i><sup><i>n</i></sup></span> is <span class="math"><i>x</i><sup><i>n</i>+1</sup>/(<i>n</i> + 1)</span> for <i>n</i> ≠ −1. An antiderivative of <span class="math">1/<i>x</i></span> is <span class="math">ln <i>x</i></span> for <i>x</i> &gt; 0.</li>
+          <li>Constants come outside the integral, and the integral of a sum is the sum of the integrals.</li>
+          <li>A density's total area is 1. So a constant <i>c</i> in front satisfies <span class="math"><i>c</i> × (area under the rest) = 1</span>.</li>
+        </ul>
+      </div>
+      <p><strong>Work it one step at a time.</strong></p>
+      <div id="ladder-A">
+        <div class="line"><span>An antiderivative of 4 − <i>x</i>² is</span><input class="blank" data-field="s0" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 1: an antiderivative of 4 minus x squared is"></div>
+        <div class="line"><span>∫<sub>0</sub><sup>2</sup> (4 − <i>x</i>²) d<i>x</i> =</span><input class="blank" data-field="s1" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 2: the integral from 0 to 2 of 4 minus x squared equals"></div>
+        <div class="line"><span><i>c</i> =</span><input class="blank" data-field="s2" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Line 3: c equals"></div>
+      </div>
+      <div class="actions"><button type="button" id="check-ladder">Check my steps</button></div>
+      <p id="feedback-ladder" class="feedback" role="status"></p>
+      <ol id="hints-A" class="hints"></ol>
+      <div class="actions"><button type="button" id="hint-A">Give me a hint</button><button type="button" id="solution-A">Show the first step of the solution</button></div>
+      <ol id="steps-A" class="solution" aria-live="polite"></ol>
+    </div>
+  </section>
+
+  <section id="case-C" aria-labelledby="hC" hidden>
+    <h2 id="hC">Now one on your own</h2>
+    <p>This case completes the refresher. It has no walkthrough; the rules are there if you ask for them.</p>
+    <p>This is a density, zero outside <span class="math">0 ≤ <i>x</i> ≤ 3</span>. Find <i>c</i>.</p>
+    <math display="block" aria-label="f of x equals c times x times 3 minus x, for x from 0 to 3">
+      <mi>f</mi><mo>(</mo><mi>x</mi><mo>)</mo><mo>=</mo><mi>c</mi><mspace width="0.1em"/><mi>x</mi><mo>(</mo><mn>3</mn><mo>−</mo><mi>x</mi><mo>)</mo><mo>,</mo><mspace width="0.6em"/><mn>0</mn><mo>≤</mo><mi>x</mi><mo>≤</mo><mn>3</mn>
+    </math>
+    <div class="line" id="entry-C"><span><i>c</i> =</span><input class="blank" data-field="c" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="c equals"></div>
+    <div class="actions">
+      <button type="button" id="check-C" class="primary">Check</button>
+      <button type="button" id="stuck-C">Show me the rules</button>
+    </div>
+    <p id="feedback-C" class="feedback" role="status"></p>
+    <div id="rules-C" class="panel" hidden>
+      <ul class="rules">
+        <li>Multiply out first: <span class="math"><i>x</i>(3 − <i>x</i>) = 3<i>x</i> − <i>x</i>²</span>. Then integrate term by term.</li>
+        <li>An antiderivative of <span class="math"><i>x</i><sup><i>n</i></sup></span> is <span class="math"><i>x</i><sup><i>n</i>+1</sup>/(<i>n</i> + 1)</span>. The total area must come out to 1.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section id="done" hidden aria-labelledby="hD">
+    <h2 id="hD">Done</h2>
+    <p id="done-text"></p>
+    <p>The method in one line: find an antiderivative, evaluate it at the limits, and use total area 1 for a density.</p>
+  </section>
+
+  <section id="case-X" aria-labelledby="hX" hidden>
+    <h2 id="hX">More practice (optional)</h2>
+    <p>Three short cases. Each is checked on its own.</p>
+    <div class="item" id="item-X1">
+      <h3>A mean</h3>
+      <p>For the density in the first task, with the value of <i>c</i> you found, find <span class="math">E[<i>X</i>] = ∫<sub>0</sub><sup>2</sup> <i>x</i> <i>f</i>(<i>x</i>) d<i>x</i></span>.</p>
+      <div class="line"><span>E[<i>X</i>] =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="E of X equals"></div>
+      <div class="actions"><button type="button" id="check-X1">Check</button></div>
+      <p id="feedback-X1" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X2">
+      <h3>An inner integral with variable limits</h3>
+      <p>Treat <i>x</i> as a constant and evaluate <span class="math">∫<sub><i>x</i></sub><sup>2<i>x</i></sup> <i>y</i> d<i>y</i></span>. Your answer is a function of <i>x</i>.</p>
+      <div class="line"><span>∫<sub><i>x</i></sub><sup>2<i>x</i></sup> <i>y</i> d<i>y</i> =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the integral from x to 2x of y dy equals"></div>
+      <div class="actions"><button type="button" id="check-X2">Check</button></div>
+      <p id="feedback-X2" class="feedback" role="status"></p>
+    </div>
+    <div class="item" id="item-X3">
+      <h3>A log appears</h3>
+      <p><span class="math"><i>f</i>(<i>x</i>) = <i>c</i>/<i>x</i></span> is a density on <span class="math">1 ≤ <i>x</i> ≤ <i>e</i>²</span>. Find <i>c</i>.</p>
+      <div class="line"><span><i>c</i> =</span><input class="blank" data-field="v" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="c equals"></div>
+      <div class="actions"><button type="button" id="check-X3">Check</button></div>
+      <p id="feedback-X3" class="feedback" role="status"></p>
+    </div>
+  </section>
+</main>
+<script src="kit.js?v=2"></script>
+<script src="model.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>

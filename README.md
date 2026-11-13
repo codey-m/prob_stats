@@ -8,7 +8,7 @@ The five labs follow one dataset through the whole sequence: rock crabs, from We
 
 These ungraded activities revisit methods from earlier units, with reminders and practice that unfolds as you work. No programming is needed.
 
-Mathematics refresher: [Limits of a double integral](https://codey-m.github.io/prob_stats/practice/integration_bounds/).
+Mathematics refreshers: [limits of a double integral](https://codey-m.github.io/prob_stats/practice/integration_bounds/), [integrating a density](https://codey-m.github.io/prob_stats/practice/density_integrals/), [finding a maximum or minimum](https://codey-m.github.io/prob_stats/practice/max_min/), [limits as something grows](https://codey-m.github.io/prob_stats/practice/limits/), and [the chain rule](https://codey-m.github.io/prob_stats/practice/chain_rule_cdf/). Before Problem Set 2 of `6.3710.2x`, the [calculus check](https://codey-m.github.io/prob_stats/practice/ps2_calculus_check/) has one short task for each piece the set uses and points to the refresher for any you miss.
 
 | Spiral review | What you practice |
 | --- | --- |

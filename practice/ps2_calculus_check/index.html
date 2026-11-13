@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calculus check for Problem Set 2</title>
+<link rel="stylesheet" href="kit.css?v=2">
+<link rel="stylesheet" href="page.css?v=1">
+</head>
+<body>
+<main>
+  <header>
+    <p class="kicker">Math check · ungraded · optional</p>
+    <h1>Calculus check for Problem Set 2</h1>
+    <p>Problem Set 2 uses four pieces of calculus. Try each short task below. If it is right, you are ready for that piece. If not, open its refresher, which starts with the reminder.</p>
+    <p class="time">About 1 to 2 minutes per task.</p>
+    <p id="summary" class="progress" role="status">Try any task, in any order.</p>
+  </header>
+
+  <noscript>
+    <section>
+      <h2>Without JavaScript</h2>
+      <p>The four pieces are: setting limits for a double integral over a region; integrating a density, including finding a normalizing constant; finding a maximum by setting a derivative to zero and checking the range; and limits as a variable grows. The tasks on this page need JavaScript.</p>
+    </section>
+  </noscript>
+
+  <section aria-labelledby="hList">
+    <h2 id="hList" class="sr-only">Tasks</h2>
+
+    <div class="entry-item" id="item-bounds">
+      <h3>1. Limits of a double integral <span class="status-tag" id="tag-bounds">Not tried</span></h3>
+      <p>A region is described by <span class="math">0 &lt; <i>x</i> &lt; 2</span> and <span class="math"><i>x</i>/2 &lt; <i>y</i> &lt; 1</span>. Write the limits for integrating over <i>x</i> first. Limits may use numbers, <i>x</i> and <i>y</i>.</p>
+      <div class="entry" id="entry-bounds">
+        <span class="integral" role="group" aria-label="Double integral of f of x and y, dx dy">
+          <span class="int"><input class="lim" data-lim="outerHi" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Outer integral (left sign), upper limit"><span class="sign" aria-hidden="true">∫</span><input class="lim" data-lim="outerLo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Outer integral (left sign), lower limit"></span>
+          <span class="int"><input class="lim" data-lim="innerHi" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Inner integral (right sign), upper limit"><span class="sign" aria-hidden="true">∫</span><input class="lim" data-lim="innerLo" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Inner integral (right sign), lower limit"></span>
+          <span class="integrand" aria-hidden="true"><i>f</i>(<i>x</i>, <i>y</i>) d<i>x</i> d<i>y</i></span>
+        </span>
+      </div>
+      <div class="actions"><button type="button" id="check-bounds" class="primary">Check</button></div>
+      <p id="feedback-bounds" class="feedback" role="status"></p>
+      <p class="go" id="go-bounds"><a href="../integration_bounds/?from=entry">Open the refresher on double-integral limits</a></p>
+    </div>
+
+    <div class="entry-item" id="item-density">
+      <h3>2. Integrating a density <span class="status-tag" id="tag-density">Not tried</span></h3>
+      <p><span class="math"><i>f</i>(<i>x</i>) = <i>c</i>(4 − <i>x</i>²)</span> is a density on <span class="math">0 ≤ <i>x</i> ≤ 2</span> and zero elsewhere. Find <i>c</i>, exactly or to four decimal places.</p>
+      <div class="line"><span><i>c</i> =</span><input class="blank" data-field="density" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="c equals"></div>
+      <div class="actions"><button type="button" id="check-density" class="primary">Check</button></div>
+      <p id="feedback-density" class="feedback" role="status"></p>
+      <p class="go" id="go-density"><a href="../density_integrals/?from=entry">Open the refresher on integrating a density</a></p>
+    </div>
+
+    <div class="entry-item" id="item-maxmin">
+      <h3>3. Finding a maximum <span class="status-tag" id="tag-maxmin">Not tried</span></h3>
+      <p>Find the value of <i>θ</i> &gt; 0 that maximizes <span class="math"><i>g</i>(<i>θ</i>) = <i>θ</i> <i>e</i><sup>−<i>θ</i>²/18</sup></span>, exactly or to three decimal places.</p>
+      <div class="line"><span><i>θ</i> =</span><input class="blank" data-field="maxmin" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="theta equals"></div>
+      <div class="actions"><button type="button" id="check-maxmin" class="primary">Check</button></div>
+      <p id="feedback-maxmin" class="feedback" role="status"></p>
+      <p class="go" id="go-maxmin"><a href="../max_min/?from=entry">Open the refresher on finding a maximum</a></p>
+    </div>
+
+    <div class="entry-item" id="item-limits">
+      <h3>4. Limits as something grows <span class="status-tag" id="tag-limits">Not tried</span></h3>
+      <p>Find <span class="math">lim<sub><i>n</i>→∞</sub> (2<i>n</i>² + 3<i>n</i>)/(5<i>n</i>² − 1)</span>, exactly or to four decimal places.</p>
+      <div class="line"><span>limit =</span><input class="blank" data-field="limits" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="the limit equals"></div>
+      <div class="actions"><button type="button" id="check-limits" class="primary">Check</button></div>
+      <p id="feedback-limits" class="feedback" role="status"></p>
+      <p class="go" id="go-limits"><a href="../limits/?from=entry">Open the refresher on limits</a></p>
+    </div>
+  </section>
+  <p class="time">Each refresher is also available on its own, with its own fresh case. Nothing on this page is recorded or graded.</p>
+</main>
+<script src="kit.js?v=2"></script>
+<script src="models/bounds.js?v=1"></script>
+<script src="models/density.js?v=1"></script>
+<script src="models/max-min.js?v=1"></script>
+<script src="models/limits.js?v=1"></script>
+<script src="app.js?v=1"></script>
+</body>
+</html>
