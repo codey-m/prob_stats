@@ -289,7 +289,7 @@ button.mcell { cursor: pointer; }
 .box.differs { border: 2px solid var(--hl); }
 
 /* Frame 7 */
-.mini-scene { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto 6px; }
+.mini-scene { display: block; width: 100%; max-width: 170px; height: auto; margin: 0 auto 2px; }
 .hidden-q { font-size: 44px; font-weight: 800; fill: var(--muted); }
 .tree { display: grid; gap: 6px; }
 .trow { display: grid; grid-template-columns: 52px minmax(0, 1fr) 64px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; font-size: 0.8rem; }
@@ -366,6 +366,20 @@ button.mcell { cursor: pointer; }
 .again.small { min-height: 34px; padding: 4px 10px; font-size: 13px; }
 .lean-note.head { margin: 8px 0 2px; }
 .f-text .note { margin-bottom: 8px; }
+
+/* Frame 8 probability tree */
+.ptree { display: block; width: 100%; max-width: 470px; height: auto; margin: 4px auto 0; }
+.tr-head { font: 700 16.5px Arial, sans-serif; fill: var(--muted); }
+.tr-head.rev { fill: #8a5f00; }
+.tr-root { fill: var(--ink); }
+.tr-edge { stroke: #8a9694; stroke-width: 2.5; }
+.tr-p { font: 700 18px Arial, sans-serif; fill: #3d5a80; }
+.tr-node { font: 18px Georgia, serif; fill: var(--ink); }
+.tr-node.goalw { fill: var(--goal-ink); font-weight: 700; }
+.tr-joint { font: 700 18px Arial, sans-serif; fill: var(--ink); }
+.tr-joint.lit, .tr-total.lit { fill: var(--goal-ink); }
+.tr-post { font: 700 19px Arial, sans-serif; fill: #8a5f00; }
+.tr-total { font: 700 16.5px Arial, sans-serif; fill: var(--muted); }
 </style>
 </head>
 <body>
@@ -376,7 +390,7 @@ button.mcell { cursor: pointer; }
   <div class="steps" role="tablist" aria-label="Steps">
     <button type="button" class="step" role="tab" id="tab-0" aria-controls="frame-0" data-frame="0" data-tone="context"><b>1</b>Kick</button>
     <button type="button" class="step" role="tab" id="tab-1" aria-controls="frame-1" data-frame="1" data-tone="pieces"><b>2</b>Events</button>
-    <button type="button" class="step" role="tab" id="tab-2" aria-controls="frame-2" data-frame="2" data-tone="order"><b>3</b>Lean</button>
+    <button type="button" class="step" role="tab" id="tab-2" aria-controls="frame-2" data-frame="2" data-tone="order"><b>3</b>Favor</button>
     <button type="button" class="step" role="tab" id="tab-3" aria-controls="frame-3" data-frame="3" data-tone="predict"><b>4</b>Count</button>
     <button type="button" class="step" role="tab" id="tab-4" aria-controls="frame-4" data-frame="4" data-tone="unseen"><b>5</b>Union</button>
     <button type="button" class="step" role="tab" id="tab-5" aria-controls="frame-5" data-frame="5" data-tone="red"><b>6</b>Neither</button>
@@ -923,7 +937,7 @@ button.mcell { cursor: pointer; }
   var str = M.str, E = M.EVENTS;
   var MAX_W = 6;
   var LANE_NAME = { L: 'Left', C: 'Center', R: 'Right' };
-  var STEP_NAME = ['Kick', 'Events', 'Lean', 'Count', 'Union', 'Neither', 'Condition', 'Reverse'];
+  var STEP_NAME = ['Kick', 'Events', 'Favor', 'Count', 'Union', 'Neither', 'Condition', 'Reverse'];
   var TONE = ['context', 'pieces', 'order', 'predict', 'unseen', 'red', 'blue', 'slate'];
   var instant = S.instant;
   function $(id) { return document.getElementById(id); }
@@ -948,7 +962,7 @@ button.mcell { cursor: pointer; }
   function mf(f) { return f.d === 1 ? '<math><mn>' + f.n + '</mn></math>' : '<math><mfrac><mn>' + f.n + '</mn><mn>' + f.d + '</mn></mfrac></math>'; }
   function mP(inner) { return '<math><mi>P</mi><mo>(</mo>' + inner + '<mo>)</mo></math>'; }
   var MI = {
-    B: '<mi>B</mi>', C: '<mi>C</mi>', A: '<mi>A</mi>',
+    B: '<mi>B</mi>', C: '<mi>C</mi>', A: '<mtext>save</mtext>',
     BC: '<mi>B</mi><mo>&#x2229;</mo><mi>C</mi>', U: '<mi>B</mi><mo>&#x222A;</mo><mi>C</mi>',
     N: '<msup><mi>B</mi><mi>c</mi></msup><mo>&#x2229;</mo><msup><mi>C</mi><mi>c</mi></msup>',
     G: '<mtext>goal</mtext>', BG: '<mi>B</mi><mo>&#x2229;</mo><mtext>goal</mtext>', BgG: '<mi>B</mi><mo>|</mo><mtext>goal</mtext>'
@@ -1029,7 +1043,7 @@ button.mcell { cursor: pointer; }
     var reset = h('button', 'again small', 'Back to equally likely'); reset.type = 'button'; row.appendChild(reset);
     var kickToggle = null, ksvg = null, spots = {};
     if (opts.kicker) {
-      kickToggle = h('button', 'again small', 'Skew the kicker too'); kickToggle.type = 'button'; kickToggle.setAttribute('aria-expanded', 'false'); row.appendChild(kickToggle);
+      kickToggle = h('button', 'again small', 'Kicker favors a spot too'); kickToggle.type = 'button'; kickToggle.setAttribute('aria-expanded', 'false'); row.appendChild(kickToggle);
     }
     var prev = h('button', 'again small', 'Use my keeper from before'); prev.type = 'button'; prev.hidden = true; row.appendChild(prev);
     box.appendChild(row);
@@ -1065,7 +1079,7 @@ button.mcell { cursor: pointer; }
       M.G.forEach(function (g) {
         var L = lanes[g];
         L.frac.textContent = str(m.pg[g]);
-        L.lane.setAttribute('aria-label', 'Lean keeper ' + M.G_NAME[g] + ', now ' + str(m.pg[g]) + (w.gw[g] >= MAX_W ? ', at most' : ''));
+        L.lane.setAttribute('aria-label', 'Keeper favors ' + M.G_NAME[g] + ' more, now ' + str(m.pg[g]) + (w.gw[g] >= MAX_W ? ', at most' : ''));
         L.lane.classList.toggle('maxed', w.gw[g] >= MAX_W);
         L.pips.textContent = '';
         for (var i = 0; i < w.gw[g]; i++) el('circle', { cx: L.x - (w.gw[g] - 1) * 5 + i * 10, cy: 59, r: 3.2, 'class': 'lean-pip' }, L.pips);
@@ -1073,7 +1087,7 @@ button.mcell { cursor: pointer; }
       M.K.forEach(function (k) {
         if (!spots[k]) return;
         spots[k].lbl.textContent = str(m.pk[k]);
-        spots[k].g.setAttribute('aria-label', 'Lean kicker ' + M.K_NAME[k] + ', now ' + str(m.pk[k]));
+        spots[k].g.setAttribute('aria-label', 'Kicker favors ' + M.K_NAME[k] + ' more, now ' + str(m.pk[k]));
       });
       prev.hidden = !(n >= 3 && lastLean && !isUniform(lastLean) && JSON.stringify(lastLean) !== JSON.stringify(w));
     }
@@ -1236,8 +1250,8 @@ button.mcell { cursor: pointer; }
   /* ---------- 3 · Lean ---------- */
   var F2 = (function () {
     var f = stage(2, 'click a side');
-    f.h2.textContent = 'Every outcome is 1/15 only if the keeper dives at random.';
-    para(f.text, 'note', 'Real keepers lean. Each outcome’s area is its probability.');
+    f.h2.textContent = 'Every outcome is 1/15 only if the keeper picks at random.';
+    para(f.text, 'note', 'A real keeper often favors one side, diving there more than elsewhere. Each outcome’s area is its probability.');
     var picked = 'TR,R';
     var mz = mosaic(f.visual, 2, { clickable: true, icons: true, onCell: function (id) { picked = id; render(); } });
     var hf = hero(f.text, 'f2-hero');
@@ -1279,8 +1293,7 @@ button.mcell { cursor: pointer; }
         colCount[o.g]++;
       }
       function finish() {
-        tally.textContent = 'Of 40 kicks: dive left ' + colCount.L + ', center ' + colCount.C + ', right ' + colCount.R +
-          '. Wider columns catch more kicks (P = ' + str(model.pg.L) + ', ' + str(model.pg.C) + ', ' + str(model.pg.R) + ').';
+        tally.textContent = 'Of 40 kicks: dive left ' + colCount.L + ', center ' + colCount.C + ', right ' + colCount.R + '. Wider columns catch more.';
         busy = false;
       }
       if (instant) { for (; i < N; i++) one(); finish(); return; }
@@ -1293,7 +1306,7 @@ button.mcell { cursor: pointer; }
   var F3 = (function () {
     var f = stage(3, 'click a side');
     f.h2.textContent = 'Counting says P(save) = 5/15.';
-    para(f.text, 'note', 'That assumes every outcome is equally likely. Make the keeper lean and compare the two answers.');
+    para(f.text, 'note', 'That assumes every outcome is equally likely. Make the keeper favor a side and compare the two answers.');
     var mz = mosaic(f.visual, 3, {});
     var hf = hero(f.text, 'f3-hero');
     var lean = leanPanel(f.controls, 3, function () { render(); });
@@ -1326,7 +1339,7 @@ button.mcell { cursor: pointer; }
         fixed = true; lean.box.hidden = false; render();
         showChanged(f, 'Adding counts the overlap twice, so take it away once: P(B ∪ C) = P(B) + P(C) − P(B ∩ C).');
       }, function () { fixed = false; render(); hideChanged(f); });
-    var lean = leanPanel(f.controls, 4, function () { render(); }, { note: 'Try a leaning keeper' });
+    var lean = leanPanel(f.controls, 4, function () { render(); }, { note: 'Try a keeper who favors a side' });
     linkTerms(f, mz);
     function render() {
       var w = lean.get(), model = M.Model(w.kw, w.gw);
@@ -1365,7 +1378,7 @@ button.mcell { cursor: pointer; }
         }
         if (instant) second(); else setTimeout(second, 600);
       }, function () { on = { B: false, C: false }; render(); hideChanged(f); });
-    var lean = leanPanel(f.controls, 5, function () { render(); }, { note: 'Try a leaning keeper' });
+    var lean = leanPanel(f.controls, 5, function () { render(); }, { note: 'Try a keeper who favors a side' });
     linkTerms(f, mz);
     function render() {
       var w = lean.get(), model = M.Model(w.kw, w.gw), both = on.B && on.C;
@@ -1391,16 +1404,16 @@ button.mcell { cursor: pointer; }
   var F6 = (function () {
     var f = stage(6);
     f.h2.textContent = 'The ball is in the net. Did the kicker shoot right?';
-    para(f.text, 'note', 'Before the kick, P(B) = 2/5. Predict: is a right-side shot now more likely, or less?');
+    para(f.text, 'note', 'Before the kick, P(B) = 2/5. Predict: is a right-side shot more likely or less, now that the ball is in the net?');
     var mz = mosaic(f.visual, 6, {});
     var hf = hero(f.text, 'f6-hero');
     var cond = false;
     var a = act(f.controls, 6, 'Keep only the goals', 'conditioning', 'Show every outcome again',
       function () {
         cond = true; lean.box.hidden = false; render();
-        showChanged(f, 'Knowing it’s a goal removes the saves and rescales the rest. With an even keeper P(B) stays 2/5; make the keeper lean right and it drops.');
+        showChanged(f, 'Knowing it’s a goal removes the saves and rescales the rest. With an even keeper P(B) stays 2/5; make the keeper favor the right and it drops.');
       }, function () { cond = false; render(); hideChanged(f); });
-    var lean = leanPanel(f.controls, 6, function () { render(); }, { note: 'Try a leaning keeper' });
+    var lean = leanPanel(f.controls, 6, function () { render(); }, { note: 'Try a keeper who favors a side' });
     linkTerms(f, mz);
     function render() {
       var w = lean.get(), model = M.Model(w.kw, w.gw), pG = model.P(G), pB = model.P(B), pBG = model.P(EV.BG);
@@ -1426,13 +1439,14 @@ button.mcell { cursor: pointer; }
   var F7 = (function () {
     var f = stage(7);
     f.h2.textContent = 'You saw a goal, not the shot. Where did it go?';
-    para(f.text, 'note', 'The tree runs from shot to goal. The question runs the other way.');
+    para(f.text, 'note', 'The tree runs forward: first the shot side, then whether it scores. Seeing a goal asks the reverse: given the goal, which side was it?');
     var scene = el('svg', { viewBox: '0 0 300 120', 'class': 'mini-scene', role: 'img', 'aria-label': 'A goal with the net bulging and the shot hidden' });
     el('rect', { x: 40, y: 14, width: 220, height: 90, 'class': 'lean-goal' }, scene);
     for (var x = 40; x <= 260; x += 20) el('line', { x1: x, y1: 14, x2: x + (x - 150) * 0.03, y2: 104, 'class': 'netline' }, scene);
     var q = el('text', { x: 150, y: 74, 'text-anchor': 'middle', 'class': 'hidden-q' }, scene); q.textContent = '?';
     f.visual.appendChild(scene);
-    var tree = h('div', 'tree'); tree.id = 'f7-tree'; f.visual.appendChild(tree);
+    var tree = el('svg', { viewBox: '0 0 440 272', 'class': 'ptree', id: 'f7-tree', role: 'img', 'aria-label': 'Probability tree: shot side, then goal' });
+    f.visual.appendChild(tree);
     var rev = false;
     var total = para(f.readout, 'formula', ''), chip = para(f.readout, 'formula strong', '');
     total.id = 'f7-total'; chip.id = 'f7-compare';
@@ -1442,34 +1456,44 @@ button.mcell { cursor: pointer; }
         showChanged(f, 'Bayes’ rule is the same restriction as the last step, organized from the tree: multiplication rule on top, total probability below.');
         rc.hidden = false;
       }, function () { rev = false; render(); hideChanged(f); rc.hidden = true; });
-    var lean = leanPanel(f.controls, 7, function () { render(); }, { note: 'Try a leaning keeper' });
+    var lean = leanPanel(f.controls, 7, function () { render(); }, { note: 'Try a keeper who favors a side' });
     var rc = recap(); rc.hidden = true; f.sec.appendChild(rc);
     function recap() {
       var r = h('div', 'recap'); r.id = 'recap';
-      [['Kick', '15 outcomes'], ['Events', 'sets of outcomes'], ['Lean', 'P(shot) × P(dive)'], ['Count', 'only if equally likely'],
+      [['Kick', '15 outcomes'], ['Events', 'sets of outcomes'], ['Favor', 'P(shot) × P(dive)'], ['Count', 'only if equally likely'],
         ['Union', 'subtract the overlap'], ['Neither', 'not B and not C'], ['Condition', 'keep the goals, rescale'], ['Reverse', 'Bayes’ rule']].forEach(function (x, i) {
         var d = h('div'); d.dataset.tone = TONE[i]; d.appendChild(h('b', '', x[0])); d.appendChild(document.createTextNode(x[1])); r.appendChild(d);
       });
       return r;
     }
-    function bar(v, cls) { var b = h('span', 'tbar ' + cls); b.style.width = (val(v) * 100).toFixed(2) + '%'; return b; }
+    /* A two-stage tree: the kick splits by shot side (P(side)), each side splits
+       off its goal branch (P(goal | side)), and each leaf holds the product. Reversing
+       divides each leaf by their total, P(goal). */
     function render() {
       var w = lean.get(), m = M.Model(w.kw, w.gw), b = m.bayesSidesGivenGoal();
-      tree.innerHTML = '';
-      var head = h('div', 'trow thead');
-      ['Shot side', 'P(side)', '× P(goal | side)', '= both', rev ? 'P(side | goal)' : ''].forEach(function (x) { head.appendChild(h('span', 'head', x)); });
-      tree.appendChild(head);
+      tree.textContent = '';
+      var Y = { L: 70, C: 150, R: 230 }, X0 = 12, X1 = 104, X2 = 214, X3 = 300, X4 = 388;
+      function t(x, y, s, cls, anchor) { var n = el('text', { x: x, y: y, 'class': cls, 'text-anchor': anchor || 'middle' }, tree); n.textContent = s; return n; }
+      t(X3, 22, 'multiply', 'tr-head'); t(X3, 40, 'the path', 'tr-head');
+      if (rev) { t(X4, 22, 'divide by', 'tr-head rev'); t(X4, 40, str(b.total), 'tr-head rev'); }
+      el('circle', { cx: X0, cy: Y.C, r: 7, 'class': 'tr-root' }, tree);
       M.G.forEach(function (s) {
-        var r = h('div', 'trow'); r.id = 'f7-row-' + s;
-        r.appendChild(h('span', 'tname', LANE_NAME[s]));
-        var c1 = h('span', 'tcell'); c1.appendChild(bar(b.prior[s], 'prior')); c1.appendChild(h('span', 'tval', str(b.prior[s]))); r.appendChild(c1);
-        r.appendChild(h('span', 'tcell tval', str(b.lik[s])));
-        var c3 = h('span', 'tcell' + (rev ? ' lit' : '')); c3.appendChild(bar(b.joint[s], 'joint')); c3.appendChild(h('span', 'tval', str(b.joint[s]))); r.appendChild(c3);
-        var c4 = h('span', 'tcell');
-        if (rev) { c4.appendChild(bar(b.post[s], 'post')); c4.appendChild(h('span', 'tval post-val', str(b.post[s]))); }
-        r.appendChild(c4);
-        tree.appendChild(r);
+        var ex = X1 - 34, ey = Y[s];
+        el('line', { x1: X0, y1: Y.C, x2: ex, y2: ey, 'class': 'tr-edge' }, tree);
+        var lx = X0 + 0.42 * (ex - X0) - (s === 'C' ? 0 : 6), ly = Y.C + 0.42 * (ey - Y.C) + (s === 'R' ? 26 : s === 'L' ? -12 : -9);
+        t(lx, ly, str(b.prior[s]), 'tr-p');
+        t(X1, Y[s] + 6, LANE_NAME[s], 'tr-node');
+        el('line', { x1: X1 + 34, y1: Y[s], x2: X2 - 26, y2: Y[s], 'class': 'tr-edge' }, tree);
+        t((X1 + 34 + X2 - 26) / 2, Y[s] - 9, str(b.lik[s]), 'tr-p');
+        t(X2, Y[s] + 6, 'goal', 'tr-node goalw');
+        var j = t(X3, Y[s] + 6, '= ' + str(b.joint[s]), 'tr-joint' + (rev ? ' lit' : ''));
+        j.id = 'f7-joint-' + s;
+        if (rev) { var q = t(X4, Y[s] + 6, str(b.post[s]), 'tr-post post-val'); q.id = 'f7-post-' + s; }
       });
+      t(X3, 266, 'sum ' + str(b.total), 'tr-total' + (rev ? ' lit' : ''));
+      tree.setAttribute('aria-label', 'Probability tree. ' + M.G.map(function (s) {
+        return LANE_NAME[s] + ': ' + str(b.prior[s]) + ' times ' + str(b.lik[s]) + ' is ' + str(b.joint[s]) + (rev ? ', so given a goal ' + str(b.post[s]) : '');
+      }).join('. ') + '. Total ' + str(b.total) + '.');
       total.textContent = 'P(goal) = ' + M.G.map(function (s) { return str(b.joint[s]); }).join(' + ') + ' = ' + str(b.total) + (rev ? ' (total probability, the denominator)' : '');
       chip.hidden = !rev;
       chip.textContent = 'Restrict to goals: P(right | goal) = ' + str(m.cond(B, G)) + '. Bayes’ rule: ' + str(b.post.R) + '.';
