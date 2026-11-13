@@ -380,6 +380,20 @@ button.mcell { cursor: pointer; }
 .tr-joint.lit, .tr-total.lit { fill: var(--goal-ink); }
 .tr-post { font: 700 19px Arial, sans-serif; fill: #8a5f00; }
 .tr-total { font: 700 16.5px Arial, sans-serif; fill: var(--muted); }
+
+.tr-n rect { stroke-width: 2; }
+.tr-n text { font: 17px Georgia, serif; }
+.tr-n.side rect { fill: #fff; stroke: var(--ink); }
+.tr-n.side text { fill: var(--ink); }
+.tr-n.goal rect { fill: var(--goal-bg); stroke: var(--goal-ink); }
+.tr-n.goal text { fill: var(--goal-ink); font-weight: 700; }
+.tr-n.save rect { fill: var(--save-bg); stroke: var(--save-ink); }
+.tr-n.save text { fill: var(--save-ink); }
+.tr-n.gone, .tr-p.gone { opacity: 0.3; }
+.tr-edge.save { stroke: #9fb3cf; }
+.tr-edge.gone { stroke-dasharray: 4 5; opacity: 0.45; }
+.tr-p.save { fill: var(--save-ink); }
+.tr-p { paint-order: stroke; stroke: #fff; stroke-width: 6px; stroke-linejoin: round; }
 </style>
 </head>
 <body>
@@ -1440,12 +1454,7 @@ button.mcell { cursor: pointer; }
     var f = stage(7);
     f.h2.textContent = 'You saw a goal, not the shot. Where did it go?';
     para(f.text, 'note', 'The tree runs forward: first the shot side, then whether it scores. Seeing a goal asks the reverse: given the goal, which side was it?');
-    var scene = el('svg', { viewBox: '0 0 300 120', 'class': 'mini-scene', role: 'img', 'aria-label': 'A goal with the net bulging and the shot hidden' });
-    el('rect', { x: 40, y: 14, width: 220, height: 90, 'class': 'lean-goal' }, scene);
-    for (var x = 40; x <= 260; x += 20) el('line', { x1: x, y1: 14, x2: x + (x - 150) * 0.03, y2: 104, 'class': 'netline' }, scene);
-    var q = el('text', { x: 150, y: 74, 'text-anchor': 'middle', 'class': 'hidden-q' }, scene); q.textContent = '?';
-    f.visual.appendChild(scene);
-    var tree = el('svg', { viewBox: '0 0 440 272', 'class': 'ptree', id: 'f7-tree', role: 'img', 'aria-label': 'Probability tree: shot side, then goal' });
+    var tree = el('svg', { viewBox: '0 0 440 304', 'class': 'ptree', id: 'f7-tree', role: 'img', 'aria-label': 'Probability tree: shot side, then goal' });
     f.visual.appendChild(tree);
     var rev = false;
     var total = para(f.readout, 'formula', ''), chip = para(f.readout, 'formula strong', '');
@@ -1472,25 +1481,34 @@ button.mcell { cursor: pointer; }
     function render() {
       var w = lean.get(), m = M.Model(w.kw, w.gw), b = m.bayesSidesGivenGoal();
       tree.textContent = '';
-      var Y = { L: 70, C: 150, R: 230 }, X0 = 12, X1 = 104, X2 = 214, X3 = 300, X4 = 388;
+      var X0 = 18, X1 = 116, X2 = 246, X3 = 336, X4 = 408, YC = 166;
+      var Y = { L: 76, C: 166, R: 256 }, D = 25;
       function t(x, y, s, cls, anchor) { var n = el('text', { x: x, y: y, 'class': cls, 'text-anchor': anchor || 'middle' }, tree); n.textContent = s; return n; }
-      t(X3, 22, 'multiply', 'tr-head'); t(X3, 40, 'the path', 'tr-head');
-      if (rev) { t(X4, 22, 'divide by', 'tr-head rev'); t(X4, 40, str(b.total), 'tr-head rev'); }
-      el('circle', { cx: X0, cy: Y.C, r: 7, 'class': 'tr-root' }, tree);
+      function node(x, y, w, label, cls) {
+        var g = el('g', { 'class': 'tr-n ' + cls }, tree);
+        el('rect', { x: x - w / 2, y: y - 14, width: w, height: 28, rx: 14 }, g);
+        var n = el('text', { x: x, y: y + 6, 'text-anchor': 'middle' }, g); n.textContent = label;
+        return g;
+      }
+      t(X1, 20, 'shot side', 'tr-head'); t(X2, 20, 'result', 'tr-head'); t(X3, 20, 'product', 'tr-head');
+      if (rev) t(X4, 20, '\u00f7 ' + str(b.total), 'tr-head rev');
       M.G.forEach(function (s) {
-        var ex = X1 - 34, ey = Y[s];
-        el('line', { x1: X0, y1: Y.C, x2: ex, y2: ey, 'class': 'tr-edge' }, tree);
-        var lx = X0 + 0.42 * (ex - X0) - (s === 'C' ? 0 : 6), ly = Y.C + 0.42 * (ey - Y.C) + (s === 'R' ? 26 : s === 'L' ? -12 : -9);
-        t(lx, ly, str(b.prior[s]), 'tr-p');
-        t(X1, Y[s] + 6, LANE_NAME[s], 'tr-node');
-        el('line', { x1: X1 + 34, y1: Y[s], x2: X2 - 26, y2: Y[s], 'class': 'tr-edge' }, tree);
-        t((X1 + 34 + X2 - 26) / 2, Y[s] - 9, str(b.lik[s]), 'tr-p');
-        t(X2, Y[s] + 6, 'goal', 'tr-node goalw');
-        var j = t(X3, Y[s] + 6, '= ' + str(b.joint[s]), 'tr-joint' + (rev ? ' lit' : ''));
+        el('line', { x1: X0, y1: YC, x2: X1 - 36, y2: Y[s], 'class': 'tr-edge' }, tree);
+        var lx = X0 + 0.5 * (X1 - 36 - X0), ly = YC + 0.5 * (Y[s] - YC);
+        t(lx, ly + 6, str(b.prior[s]), 'tr-p');
+        [['goal', -D, b.lik[s]], ['save', D, M.sub(M.F(1), b.lik[s])]].forEach(function (leaf) {
+          var y2 = Y[s] + leaf[1], save = leaf[0] === 'save';
+          el('line', { x1: X1 + 36, y1: Y[s], x2: X2 - 30, y2: y2, 'class': 'tr-edge' + (save ? ' save' : '') + (save && rev ? ' gone' : '') }, tree);
+          t((X1 + 36 + X2 - 30) / 2, (Y[s] + y2) / 2 + 6, str(leaf[2]), 'tr-p' + (save ? ' save' : '') + (save && rev ? ' gone' : ''));
+          node(X2, y2, 60, leaf[0], save ? 'save' + (rev ? ' gone' : '') : 'goal');
+        });
+        node(X1, Y[s], 72, LANE_NAME[s], 'side');
+        var j = t(X3, Y[s] - D + 6, '= ' + str(b.joint[s]), 'tr-joint' + (rev ? ' lit' : ''));
         j.id = 'f7-joint-' + s;
-        if (rev) { var q = t(X4, Y[s] + 6, str(b.post[s]), 'tr-post post-val'); q.id = 'f7-post-' + s; }
+        if (rev) { var q = t(X4, Y[s] - D + 6, str(b.post[s]), 'tr-post post-val'); q.id = 'f7-post-' + s; }
       });
-      t(X3, 266, 'sum ' + str(b.total), 'tr-total' + (rev ? ' lit' : ''));
+      el('circle', { cx: X0, cy: YC, r: 8, 'class': 'tr-root' }, tree);
+      t(X3, 298, 'sum ' + str(b.total), 'tr-total' + (rev ? ' lit' : ''));
       tree.setAttribute('aria-label', 'Probability tree. ' + M.G.map(function (s) {
         return LANE_NAME[s] + ': ' + str(b.prior[s]) + ' times ' + str(b.lik[s]) + ' is ' + str(b.joint[s]) + (rev ? ', so given a goal ' + str(b.post[s]) : '');
       }).join('. ') + '. Total ' + str(b.total) + '.');
