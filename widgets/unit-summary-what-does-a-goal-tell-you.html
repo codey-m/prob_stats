@@ -1,0 +1,1516 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What does a goal tell you?</title>
+<style>
+/* House synthesis style, shared with the CV/NLP and Deep Learning unit summaries. */
+:root {
+  --ink: #1d292b; --muted: #5a676a; --line: #cfd7d5; --paper: #f7f8f5; --panel: #ffffff;
+  --a: #a31f34; --b: #245a7a; --bad: #7d2a33;
+  --goal: #2ead4a; --goal-ink: #1b6e2f; --goal-bg: #e4f5e8;
+  --save: #2f6fdb; --save-ink: #1f4fa8; --save-bg: #e6eefc;
+  --hl: #8a5f00;
+  --crab: #ee6a45; --crab-dark: #b8442a; --crab-belly: #f8b08f;
+  --grass: #dcefdf;
+  color-scheme: light;
+}
+[data-tone="context"] { --tone: #006b68; --wash: #e4f3f1; }
+[data-tone="pieces"] { --tone: #8e3b74; --wash: #f6eaf2; }
+[data-tone="order"] { --tone: #267153; --wash: #e8f3ec; }
+[data-tone="predict"] { --tone: #684a8f; --wash: #f0ebf7; }
+[data-tone="unseen"] { --tone: #9a5b00; --wash: #fff2d9; }
+[data-tone="red"] { --tone: #a31f34; --wash: #f9e8eb; }
+[data-tone="blue"] { --tone: #245a7a; --wash: #e6eff5; }
+[data-tone="slate"] { --tone: #4f5d6b; --wash: #eef1f3; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { padding: 18px 16px 26px; font: 16px/1.45 Arial, Helvetica, sans-serif; }
+main { max-width: 840px; margin: auto; padding: 0; }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
+button:focus-visible, h2:focus-visible { outline: 3px solid #176ca5; outline-offset: 3px; }
+h2:focus:not(:focus-visible) { outline: none; }
+.eyebrow { margin: 0 0 3px; color: var(--a); font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+h1 { margin: 0 0 12px; font: 500 clamp(28px, 5vw, 38px)/1.1 Georgia, "Times New Roman", serif; }
+h2 { margin: 0 0 12px; font: 500 clamp(22px, 4vw, 29px)/1.2 Georgia, "Times New Roman", serif; }
+h3 { margin: 0 0 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+p { margin: 0 0 10px; }
+.head { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+.lead, .note { font-size: 16px; color: var(--ink); }
+.problem { color: var(--bad); }
+math { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; math-style: normal; font-size: 1.15em; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Steps, stage, pager */
+.steps { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+.step { display: grid; justify-items: center; gap: 1px; padding: 7px 2px; border: 1px solid var(--line); border-top: 4px solid var(--tone); border-radius: 4px; background: #fff; color: #4a5659; font-size: 13px; }
+.step b { font: 700 12px "Courier New", monospace; color: var(--tone); }
+.step[aria-selected="true"] { background: var(--wash); border-color: var(--tone); color: var(--ink); font-weight: 700; }
+.stage { position: relative; padding: 20px 20px 18px; border: 1px solid var(--line); border-top: 5px solid var(--tone); border-radius: 8px; background: #fff; }
+.kicker { margin: 0 0 2px; color: var(--tone); font: 700 13px "Courier New", monospace; text-transform: uppercase; }
+.kicker .how { margin-left: 10px; color: var(--muted); font: italic 13px Georgia, serif; text-transform: none; }
+.f-head { grid-area: head; }
+.changed { margin: 4px 0 12px; padding: 12px 14px; border-left: 5px solid var(--tone); background: var(--wash); font: 17px/1.42 Georgia, "Times New Roman", serif; border-radius: 0; }
+.changed p { margin: 0 0 6px; font-weight: 400; }
+.changed .head { display: block; margin-bottom: 3px; font-family: Arial, sans-serif; color: var(--tone); }
+.act { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 6px 0 8px; }
+.go { display: inline-grid; justify-items: start; gap: 1px; min-height: 52px; padding: 8px 18px; border: 2px solid var(--tone); border-radius: 7px; background: var(--tone); color: #fff; font-size: 17px; font-weight: 700; text-align: left; }
+.go small { font-size: 12px; font-weight: 400; opacity: 0.85; }
+.again { min-height: 44px; padding: 8px 12px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 14px; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
+.pager button { min-height: 46px; padding: 8px 14px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 15px; }
+.pcount { color: var(--muted); font-size: 13px; }
+.recap { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin: 10px 0 0; }
+.recap div { padding: 8px 6px; border-top: 4px solid var(--tone); background: var(--wash); font: 12.5px/1.3 Arial, sans-serif; text-align: center; }
+.recap b { display: block; color: var(--tone); }
+@media (max-width: 620px) {
+  .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .stage { padding: 15px 11px; }
+  .changed { font-size: 16px; }
+  .recap { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .pager .wide { display: none; }
+}
+
+/* Scene */
+.scene-wrap { margin: 8px 0 10px; }
+#scene { display: block; width: 100%; height: auto; background: #fbfcfd; border-radius: 8px; touch-action: manipulation; }
+.grass { fill: var(--grass); }
+.frame-posts { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linejoin: round; }
+.netline { stroke: #b8c3cc; stroke-width: 1.4; }
+.spot { fill: none; stroke: #8a97a3; stroke-width: 2; stroke-dasharray: 4 4; }
+.spot-label { font-size: 19px; font-weight: 600; fill: var(--muted); }
+.lane-fill { fill: transparent; stroke: none; }
+.lane { cursor: pointer; outline: none; }
+.lane-label { font-size: 22px; font-weight: 600; fill: var(--save-ink); }
+.lane:hover .lane-fill, .lane:focus-visible .lane-fill { fill: rgba(47, 111, 219, 0.10); stroke: var(--save); stroke-width: 3; stroke-dasharray: 8 6; }
+.lane:focus-visible .lane-fill { stroke: var(--hl); stroke-width: 4; }
+.lane.chosen .lane-fill { fill: rgba(47, 111, 219, 0.14); }
+#lanes[aria-disabled="true"] .lane { cursor: default; pointer-events: none; }
+#lanes[aria-disabled="true"] .lane-label { opacity: 0.45; }
+.crab-body { fill: var(--crab); stroke: var(--ink); stroke-width: 2.5; }
+.crab-belly { fill: var(--crab-belly); }
+.crab-blush { fill: #f2707a; opacity: 0.55; }
+.crab-leg-o { fill: none; stroke: var(--ink); stroke-width: 8.5; stroke-linecap: round; stroke-linejoin: round; }
+.crab-leg { fill: none; stroke: var(--crab-dark); stroke-width: 4.5; stroke-linecap: round; stroke-linejoin: round; }
+.crab-arm-o { fill: none; stroke: var(--ink); stroke-width: 10; stroke-linecap: round; stroke-linejoin: round; }
+.crab-arm-i { fill: none; stroke: var(--crab); stroke-width: 5.5; stroke-linecap: round; stroke-linejoin: round; }
+.crab-claw { fill: var(--crab); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.crab-stalk { stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
+.crab-eye { fill: #fff; stroke: var(--ink); stroke-width: 2.5; }
+.crab-pupil { fill: var(--ink); }
+.crab-mouth { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.crab-mouth-fill { fill: #7a2430; }
+.kicker-body { fill: #34495e; }
+.ball { fill: #fff; stroke: var(--ink); stroke-width: 2.5; }
+.ball-patch { fill: var(--ink); }
+#verdict { font-size: 32px; font-weight: 800; letter-spacing: 0.02em; }
+#verdict.goal { fill: var(--goal-ink); }
+#verdict.save { fill: var(--save-ink); }
+
+.result { font-size: 1.05rem; font-weight: 600; }
+
+/* Sample space grid */
+.grid { display: grid; grid-template-columns: 92px repeat(3, minmax(0, 1fr)); gap: 6px; align-items: stretch; }
+.colhead, .rowhead { font-size: 0.9rem; color: var(--muted); display: flex; align-items: center; }
+.colhead { justify-content: center; font-weight: 600; }
+.rowhead { justify-content: flex-start; line-height: 1.2; }
+.rowhead .short { display: none; }
+.corner { font-size: 0.8rem; color: var(--muted); align-self: end; }
+.card { position: relative; border: 2px solid var(--line); border-radius: 8px; padding: 4px 4px 3px; background: #fff; text-align: center;
+  transition: opacity 280ms ease, transform 280ms ease, border-color 200ms ease; }
+.card svg { display: block; width: 100%; height: auto; }
+.card .pair { font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+.card .tag { display: inline-flex; align-items: center; gap: 3px; font-size: 0.78rem; font-weight: 700; border-radius: 4px; padding: 0 5px; }
+.card.goal .tag { background: var(--goal-bg); color: var(--goal-ink); }
+.card.save .tag { background: var(--save-bg); color: var(--save-ink); }
+.card .tag svg { width: 12px; height: 12px; }
+.card.visited { border-color: var(--hl); border-width: 3px; padding: 3px 3px 2px; }
+.card .count { position: absolute; top: 2px; right: 4px; font-size: 0.72rem; font-weight: 700; color: var(--hl); }
+.card.enter { opacity: 0; transform: scale(0.85); }
+.card.pop { animation: pop 520ms ease-out; }
+.instant .card.pop { animation: none; }
+@keyframes pop { 0% { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(138, 95, 0, 0.25); } 100% { transform: scale(1); box-shadow: none; } }
+.mini-post { fill: none; stroke: var(--ink); stroke-width: 2.2; }
+.mini-grass { fill: var(--grass); }
+.mini-ball { fill: #fff; stroke: var(--ink); stroke-width: 1.4; }
+.tally { color: var(--muted); font-size: 0.95rem; margin-top: 8px; }
+
+
+@media (max-width: 520px) {
+  .grid { grid-template-columns: 34px repeat(3, minmax(0, 1fr)); gap: 4px; }
+  .rowhead .long { display: none; }
+  .rowhead .short { display: inline; font-weight: 600; }
+  .card .pair { font-size: 0.74rem; }
+  .card .tag { font-size: 0.72rem; padding: 0 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card { transition: none; }
+  .card.pop { animation: none; }
+}
+#keeper, #ball, #kicker, #verdict, #spots { pointer-events: none; }
+@media (max-width: 520px) {
+  .lane-label { font-size: 30px; }
+  .spot-label { font-size: 24px; }
+  #verdict { font-size: 44px; }
+}
+
+/* Frame 0 stage: text, scene and map. Two columns on wide screens so the map sits
+   beside the scene; stacked on narrow screens. The scene never changes size. */
+.board0 { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "text" "scene" "result" "map" "changed"; column-gap: 18px; }
+.board0 .result { grid-area: result; }
+.board0 .changed { grid-area: changed; }
+.stage-text { grid-area: text; }
+.board0 .scene-wrap { grid-area: scene; margin: 4px 0 8px; }
+.board0 .space { grid-area: map; margin: 6px 0 0; }
+@media (min-width: 820px) {
+  .board0 { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); grid-template-areas: "head head" "scene text" "scene map" "result map" "changed map"; grid-template-rows: auto auto auto auto 1fr; align-items: start; }
+  .board0 .scene-wrap { margin: 0; }
+}
+.map { display: grid; grid-template-columns: 30px repeat(3, minmax(0, 1fr)); gap: 4px; }
+.map .colhead { font-size: 0.8rem; }
+.map .rowhead { font-size: 0.8rem; font-weight: 600; justify-content: flex-start; }
+.cell { position: relative; min-height: 40px; border: 2px solid var(--line); border-radius: 6px; background: #fff; display: flex; align-items: center; justify-content: center; text-align: center;
+  transition: background-color 260ms ease, border-color 260ms ease; }
+.cell .cell-body { display: flex; flex-direction: column; align-items: center; line-height: 1.15; transition: opacity 260ms ease; }
+.cell .pair { font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.cell .tag { display: inline-flex; align-items: center; gap: 2px; font-size: 0.7rem; font-weight: 700; border-radius: 3px; padding: 0 3px; }
+.cell .tag svg { width: 10px; height: 10px; }
+.cell.goal .tag { background: var(--goal-bg); color: var(--goal-ink); }
+.cell.save .tag { background: var(--save-bg); color: var(--save-ink); }
+.cell.empty { border-style: dashed; background: transparent; }
+.cell.empty .cell-body { opacity: 0; }
+.cell.visited { border-color: var(--hl); border-width: 3px; }
+.cell .count { position: absolute; top: 0; right: 3px; font-size: 0.68rem; font-weight: 700; color: var(--hl); }
+.cell.pop { animation: pop 480ms ease-out; }
+.instant .cell.pop { animation: none; }
+.instant .cell, .instant .cell .cell-body { transition: none; }
+.action { font: inherit; font-size: 0.95rem; font-weight: 600; margin-top: 8px; padding: 6px 14px; border-radius: 6px; border: 2px solid var(--ink); background: var(--ink); color: #fff; cursor: pointer; }
+.action:hover { background: #33465a; }
+.action:focus-visible { outline: 3px solid var(--hl); outline-offset: 2px; }
+.board0 .changed math { font-size: 1em; }
+.board0 .tally { margin: 6px 0 0; font-size: 0.85rem; }
+.board0 .result { font-size: 0.95rem; }
+@media (prefers-reduced-motion: reduce) { .cell, .cell .cell-body { transition: none; } .cell.pop { animation: none; } }
+
+/* ---------- Frames 1-7: shared stage ---------- */
+.fstage { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "text" "visual" "controls" "readout" "changed"; column-gap: 18px; }
+.f-text { grid-area: text; } .f-visual { grid-area: visual; margin: 4px 0 8px; } .f-controls { grid-area: controls; }
+.f-readout { grid-area: readout; margin-top: 6px; } .f-changed { grid-area: changed; }
+@media (min-width: 820px) {
+  .fstage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "head head" "visual text" "visual controls" "readout changed"; grid-template-rows: auto auto 1fr auto; align-items: start; }
+  .f-visual { margin: 0; }
+}
+h2:focus { outline: none; }
+.fstage .lead { font-size: 1.02rem; }
+.next { margin-top: 4px; }
+
+/* Frame 1 cards and chips */
+.ecards { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)); gap: 4px; }
+.ecards .colhead, .ecards .rowhead { font-size: 0.78rem; }
+.ecards .rowhead { font-weight: 600; }
+.ecard { position: relative; font: inherit; border: 2px solid var(--line); border-radius: 6px; background: #fff; padding: 2px 2px 1px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
+.ecard svg { display: block; width: 100%; height: auto; }
+.ecard .pair { font-size: 0.7rem; font-variant-numeric: tabular-nums; }
+.ecard .tick { position: absolute; top: 1px; right: 3px; font-size: 0.8rem; font-weight: 800; color: var(--hl); visibility: hidden; }
+.ecard[aria-pressed="true"] { border: 3px solid var(--hl); background: #fff6e0; padding: 1px 1px 0; }
+.ecard[aria-pressed="true"] .tick { visibility: visible; }
+.ecard:focus-visible, .mcell:focus-visible, .chip:focus-visible, .small:focus-visible { outline: 3px solid var(--hl); outline-offset: 1px; }
+.chip-label { font-size: 0.85rem; color: var(--muted); margin: 6px 0 4px; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font: inherit; font-size: 0.82rem; padding: 3px 10px; border: 1px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.chip.ghost { border-style: dashed; }
+.set-name { font-weight: 600; font-size: 0.92rem; margin: 8px 0 4px; }
+.set-notation { font-size: 0.85rem; font-variant-numeric: tabular-nums; background: #f6f8f9; border-radius: 6px; padding: 6px 8px; margin-bottom: 4px; }
+.set-count { font-size: 0.82rem; color: var(--muted); }
+
+/* Lean panel */
+.lean { margin: 6px 0 4px; }
+.lean-note { font-size: 0.85rem; color: var(--muted); margin: 6px 0 2px; }
+.lean-strip { display: block; width: 100%; max-width: 330px; height: auto; }
+.lean-goal { fill: #fbfcfd; stroke: var(--ink); stroke-width: 3; }
+.lean-lane, .lean-spot { cursor: pointer; outline: none; }
+.lean-fill { fill: transparent; }
+.lean-lane:hover .lean-fill, .lean-lane:focus-visible .lean-fill { fill: rgba(47, 111, 219, 0.10); }
+.lean-lane:focus-visible .lean-fill { stroke: var(--hl); stroke-width: 3; }
+.lean-lane.maxed { cursor: default; }
+.lean-name { font-size: 14px; fill: var(--muted); }
+.lean-frac { font-size: 19px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.lean-frac.small { font-size: 15px; }
+.lean-pip { fill: var(--save); }
+.lean-spot-c { fill: #fff; stroke: #8a97a3; stroke-width: 2; stroke-dasharray: 4 3; }
+.lean-spot:hover .lean-spot-c, .lean-spot:focus-visible .lean-spot-c { fill: rgba(47, 111, 219, 0.12); stroke: var(--hl); stroke-dasharray: none; }
+.lean-spot-t { font-size: 13px; font-weight: 600; fill: var(--muted); }
+.lean-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.small { font: inherit; font-size: 0.8rem; padding: 3px 10px; border: 1px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
+.action:disabled { opacity: 0.5; cursor: default; }
+.action.toggle { background: #fff; color: var(--ink); }
+.action.toggle[aria-pressed="true"] { background: var(--ink); color: #fff; }
+
+/* Mosaic: column widths and row heights are probabilities */
+.mosaic-cap { text-align: center; font-size: 0.78rem; color: var(--muted); margin-left: 30px; }
+.mosaic { display: grid; height: 360px; gap: 3px; }
+.mhead { font-size: 0.75rem; font-weight: 600; text-align: center; align-self: end; white-space: nowrap; overflow: hidden; }
+.mrow { font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; }
+.mcell { font: inherit; min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 4px; background-color: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; padding: 0; color: var(--ink); position: relative;
+  transition: opacity 260ms ease; }
+button.mcell { cursor: pointer; }
+.mpair { font-size: 0.66rem; font-variant-numeric: tabular-nums; }
+.mval { font-size: 0.74rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mcell.tight .mpair { display: none; }
+.mcell.tiny .mval { font-size: 0.62rem; }
+.mcell.picked { border: 3px solid var(--hl); }
+.mcell.is-save { background-color: var(--save-bg); }
+.mcell.is-goal { background-color: var(--goal-bg); }
+.mcell.in-B { background-image: repeating-linear-gradient(45deg, rgba(125, 60, 152, 0.30) 0 5px, transparent 5px 11px); }
+.mcell.in-C { background-image: repeating-linear-gradient(-45deg, rgba(31, 122, 140, 0.32) 0 5px, transparent 5px 11px); }
+.mcell.in-B.in-C { background-image: repeating-linear-gradient(45deg, rgba(125, 60, 152, 0.30) 0 5px, transparent 5px 11px), repeating-linear-gradient(-45deg, rgba(31, 122, 140, 0.32) 0 5px, transparent 5px 11px); }
+.mcell.twice::after { content: "\00d7 2"; position: absolute; top: 1px; right: 3px; font-size: 0.66rem; font-weight: 800; color: #5b2a70; }
+.mcell.in-union { background-color: #ded3e8; }
+.mcell.in-notB { background-image: radial-gradient(rgba(125, 60, 152, 0.55) 1.4px, transparent 1.6px); background-size: 8px 8px; }
+.mcell.in-notC { background-image: repeating-linear-gradient(0deg, rgba(31, 122, 140, 0.4) 0 2px, transparent 2px 7px); }
+.mcell.in-notB.in-notC { background-image: radial-gradient(rgba(125, 60, 152, 0.55) 1.4px, transparent 1.6px), repeating-linear-gradient(0deg, rgba(31, 122, 140, 0.4) 0 2px, transparent 2px 7px); background-size: 8px 8px, auto; }
+.mcell.outlined { border: 3px solid var(--hl); }
+.mcell.faded { opacity: 0.22; }
+
+/* Readouts */
+.formula { font-size: 0.9rem; font-variant-numeric: tabular-nums; margin-bottom: 4px; }
+.formula.strong { font-weight: 700; }
+.hint { font-size: 0.8rem; color: var(--muted); }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.box { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; }
+.box p { margin: 0; }
+.box-title { font-size: 0.78rem; color: var(--muted); }
+.box-val { font-weight: 700; font-size: 1rem; }
+.box-terms { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.box.differs { border: 2px solid var(--hl); }
+
+/* Frame 7 */
+.mini-scene { display: block; width: 100%; max-width: 300px; height: auto; margin: 0 auto 6px; }
+.hidden-q { font-size: 44px; font-weight: 800; fill: var(--muted); }
+.tree { display: grid; gap: 6px; }
+.trow { display: grid; grid-template-columns: 52px minmax(0, 1fr) 64px minmax(0, 1fr) minmax(0, 1fr); gap: 6px; align-items: center; font-size: 0.8rem; }
+.thead { color: var(--muted); font-size: 0.72rem; }
+.tname { font-weight: 600; }
+.tcell { position: relative; height: 24px; background: #f1f4f6; border-radius: 4px; display: flex; align-items: center; font-variant-numeric: tabular-nums; }
+.trow .tcell.tval { background: transparent; justify-content: center; }
+.tbar { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; }
+.tbar.prior { background: #c9d6e8; } .tbar.joint { background: #b8e0c2; } .tbar.post { background: #f0c879; }
+.tcell .tval { position: relative; padding-left: 5px; font-weight: 600; }
+.tcell.lit { outline: 2px solid var(--goal-ink); }
+@media (max-width: 520px) {
+  .mosaic { height: 320px; }
+  .trow { grid-template-columns: 44px minmax(0, 1fr) 50px minmax(0, 1fr) minmax(0, 1fr); font-size: 0.74rem; }
+  .two { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .mcell { transition: none; } }
+
+/* ---------- Review round 1: goals, formulas, events, visual mosaic ---------- */
+.goal { font-size: 1.15rem; font-weight: 700; margin: 2px 0 6px; }
+.task { font-size: 1rem; font-weight: 600; margin: 8px 0 4px; }
+.evtabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 2px; }
+.evtab { font: inherit; font-size: 0.82rem; padding: 4px 10px; border: 1px solid var(--ink); border-radius: 999px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; }
+.evtab[aria-pressed="true"] { background: var(--ink); color: #fff; }
+.evtab.done::after { content: " \2713"; }
+.evtab:focus-visible { outline: 3px solid var(--hl); outline-offset: 2px; }
+.ecap { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+.ecard.truth { outline: 3px dashed var(--save-ink); outline-offset: -1px; }
+
+/* Formula block: the frame's main readout */
+.fhero { margin: 6px 0 8px; padding: 8px 10px; background: #f6f8f9; border-radius: 8px; }
+.fline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 1.08rem; margin: 3px 0; }
+.fline math { font-size: 1.1em; }
+.fline.dim { font-size: 0.95rem; color: var(--muted); }
+.fline .op { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; }
+.flabel { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); min-width: 3.4em; }
+.ans { padding: 2px 6px; border-radius: 6px; background: #e3e9ee; font-weight: 700; }
+.ans.hl { background: #fbe7b5; }
+.ans.over { background: #f9d6d2; }
+.fnote { font-size: 0.88rem; margin: 4px 0 0; }
+.fnote math { font-size: 1.05em; }
+.term { border-radius: 5px; padding: 1px 4px; cursor: help; border: 2px solid transparent; }
+.term:hover, .term:focus-visible { border-color: var(--hl); outline: none; }
+.t-A { background: var(--save-bg); }
+.t-B { background-color: #fff; background-image: repeating-linear-gradient(45deg, rgba(125, 60, 152, 0.30) 0 4px, transparent 4px 9px); }
+.t-C { background-color: #fff; background-image: repeating-linear-gradient(-45deg, rgba(31, 122, 140, 0.32) 0 4px, transparent 4px 9px); }
+.t-BC { background-color: #fff; background-image: repeating-linear-gradient(45deg, rgba(125, 60, 152, 0.30) 0 4px, transparent 4px 9px), repeating-linear-gradient(-45deg, rgba(31, 122, 140, 0.32) 0 4px, transparent 4px 9px); }
+.t-U { background: #ded3e8; }
+.t-N { background: #fff; border-color: var(--hl); }
+.t-G { background: var(--goal-bg); }
+.t-BG { background-color: var(--goal-bg); background-image: repeating-linear-gradient(45deg, rgba(125, 60, 152, 0.30) 0 4px, transparent 4px 9px); }
+.mcell.termhl { box-shadow: inset 0 0 0 3px var(--hl); }
+
+/* Frame 2: crab column heads, ball row heads, animated mosaic, kick dots */
+.mosaic-wrap { position: relative; }
+.mosaic { transition: grid-template-columns 380ms ease, grid-template-rows 380ms ease; }
+.with-icons .mosaic-cap { margin-left: 46px; }
+.with-icons .mosaic { height: 370px; }
+.mhead { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.head-crab { width: 38px; height: 37px; }
+.mrow { gap: 3px; }
+.head-ball { width: 22px; height: 15px; flex: none; }
+.mdots { position: absolute; inset: 0; pointer-events: none; }
+.mdot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); animation: drop 240ms ease-out; }
+@keyframes drop { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.instant .mdot { animation: none; }
+.instant .mosaic { transition: none; }
+@media (prefers-reduced-motion: reduce) { .mdot { animation: none; } .mosaic { transition: none; } }
+@media (max-width: 520px) {
+  .fline { font-size: 1rem; }
+  .with-icons .mosaic { height: 340px; }
+}
+
+.again.small { min-height: 34px; padding: 4px 10px; font-size: 13px; }
+.lean-note.head { margin: 8px 0 2px; }
+.f-text .note { margin-bottom: 8px; }
+</style>
+</head>
+<body>
+<main id="app">
+  <p class="eyebrow">Unit 1 synthesis</p>
+  <h1>What does a goal tell you?</h1>
+
+  <div class="steps" role="tablist" aria-label="Steps">
+    <button type="button" class="step" role="tab" id="tab-0" aria-controls="frame-0" data-frame="0" data-tone="context"><b>1</b>Kick</button>
+    <button type="button" class="step" role="tab" id="tab-1" aria-controls="frame-1" data-frame="1" data-tone="pieces"><b>2</b>Events</button>
+    <button type="button" class="step" role="tab" id="tab-2" aria-controls="frame-2" data-frame="2" data-tone="order"><b>3</b>Lean</button>
+    <button type="button" class="step" role="tab" id="tab-3" aria-controls="frame-3" data-frame="3" data-tone="predict"><b>4</b>Count</button>
+    <button type="button" class="step" role="tab" id="tab-4" aria-controls="frame-4" data-frame="4" data-tone="unseen"><b>5</b>Union</button>
+    <button type="button" class="step" role="tab" id="tab-5" aria-controls="frame-5" data-frame="5" data-tone="red"><b>6</b>Neither</button>
+    <button type="button" class="step" role="tab" id="tab-6" aria-controls="frame-6" data-frame="6" data-tone="blue"><b>7</b>Condition</button>
+    <button type="button" class="step" role="tab" id="tab-7" aria-controls="frame-7" data-frame="7" data-tone="slate"><b>8</b>Reverse</button>
+  </div>
+
+  <section id="frame-0" class="stage board0" role="tabpanel" aria-labelledby="f0-title" data-tone="context">
+    <div class="f-head">
+      <p class="kicker">1 · Kick<span class="how">pick a dive</span></p>
+      <h2 id="f0-title" tabindex="-1">Choose the keeper's dive.</h2>
+    </div>
+    <div class="stage-text">
+      <p class="note">The kicker aims at one of five spots, each equally likely. <span id="f0-prompt">Click the side of the goal the keeper should dive to.</span> Left and right are as you see the goal from the penalty spot.</p>
+    </div>
+
+    <div class="scene-wrap">
+      <svg id="scene" viewBox="0 0 600 360" role="img" aria-labelledby="scene-title" aria-describedby="scene-desc">
+        <title id="scene-title">Penalty kick</title>
+        <desc id="scene-desc">A goal seen from the penalty spot, with a crab keeper on the goal line and the ball on the spot.</desc>
+        <defs>
+          <clipPath id="mouth"><rect x="100" y="60" width="400" height="220"/></clipPath>
+        </defs>
+        <rect x="0" y="280" width="600" height="80" class="grass"/>
+        <g id="net" clip-path="url(#mouth)"></g>
+        <rect x="100" y="60" width="400" height="220" class="frame-posts"/>
+        <g id="lanes"></g>
+        <g id="spots"></g>
+        <g id="kicker" transform="translate(236 398)">
+          <rect x="-11" y="-38" width="22" height="34" rx="6" class="kicker-body"/>
+          <circle cx="0" cy="-48" r="10" class="kicker-body"/>
+        </g>
+        <g id="keeper" transform="translate(300 280)"></g>
+        <g id="ball" transform="translate(300 335)">
+          <circle r="16" class="ball"/>
+          <path d="M0 -6 L5.7 -1.9 L3.5 4.9 L-3.5 4.9 L-5.7 -1.9 Z" class="ball-patch"/>
+        </g>
+        <text id="verdict" x="300" y="42" text-anchor="middle" aria-hidden="true"></text>
+      </svg>
+    </div>
+
+    <p id="result" class="result" hidden></p>
+
+    <div id="space" class="space" hidden>
+      <h3 id="space-title" class="space-title">Outcomes you've seen</h3>
+      <div id="grid" class="map" role="table" aria-label="Outcomes: kicker's shot by keeper's dive"></div>
+      <p id="tally" class="tally"></p>
+      <div class="act"><button type="button" id="reveal-all" class="go" hidden>Show every possible outcome<small>the sample space</small></button></div>
+    </div>
+    <div id="f0-changed" class="changed" hidden>
+      <p><span class="head">What changed</span> Every kick ends in one of these 15 outcomes, a (shot, dive) pair. Together they are the sample space.</p>
+      <math display="block" aria-label="S equals K times G, and the size of S is 5 times 3, which is 15">
+      <mi>S</mi><mo>=</mo><mi>K</mi><mo>&#xD7;</mo><mi>G</mi><mo separator="true">,</mo><mspace width="0.8em"/>
+      <mo>|</mo><mi>S</mi><mo>|</mo><mo>=</mo><mn>5</mn><mo>&#xD7;</mo><mn>3</mn><mo>=</mo><mn>15</mn>
+      </math>
+    </div>
+  </section>
+  <div id="frames-rest"></div>
+
+  <div class="pager"><button type="button" id="prev">←<span class="wide"> Previous</span></button><span class="pcount" id="pcount">1 of 8</span><button type="button" id="next"><span class="wide" id="next-label">Next: Events </span>→</button></div>
+
+  <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+</main>
+<script>
+/* Penalty-kick probability model. Exact fractions throughout.
+   Probabilities come from click weights: P(option) = weight / total weight. */
+(function (root) {
+  'use strict';
+  var K = ['TL', 'BL', 'C', 'TR', 'BR'];
+  var G = ['L', 'C', 'R'];
+  var K_NAME = { TL: 'top left', BL: 'bottom left', C: 'center', TR: 'top right', BR: 'bottom right' };
+  var G_NAME = { L: 'left', C: 'center', R: 'right' };
+
+  function gcd(a, b) { a = Math.abs(a); b = Math.abs(b); while (b) { var t = a % b; a = b; b = t; } return a || 1; }
+  function F(n, d) {
+    if (d === undefined) d = 1;
+    if (d === 0) throw new Error('zero denominator');
+    if (d < 0) { n = -n; d = -d; }
+    var g = gcd(n, d);
+    return { n: n / g, d: d / g };
+  }
+  var ZERO = F(0), ONE = F(1);
+  function add(a, b) { return F(a.n * b.d + b.n * a.d, a.d * b.d); }
+  function sub(a, b) { return F(a.n * b.d - b.n * a.d, a.d * b.d); }
+  function mul(a, b) { return F(a.n * b.n, a.d * b.d); }
+  function div(a, b) { return F(a.n * b.d, a.d * b.n); }
+  function eq(a, b) { return a.n === b.n && a.d === b.d; }
+  function str(a) { return a.d === 1 ? String(a.n) : a.n + '/' + a.d; }
+  function sum(list) { return list.reduce(add, ZERO); }
+
+  /* Which third of the goal a shot lands in, as seen from the penalty spot. */
+  function sideOf(k) { return k === 'C' ? 'C' : k.charAt(1); }
+  function isSave(k, g) { return sideOf(k) === g; }
+
+  var OUTCOMES = [];
+  K.forEach(function (k) { G.forEach(function (g) { OUTCOMES.push({ k: k, g: g, id: k + ',' + g, save: isSave(k, g) }); }); });
+
+  function probs(weights, names) {
+    var total = names.reduce(function (s, x) { return s + weights[x]; }, 0);
+    var p = {};
+    names.forEach(function (x) { p[x] = F(weights[x], total); });
+    return p;
+  }
+  function uniformWeights(names) { var w = {}; names.forEach(function (x) { w[x] = 1; }); return w; }
+
+  /* A model holds both players' weights. Outcome probability follows the tree:
+     P(k, g) = P(k) P(g | k), and the keeper's dive probabilities are the same on
+     every shot branch because the keeper commits before seeing the ball. */
+  function Model(kw, gw) {
+    kw = kw || uniformWeights(K); gw = gw || uniformWeights(G);
+    var pk = probs(kw, K), pg = probs(gw, G);
+    function pOutcome(o) { return mul(pk[o.k], pg[o.g]); }
+    function P(pred) { return sum(OUTCOMES.filter(pred).map(pOutcome)); }
+    function cond(predA, predB) {
+      return div(P(function (o) { return predA(o) && predB(o); }), P(predB));
+    }
+    /* Bayes over the three shot sides: prior P(side) times P(goal | side),
+       over the total probability of a goal. */
+    function bayesSidesGivenGoal() {
+      var prior = {}, lik = {}, joint = {}, post = {};
+      G.forEach(function (s) {
+        prior[s] = sum(K.filter(function (k) { return sideOf(k) === s; }).map(function (k) { return pk[k]; }));
+        lik[s] = sub(ONE, pg[s]);
+        joint[s] = mul(prior[s], lik[s]);
+      });
+      var total = sum(G.map(function (s) { return joint[s]; }));
+      G.forEach(function (s) { post[s] = div(joint[s], total); });
+      return { prior: prior, lik: lik, joint: joint, total: total, post: post };
+    }
+    return { pk: pk, pg: pg, pOutcome: pOutcome, P: P, cond: cond, bayesSidesGivenGoal: bayesSidesGivenGoal };
+  }
+
+  /* Seeded uniform draws (mulberry32) so tests can replay a kick sequence. */
+  function rng(seed) {
+    if (seed === null || seed === undefined || isNaN(seed)) return Math.random;
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function drawShot(rand) { return K[Math.min(K.length - 1, Math.floor(rand() * K.length))]; }
+
+  var EVENTS = {
+    save: function (o) { return o.save; },
+    goal: function (o) { return !o.save; },
+    shootRight: function (o) { return sideOf(o.k) === 'R'; },
+    keeperRight: function (o) { return o.g === 'R'; }
+  };
+
+  root.PKModel = {
+    K: K, G: G, K_NAME: K_NAME, G_NAME: G_NAME, OUTCOMES: OUTCOMES, EVENTS: EVENTS,
+    F: F, add: add, sub: sub, mul: mul, div: div, eq: eq, str: str, sum: sum,
+    sideOf: sideOf, isSave: isSave, Model: Model, uniformWeights: uniformWeights,
+    rng: rng, drawShot: drawShot
+  };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+<script>
+(function () {
+  'use strict';
+  var M = window.PKModel;
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var Q = new URLSearchParams(location.search);
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var instant = reduced || Q.get('anim') === '0';
+  var rand = M.rng(Q.has('seed') ? parseInt(Q.get('seed'), 10) : null);
+
+  /* Scene geometry (viewBox 600 x 360). The goal mouth is x 100-500, y 60-280. */
+  var SPOT = { TL: [175, 108], BL: [175, 232], C: [300, 140], TR: [425, 108], BR: [425, 232] };
+  var LANE_X = { L: [100, 233.33], C: [233.33, 366.67], R: [366.67, 500] };
+  var BALL_START = [300, 335];
+  /* Crab keeper poses: body position and tilt, plus each claw tip in body coordinates.
+     A side dive scuttles into that third with one claw high and one low, covering
+     both the top and bottom spot on that side; the center pose raises both claws. */
+  var REST = { x: 300, y: 280, r: 0, l: [-62, -92], rr: [62, -92] };
+  var DIVE = {
+    L: { x: 178, y: 244, r: -10, l: [-12, -122], rr: [64, -34] },
+    C: { x: 300, y: 270, r: 0, l: [-30, -134], rr: [30, -134] },
+    R: { x: 422, y: 244, r: 10, l: [-64, -34], rr: [12, -122] }
+  };
+  var SHOULDER = 34, SHOULDER_Y = -46;
+  var KICKER_REST = [236, 398], KICKER_STRIKE = [272, 380];
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(SVGNS, tag);
+    for (var a in attrs) n.setAttribute(a, attrs[a]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function h(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function lerp(a, b, p) { return a + (b - a) * p; }
+  function ease(p) { return 1 - (1 - p) * (1 - p); }
+  function tween(ms, fn) {
+    return new Promise(function (done) {
+      if (instant || ms <= 0) { fn(1); done(); return; }
+      /* Frames drive the motion; a timer finishes the tween on schedule if frames
+         stop (a backgrounded tab), so a kick never leaves the lanes locked. */
+      var t0 = performance.now(), finished = false;
+      function end() { if (finished) return; finished = true; fn(1); done(); }
+      function step() {
+        if (finished) return;
+        var p = Math.min(1, (performance.now() - t0) / ms);
+        if (p >= 1) { end(); return; }
+        fn(p);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+      setTimeout(end, ms + 60);
+    });
+  }
+  function wait(ms) { return instant ? Promise.resolve() : new Promise(function (r) { setTimeout(r, ms); }); }
+
+  /* ---------- Static scene pieces ---------- */
+  var net = $('net');
+  for (var x = 100; x <= 500; x += 25) el('line', { x1: x, y1: 60, x2: x, y2: 280, 'class': 'netline' }, net);
+  for (var y = 60; y <= 280; y += 22) el('line', { x1: 100, y1: y, x2: 500, y2: y, 'class': 'netline' }, net);
+
+  var spots = $('spots');
+  M.K.forEach(function (k) {
+    el('circle', { cx: SPOT[k][0], cy: SPOT[k][1], r: 21, 'class': 'spot' }, spots);
+    var t = el('text', { x: SPOT[k][0], y: SPOT[k][1] + 6, 'text-anchor': 'middle', 'class': 'spot-label' }, spots);
+    t.textContent = k;
+  });
+
+  var lanes = $('lanes');
+  var laneEls = {};
+  M.G.forEach(function (g) {
+    var x0 = LANE_X[g][0], x1 = LANE_X[g][1];
+    var lane = el('g', { 'class': 'lane', role: 'button', tabindex: '0', 'aria-label': 'Dive ' + M.G_NAME[g], 'data-dive': g }, lanes);
+    el('rect', { x: x0, y: 60, width: x1 - x0, height: 270, 'class': 'lane-fill' }, lane);
+    var label = el('text', { x: (x0 + x1) / 2, y: 306, 'text-anchor': 'middle', 'class': 'lane-label' }, lane);
+    label.textContent = g === 'C' ? 'Center' : (g === 'L' ? 'Left' : 'Right');
+    lane.addEventListener('click', function () { kick(g); });
+    lane.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); kick(g); }
+    });
+    laneEls[g] = lane;
+  });
+
+  /* ---------- The crab keeper, drawn in body coordinates (feet at 0, 0) ---------- */
+  var MOUTH = {
+    smile: 'M-8 -44 Q0 -37 8 -44',
+    grin: 'M-13 -47 Q0 -30 13 -47 Z',
+    oh: 'M-4.5 -41 a4.5 5 0 1 0 9 0 a4.5 5 0 1 0 -9 0'
+  };
+  function buildCrab(root) {
+    var legs = {};
+    ['l', 'r'].forEach(function (side) {
+      var s = side === 'l' ? -1 : 1;
+      var g = el('g', { 'class': 'crab-legs' }, root);
+      /* Each leg: a short bent stroke from the body edge, up to a knee and down to the ground. */
+      [[-30, -30, -45, -38, -53, -4], [-36, -22, -51, -26, -57, 1], [-32, -14, -44, -16, -47, 3]].forEach(function (c) {
+        var d = 'M' + s * -c[0] + ' ' + c[1] + ' L' + s * -c[2] + ' ' + c[3] + ' L' + s * -c[4] + ' ' + c[5];
+        el('path', { d: d, 'class': 'crab-leg-o' }, g);
+        el('path', { d: d, 'class': 'crab-leg' }, g);
+      });
+      legs[side] = g;
+    });
+    var arms = {};
+    ['l', 'r'].forEach(function (side) {
+      var g = el('g', {}, root);
+      arms[side] = {
+        outer: el('polyline', { 'class': 'crab-arm-o' }, g),
+        inner: el('polyline', { 'class': 'crab-arm-i' }, g),
+        claw: el('path', { d: 'M-13 2 C-17 -12 -11 -24 -3 -27 L-1 -12 L3 -12 L7 -26 C15 -21 17 -8 13 2 C9 11 -9 11 -13 2 Z', 'class': 'crab-claw' }, g)
+      };
+    });
+    el('ellipse', { cx: 0, cy: -38, rx: 41, ry: 27, 'class': 'crab-body' }, root);
+    el('ellipse', { cx: 0, cy: -29, rx: 25, ry: 12, 'class': 'crab-belly' }, root);
+    el('ellipse', { cx: -25, cy: -38, rx: 6.5, ry: 3.8, 'class': 'crab-blush' }, root);
+    el('ellipse', { cx: 25, cy: -38, rx: 6.5, ry: 3.8, 'class': 'crab-blush' }, root);
+    var pupils = [];
+    [-1, 1].forEach(function (s) {
+      el('line', { x1: s * 11, y1: -60, x2: s * 15, y2: -78, 'class': 'crab-stalk' }, root);
+      el('circle', { cx: s * 15, cy: -86, r: 10.5, 'class': 'crab-eye' }, root);
+      var pg = el('g', {}, root);
+      el('circle', { cx: s * 15, cy: -86, r: 5, 'class': 'crab-pupil' }, pg);
+      el('circle', { cx: s * 15 + 1.8, cy: -88, r: 1.7, fill: '#fff' }, pg);
+      pupils.push(pg);
+    });
+    var mouth = el('path', { d: MOUTH.smile, 'class': 'crab-mouth' }, root);
+    /* Two-segment arm: the elbow sits off the shoulder-to-claw line, bent outward
+       (away from the body), so every pose shows a jointed limb. */
+    function claw(a, tip, side) {
+      var sx = side === 'l' ? -SHOULDER : SHOULDER, out = side === 'l' ? -1 : 1;
+      var dx = tip[0] - sx, dy = tip[1] - SHOULDER_Y, len = Math.hypot(dx, dy) || 1;
+      var px = -dy / len, py = dx / len;
+      if (px * out < 0 || (Math.abs(px) < 0.2 && py < 0)) { px = -px; py = -py; }
+      var bend = 0.26 * len;
+      var ex = sx + dx * 0.5 + px * bend, ey = SHOULDER_Y + dy * 0.5 + py * bend;
+      var pts = sx + ',' + SHOULDER_Y + ' ' + ex.toFixed(2) + ',' + ey.toFixed(2) + ' ' + tip[0] + ',' + tip[1];
+      a.outer.setAttribute('points', pts); a.inner.setAttribute('points', pts);
+      var deg = Math.atan2(tip[0] - ex, -(tip[1] - ey)) * 180 / Math.PI;
+      a.claw.setAttribute('transform', 'translate(' + tip[0] + ' ' + tip[1] + ') rotate(' + deg.toFixed(2) + ')');
+    }
+    return {
+      pose: function (p, hop, wiggle) {
+        root.setAttribute('transform', 'translate(' + p.x + ' ' + (p.y - (hop || 0)) + ') rotate(' + p.r + ')');
+        claw(arms.l, p.l, 'l'); claw(arms.r, p.rr, 'r');
+        var w = wiggle || 0;
+        legs.l.setAttribute('transform', w ? 'rotate(' + w + ' -30 -20)' : '');
+        legs.r.setAttribute('transform', w ? 'rotate(' + -w + ' 30 -20)' : '');
+      },
+      look: function (dx, dy) {
+        var n = Math.hypot(dx, dy) || 1, m = 3.6;
+        pupils.forEach(function (pg) { pg.setAttribute('transform', 'translate(' + (dx / n * m).toFixed(2) + ' ' + (dy / n * m).toFixed(2) + ')'); });
+      },
+      face: function (kind) {
+        mouth.setAttribute('d', MOUTH[kind]);
+        mouth.setAttribute('class', 'crab-mouth' + (kind === 'smile' ? '' : ' crab-mouth-fill'));
+      }
+    };
+  }
+  function lerpPose(a, b, q) {
+    return {
+      x: lerp(a.x, b.x, q), y: lerp(a.y, b.y, q), r: lerp(a.r, b.r, q),
+      l: [lerp(a.l[0], b.l[0], q), lerp(a.l[1], b.l[1], q)], rr: [lerp(a.rr[0], b.rr[0], q), lerp(a.rr[1], b.rr[1], q)]
+    };
+  }
+
+  var keeper = $('keeper'), ball = $('ball'), kicker = $('kicker'), verdict = $('verdict');
+  var crab = buildCrab(keeper);
+  function setKeeper(p, hop, wiggle) { crab.pose(p, hop, wiggle); }
+  function setBall(x, y, s, o) {
+    ball.setAttribute('transform', 'translate(' + x + ' ' + y + ') scale(' + s + ')');
+    ball.style.opacity = o === undefined ? 1 : o;
+  }
+  function setKicker(x, y) { kicker.setAttribute('transform', 'translate(' + x + ' ' + y + ')'); }
+  function setNet(cx, cy, s) {
+    net.setAttribute('transform', s === 1 ? '' : 'translate(' + cx + ' ' + cy + ') scale(' + s + ') translate(' + (-cx) + ' ' + (-cy) + ')');
+  }
+  function resetScene() {
+    setKeeper(REST); crab.face('smile'); crab.look(0, 1);
+    setBall(BALL_START[0], BALL_START[1], 1); setKicker(KICKER_REST[0], KICKER_REST[1]); setNet(0, 0, 1);
+    verdict.textContent = ''; verdict.setAttribute('class', '');
+  }
+
+  /* ---------- One kick: the keeper commits at the same moment the ball is struck ---------- */
+  function animateKick(k, g) {
+    var save = M.isSave(k, g);
+    var tx = SPOT[k][0], ty = SPOT[k][1];
+    var stopP = save ? 0.88 : 1;
+    var endX = lerp(BALL_START[0], tx, stopP), endY = lerp(BALL_START[1], ty, stopP);
+    var pose = DIVE[g];
+    resetScene();
+    return tween(360, function (p) {
+      var q = ease(p);
+      setKicker(lerp(KICKER_REST[0], KICKER_STRIKE[0], q), lerp(KICKER_REST[1], KICKER_STRIKE[1], q));
+    }).then(function () {
+      return Promise.all([
+        tween(620, function (p) {
+          var q = ease(p);
+          var bx = lerp(BALL_START[0], endX, q), by = lerp(BALL_START[1], endY, q) - 26 * Math.sin(Math.PI * q) * (ty < 150 ? 1 : 0.4);
+          setBall(bx, by, lerp(1, 0.72, q));
+          crab.look(bx - lerp(REST.x, pose.x, q), by - (lerp(REST.y, pose.y, q) - 86));
+        }),
+        tween(540, function (p) {
+          var q = ease(p);
+          setKeeper(lerpPose(REST, pose, q), p < 1 ? 16 * Math.sin(Math.PI * q) : 0, p < 1 ? 10 * Math.sin(6 * Math.PI * p) : 0);
+        })
+      ]);
+    }).then(function () {
+      if (save) {
+        var dir = g === 'L' ? -1 : 1;
+        var rx = g === 'C' ? 362 : endX + dir * 85, ry = 330;
+        return tween(420, function (p) {
+          var q = ease(p);
+          setBall(lerp(endX, rx, q), lerp(endY, ry, q), 0.72, lerp(1, 0.55, q));
+        });
+      }
+      return tween(380, function (p) { setNet(tx, ty, 1 + 0.045 * Math.sin(Math.PI * p)); });
+    }).then(function () {
+      if (instant) {
+        setKicker(KICKER_STRIKE[0], KICKER_STRIKE[1]); setKeeper(pose);
+        crab.look(tx - pose.x, ty - (pose.y - 86));
+      }
+      crab.face(save ? 'grin' : 'oh');
+      verdict.textContent = save ? 'Save' : 'Goal';
+      verdict.setAttribute('class', save ? 'save' : 'goal');
+      return save;
+    });
+  }
+
+  /* ---------- Sample space grid ---------- */
+  var grid = $('grid');
+  var cards = {};
+  function mini(k, g) {
+    var s = el('svg', { viewBox: '0 0 100 64', 'aria-hidden': 'true', focusable: 'false' });
+    function mx(X) { return 8 + (X - 100) / 400 * 84; }
+    function my(Y) { return 6 + (Y - 60) / 220 * 44; }
+    el('rect', { x: 0, y: 50, width: 100, height: 14, 'class': 'mini-grass' }, s);
+    el('rect', { x: 8, y: 6, width: 84, height: 44, 'class': 'mini-post' }, s);
+    /* The same crab in its dive pose, drawn in scene coordinates and scaled into the card. */
+    var sceneToCard = el('g', { transform: 'translate(8 6) scale(0.21 0.2) translate(-100 -60)', 'class': 'mini-crab' }, s);
+    var mc = buildCrab(el('g', {}, sceneToCard));
+    mc.pose(DIVE[g]);
+    mc.look(SPOT[k][0] - DIVE[g].x, SPOT[k][1] - (DIVE[g].y - 86));
+    mc.face(M.isSave(k, g) ? 'grin' : 'oh');
+    el('circle', { cx: mx(SPOT[k][0]), cy: my(SPOT[k][1]), r: 4.4, 'class': 'mini-ball' }, s);
+    return s;
+  }
+  function tagIcon(save) {
+    var s = el('svg', { viewBox: '0 0 12 12', 'aria-hidden': 'true', focusable: 'false' });
+    if (save) {
+      el('path', { d: 'M3 11 V4.5 a1 1 0 0 1 2 0 V3 a1 1 0 0 1 2 0 V3.5 a1 1 0 0 1 2 0 V8 a3 3 0 0 1 -3 3 Z', fill: 'currentColor' }, s);
+    } else {
+      el('rect', { x: 1, y: 1, width: 10, height: 10, fill: 'none', stroke: 'currentColor', 'stroke-width': 1.4 }, s);
+      el('path', { d: 'M4.3 1 V11 M7.7 1 V11 M1 4.3 H11 M1 7.7 H11', stroke: 'currentColor', 'stroke-width': 1 }, s);
+    }
+    return s;
+  }
+  /* Frame 0's compact map: 15 empty cells that fill in as kicks land, then
+     "Show every possible kick" fills the rest. (mini() above draws frame 1's cards.) */
+  (function buildMap() {
+    var head = h('div'); head.setAttribute('role', 'row'); head.style.display = 'contents';
+    var corner = h('div', 'corner'); corner.setAttribute('role', 'columnheader');
+    corner.appendChild(h('span', 'visually-hidden', "Kicker's shot by keeper's dive"));
+    head.appendChild(corner);
+    M.G.forEach(function (g) {
+      var c = h('div', 'colhead', g === 'C' ? 'Center' : (g === 'L' ? 'Left' : 'Right'));
+      c.setAttribute('role', 'columnheader');
+      head.appendChild(c);
+    });
+    grid.appendChild(head);
+    M.K.forEach(function (k, ri) {
+      var row = h('div'); row.setAttribute('role', 'row'); row.style.display = 'contents';
+      var rh = h('div', 'rowhead', k); rh.setAttribute('role', 'rowheader'); rh.title = M.K_NAME[k];
+      rh.setAttribute('aria-label', M.K_NAME[k]);
+      row.appendChild(rh);
+      M.G.forEach(function (g, ci) {
+        var save = M.isSave(k, g);
+        var c = h('div', 'cell empty ' + (save ? 'save' : 'goal'));
+        c.id = 'card-' + k + '-' + g;
+        c.setAttribute('role', 'cell');
+        c.dataset.row = ri; c.dataset.col = ci;
+        c.setAttribute('aria-label', 'not seen yet');
+        c.dataset.label = '(' + k + ', ' + g + '): ' + (save ? 'save' : 'goal');
+        var body = h('span', 'cell-body');
+        body.appendChild(h('span', 'pair', '(' + k + ', ' + g + ')'));
+        var tag = h('span', 'tag'); tag.appendChild(tagIcon(save)); tag.appendChild(document.createTextNode(save ? 'Save' : 'Goal'));
+        body.appendChild(tag);
+        c.appendChild(body);
+        var count = h('span', 'count'); count.setAttribute('aria-hidden', 'true'); c.appendChild(count);
+        row.appendChild(c);
+        cards[k + ',' + g] = c;
+      });
+      grid.appendChild(row);
+    });
+  })();
+
+  /* ---------- State and the kick handler ---------- */
+  var state = { kicks: [], counts: {}, busy: false, allShown: false };
+
+  function setLanesEnabled(on) {
+    lanes.setAttribute('aria-disabled', on ? 'false' : 'true');
+    M.G.forEach(function (g) { laneEls[g].setAttribute('aria-disabled', on ? 'false' : 'true'); });
+  }
+  function fill(c) { c.classList.remove('empty'); c.setAttribute('aria-label', c.dataset.label); }
+  function pop(c) { c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); }
+  function updateTally() {
+    var seen = Object.keys(state.counts).length;
+    $('tally').textContent = 'Kicks so far: ' + state.kicks.length + '. Different outcomes seen: ' + seen +
+      (state.allShown ? ' of 15.' : '.');
+    return seen;
+  }
+
+  function showAll() {
+    if (state.allShown) return Promise.resolve();
+    state.allShown = true;
+    $('reveal-all').hidden = true;
+    $('space-title').textContent = 'Every possible outcome';
+    var rest = Object.keys(cards).filter(function (id) { return cards[id].classList.contains('empty'); });
+    var done = rest.length;
+    rest.forEach(function (id, i) {
+      var c = cards[id];
+      if (instant) { fill(c); return; }
+      c.style.transitionDelay = (i * 45) + 'ms';
+      fill(c);
+    });
+    updateTally();
+    $('f0-changed').hidden = false;
+    $('status').textContent = 'All 15 possible outcomes shown. ' + done + ' you had not seen yet.';
+    return wait(rest.length * 45 + 300).then(function () {
+      rest.forEach(function (id) { cards[id].style.transitionDelay = ''; });
+    });
+  }
+  $('reveal-all').addEventListener('click', showAll);
+
+  function kick(g) {
+    if (state.busy) return Promise.resolve(null);
+    state.busy = true;
+    setLanesEnabled(false);
+    M.G.forEach(function (x) { laneEls[x].classList.toggle('chosen', x === g); });
+    var k = M.drawShot(rand);
+    return animateKick(k, g).then(function (save) {
+      var id = k + ',' + g;
+      state.kicks.push({ k: k, g: g, save: save });
+      state.counts[id] = (state.counts[id] || 0) + 1;
+      var card = cards[id];
+      fill(card);
+      card.classList.add('visited');
+      card.querySelector('.count').textContent = state.counts[id] > 1 ? '×' + state.counts[id] : '';
+      $('space').hidden = false;
+      if (!state.allShown) $('reveal-all').hidden = false;
+      pop(card);
+      var line = 'Shot ' + M.K_NAME[k] + ', keeper dived ' + M.G_NAME[g] + ': ' + (save ? 'save' : 'goal') + '. Outcome (' + k + ', ' + g + ').';
+      var res = $('result'); res.hidden = false; res.textContent = line;
+      updateTally();
+      $('status').textContent = line + ' ' + $('tally').textContent;
+      $('f0-prompt').textContent = 'Click a side again to take another kick.';
+      M.G.forEach(function (x) { laneEls[x].classList.remove('chosen'); });
+      state.busy = false;
+      setLanesEnabled(true);
+      return { k: k, g: g, save: save };
+    });
+  }
+
+  if (instant) document.documentElement.classList.add('instant');
+  resetScene();
+  setLanesEnabled(true);
+  window.__pk = { state: state, kick: kick, showAll: showAll, cards: cards, instant: instant };
+  window.__pkShared = { el: el, h: h, mini: mini, tagIcon: tagIcon, buildCrab: buildCrab, DIVE: DIVE, SPOT: SPOT, instant: instant, rand: rand };
+})();
+</script>
+<script>
+/* Frames 2-8 in the house synthesis style (CV/NLP and DL unit summaries): kicker,
+   a problem sentence as the heading, the visual, the formula, one button named for
+   the fix with an undo, and a "What changed" panel after the action. The steps bar
+   and pager navigate all eight frames, including the opener in app.js. Every frame
+   opens on the equally likely model. */
+(function () {
+  'use strict';
+  var M = window.PKModel, S = window.__pkShared, el = S.el, h = S.h;
+  var str = M.str, E = M.EVENTS;
+  var MAX_W = 6;
+  var LANE_NAME = { L: 'Left', C: 'Center', R: 'Right' };
+  var STEP_NAME = ['Kick', 'Events', 'Lean', 'Count', 'Union', 'Neither', 'Condition', 'Reverse'];
+  var TONE = ['context', 'pieces', 'order', 'predict', 'unseen', 'red', 'blue', 'slate'];
+  var instant = S.instant;
+  function $(id) { return document.getElementById(id); }
+  function uniform() { return { kw: M.uniformWeights(M.K), gw: M.uniformWeights(M.G) }; }
+  function isUniform(w) {
+    return M.K.every(function (k) { return w.kw[k] === w.kw.TL; }) && M.G.every(function (g) { return w.gw[g] === w.gw.L; });
+  }
+  function copyW(w) { return { kw: Object.assign({}, w.kw), gw: Object.assign({}, w.gw) }; }
+  function val(f) { return f.n / f.d; }
+  var lastLean = null;
+
+  var B = E.shootRight, C = E.keeperRight, G = E.goal;
+  var EV = {
+    A: E.save, B: B, C: C, G: G,
+    BC: function (o) { return B(o) && C(o); },
+    U: function (o) { return B(o) || C(o); },
+    N: function (o) { return !B(o) && !C(o); },
+    BG: function (o) { return B(o) && G(o); }
+  };
+
+  /* ---------- Formula pieces: native MathML for notation, HTML spans for the links ---------- */
+  function mf(f) { return f.d === 1 ? '<math><mn>' + f.n + '</mn></math>' : '<math><mfrac><mn>' + f.n + '</mn><mn>' + f.d + '</mn></mfrac></math>'; }
+  function mP(inner) { return '<math><mi>P</mi><mo>(</mo>' + inner + '<mo>)</mo></math>'; }
+  var MI = {
+    B: '<mi>B</mi>', C: '<mi>C</mi>', A: '<mi>A</mi>',
+    BC: '<mi>B</mi><mo>&#x2229;</mo><mi>C</mi>', U: '<mi>B</mi><mo>&#x222A;</mo><mi>C</mi>',
+    N: '<msup><mi>B</mi><mi>c</mi></msup><mo>&#x2229;</mo><msup><mi>C</mi><mi>c</mi></msup>',
+    G: '<mtext>goal</mtext>', BG: '<mi>B</mi><mo>&#x2229;</mo><mtext>goal</mtext>', BgG: '<mi>B</mi><mo>|</mo><mtext>goal</mtext>'
+  };
+  function term(key, ev) {
+    return '<span class="term t-' + (ev || key) + '" tabindex="0" data-ev="' + (ev || key) + '">' + mP(MI[key]) + '</span>';
+  }
+  function op(s) { return '<span class="op">' + s + '</span>'; }
+  function fline(parts, cls) { return '<div class="fline ' + (cls || '') + '">' + parts.join('') + '</div>'; }
+
+  /* ---------- Frame scaffold ---------- */
+  function stage(n, how) {
+    var sec = h('section', 'stage fstage'); sec.id = 'frame-' + n; sec.hidden = true;
+    sec.setAttribute('role', 'tabpanel'); sec.setAttribute('aria-labelledby', 'f' + n + '-title');
+    sec.dataset.tone = TONE[n];
+    var head = h('div', 'f-head'), text = h('div', 'f-text'), visual = h('div', 'f-visual'), controls = h('div', 'f-controls'),
+      readout = h('div', 'f-readout'), changed = h('div', 'changed f-changed');
+    var kick = h('p', 'kicker', (n + 1) + ' · ' + STEP_NAME[n]);
+    if (how) kick.appendChild(h('span', 'how', how));
+    var h2 = h('h2', ''); h2.id = 'f' + n + '-title'; h2.tabIndex = -1;
+    head.appendChild(kick); head.appendChild(h2);
+    readout.setAttribute('aria-live', 'polite');
+    changed.hidden = true; changed.id = 'f' + n + '-changed';
+    [head, text, visual, controls, readout, changed].forEach(function (x) { sec.appendChild(x); });
+    $('frames-rest').appendChild(sec);
+    return { sec: sec, h2: h2, text: text, visual: visual, controls: controls, readout: readout, changed: changed };
+  }
+  function para(parent, cls, html) { var p = h('p', cls); p.innerHTML = html; parent.appendChild(p); return p; }
+  function hero(parent, id) { var d = h('div', 'fhero'); d.id = id; d.setAttribute('aria-live', 'polite'); parent.appendChild(d); return d; }
+  /* One button named for the fix (method name underneath), and an undo. */
+  function act(parent, n, label, method, againLabel, onGo, onAgain) {
+    var row = h('div', 'act');
+    var go = h('button', 'go'); go.type = 'button'; go.id = 'f' + n + '-go';
+    go.appendChild(document.createTextNode(label));
+    if (method) go.appendChild(h('small', '', method));
+    var again = h('button', 'again', againLabel); again.type = 'button'; again.id = 'f' + n + '-again'; again.hidden = true;
+    row.appendChild(go); row.appendChild(again); parent.appendChild(row);
+    go.addEventListener('click', function () { go.hidden = true; again.hidden = false; onGo(); });
+    again.addEventListener('click', function () { again.hidden = true; go.hidden = false; onAgain(); go.focus(); });
+    return { go: go, again: again, reset: function () { go.hidden = false; again.hidden = true; } };
+  }
+  function showChanged(f, html, extra) {
+    f.changed.innerHTML = '<p><span class="head">What changed</span>' + html + '</p>';
+    if (extra) f.changed.appendChild(extra);
+    f.changed.hidden = false;
+  }
+  function hideChanged(f) { f.changed.hidden = true; }
+  function linkTerms(f, mz) {
+    function on(e) { var t = e.target.closest && e.target.closest('.term'); if (t) mz.highlight(EV[t.dataset.ev]); }
+    function off(e) { var t = e.target.closest && e.target.closest('.term'); if (t) mz.highlight(null); }
+    f.sec.addEventListener('mouseover', on); f.sec.addEventListener('focusin', on);
+    f.sec.addEventListener('mouseout', off); f.sec.addEventListener('focusout', off);
+  }
+
+  /* ---------- Lean panel: click a side (or a spot) to add one unit of weight ---------- */
+  function leanPanel(parent, n, onChange, opts) {
+    opts = opts || {};
+    var w = uniform();
+    var box = h('div', 'lean');
+    if (opts.note) box.appendChild(h('p', 'head lean-note', opts.note));
+    var svg = el('svg', { viewBox: '0 0 300 86', 'class': 'lean-strip', role: 'group', 'aria-label': "Keeper's lean" });
+    el('rect', { x: 8, y: 6, width: 284, height: 62, 'class': 'lean-goal' }, svg);
+    var lanes = {};
+    M.G.forEach(function (g, i) {
+      var x0 = 8 + i * 284 / 3;
+      var lane = el('g', { 'class': 'lean-lane', role: 'button', tabindex: '0', 'data-lean': g }, svg);
+      el('rect', { x: x0, y: 6, width: 284 / 3, height: 62, 'class': 'lean-fill' }, lane);
+      var name = el('text', { x: x0 + 284 / 6, y: 28, 'text-anchor': 'middle', 'class': 'lean-name' }, lane); name.textContent = LANE_NAME[g];
+      var frac = el('text', { x: x0 + 284 / 6, y: 49, 'text-anchor': 'middle', 'class': 'lean-frac' }, lane);
+      var pips = el('g', {}, lane);
+      lanes[g] = { lane: lane, frac: frac, pips: pips, x: x0 + 284 / 6 };
+      function a() { if (w.gw[g] < MAX_W) { w.gw[g]++; changed(); } }
+      lane.addEventListener('click', a);
+      lane.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); a(); } });
+    });
+    box.appendChild(svg);
+    var row = h('div', 'lean-buttons');
+    var reset = h('button', 'again small', 'Back to equally likely'); reset.type = 'button'; row.appendChild(reset);
+    var kickToggle = null, ksvg = null, spots = {};
+    if (opts.kicker) {
+      kickToggle = h('button', 'again small', 'Skew the kicker too'); kickToggle.type = 'button'; kickToggle.setAttribute('aria-expanded', 'false'); row.appendChild(kickToggle);
+    }
+    var prev = h('button', 'again small', 'Use my keeper from before'); prev.type = 'button'; prev.hidden = true; row.appendChild(prev);
+    box.appendChild(row);
+    if (opts.kicker) {
+      ksvg = el('svg', { viewBox: '0 0 300 96', 'class': 'lean-strip kick-strip', role: 'group', 'aria-label': "Kicker's lean" });
+      ksvg.style.display = 'none';
+      el('rect', { x: 8, y: 6, width: 284, height: 84, 'class': 'lean-goal' }, ksvg);
+      var KS = { TL: [58, 30], BL: [58, 70], C: [150, 50], TR: [242, 30], BR: [242, 70] };
+      M.K.forEach(function (k) {
+        var g = el('g', { 'class': 'lean-spot', role: 'button', tabindex: '0', 'data-spot': k }, ksvg);
+        el('circle', { cx: KS[k][0], cy: KS[k][1], r: 17, 'class': 'lean-spot-c' }, g);
+        var t = el('text', { x: KS[k][0], y: KS[k][1] + 5, 'text-anchor': 'middle', 'class': 'lean-spot-t' }, g);
+        var lbl = el('text', { x: KS[k][0] + (KS[k][0] < 150 ? 26 : -26), y: KS[k][1] + 5, 'text-anchor': KS[k][0] < 150 ? 'start' : 'end', 'class': 'lean-frac small' }, g);
+        if (k === 'C') { lbl.setAttribute('x', 150); lbl.setAttribute('y', 84); lbl.setAttribute('text-anchor', 'middle'); }
+        t.textContent = k;
+        spots[k] = { g: g, lbl: lbl };
+        function a() { if (w.kw[k] < MAX_W) { w.kw[k]++; changed(); } }
+        g.addEventListener('click', a);
+        g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); a(); } });
+      });
+      box.appendChild(ksvg);
+      kickToggle.addEventListener('click', function () {
+        var open = ksvg.style.display === 'none';
+        ksvg.style.display = open ? '' : 'none';
+        kickToggle.setAttribute('aria-expanded', String(open));
+      });
+    }
+    parent.appendChild(box);
+    reset.addEventListener('click', function () { w = uniform(); changed(); });
+    prev.addEventListener('click', function () { if (lastLean) { w = copyW(lastLean); changed(); } });
+    function draw() {
+      var m = M.Model(w.kw, w.gw);
+      M.G.forEach(function (g) {
+        var L = lanes[g];
+        L.frac.textContent = str(m.pg[g]);
+        L.lane.setAttribute('aria-label', 'Lean keeper ' + M.G_NAME[g] + ', now ' + str(m.pg[g]) + (w.gw[g] >= MAX_W ? ', at most' : ''));
+        L.lane.classList.toggle('maxed', w.gw[g] >= MAX_W);
+        L.pips.textContent = '';
+        for (var i = 0; i < w.gw[g]; i++) el('circle', { cx: L.x - (w.gw[g] - 1) * 5 + i * 10, cy: 59, r: 3.2, 'class': 'lean-pip' }, L.pips);
+      });
+      M.K.forEach(function (k) {
+        if (!spots[k]) return;
+        spots[k].lbl.textContent = str(m.pk[k]);
+        spots[k].g.setAttribute('aria-label', 'Lean kicker ' + M.K_NAME[k] + ', now ' + str(m.pk[k]));
+      });
+      prev.hidden = !(n >= 3 && lastLean && !isUniform(lastLean) && JSON.stringify(lastLean) !== JSON.stringify(w));
+    }
+    function changed() { if (!isUniform(w)) lastLean = copyW(w); draw(); onChange(w); }
+    return {
+      box: box,
+      get: function () { return w; },
+      open: function () {
+        w = uniform();
+        if (ksvg) { ksvg.style.display = 'none'; kickToggle.setAttribute('aria-expanded', 'false'); }
+        draw();
+      }
+    };
+  }
+
+  /* ---------- Mosaic: column width = P(dive), row height = P(shot), so area = P(outcome) ---------- */
+  function crabIcon(g) {
+    var s = el('svg', { viewBox: '-95 -175 190 185', 'class': 'head-crab', 'aria-hidden': 'true', focusable: 'false' });
+    var p = S.DIVE[g];
+    var c = S.buildCrab(el('g', {}, s));
+    c.pose({ x: 0, y: 0, r: p.r, l: p.l, rr: p.rr }); c.look(0, -1);
+    return s;
+  }
+  function ballIcon(k) {
+    var s = el('svg', { viewBox: '0 0 40 26', 'class': 'head-ball', 'aria-hidden': 'true', focusable: 'false' });
+    el('rect', { x: 2, y: 2, width: 36, height: 20, 'class': 'mini-post' }, s);
+    el('circle', { cx: 2 + (S.SPOT[k][0] - 100) / 400 * 36, cy: 2 + (S.SPOT[k][1] - 60) / 220 * 20, r: 3.6, 'class': 'mini-ball' }, s);
+    return s;
+  }
+  function mosaic(parent, n, opts) {
+    var wrap = h('div', 'mosaic-wrap' + (opts.icons ? ' with-icons' : ''));
+    wrap.appendChild(h('div', 'head mosaic-cap', "Keeper's dive"));
+    var grid = h('div', 'mosaic'); grid.setAttribute('role', 'table');
+    grid.setAttribute('aria-label', "Outcomes sized by probability: kicker's shot by keeper's dive");
+    var heads = {}, rows = {}, cells = {};
+    var hr = h('div'); hr.setAttribute('role', 'row'); hr.style.display = 'contents';
+    hr.appendChild(h('div', 'mcorner'));
+    M.G.forEach(function (g) {
+      var c = h('div', 'mhead'); c.setAttribute('role', 'columnheader');
+      if (opts.icons) c.appendChild(crabIcon(g));
+      var t = h('span', 'mhead-t'); c.appendChild(t);
+      heads[g] = t; hr.appendChild(c);
+    });
+    grid.appendChild(hr);
+    M.K.forEach(function (k) {
+      var r = h('div'); r.setAttribute('role', 'row'); r.style.display = 'contents';
+      var rh = h('div', 'mrow'); rh.setAttribute('role', 'rowheader');
+      if (opts.icons) rh.appendChild(ballIcon(k));
+      var rt = h('span', 'mrow-t'); rh.appendChild(rt);
+      rows[k] = rt; r.appendChild(rh);
+      M.G.forEach(function (g) {
+        var c = h(opts.clickable ? 'button' : 'div', 'mcell');
+        if (opts.clickable) { c.type = 'button'; c.setAttribute('aria-pressed', 'false'); } else c.setAttribute('role', 'cell');
+        c.id = 'm' + n + '-' + k + '-' + g;
+        c.dataset.id = k + ',' + g;
+        var pair = h('span', 'mpair', '(' + k + ', ' + g + ')'), pv = h('span', 'mval');
+        c.appendChild(pair); c.appendChild(pv);
+        cells[k + ',' + g] = { el: c, pair: pair, val: pv };
+        r.appendChild(c);
+        if (opts.clickable) c.addEventListener('click', function () { opts.onCell(k + ',' + g); });
+      });
+      grid.appendChild(r);
+    });
+    wrap.appendChild(grid);
+    var dots = h('div', 'mdots'); dots.setAttribute('aria-hidden', 'true'); wrap.appendChild(dots);
+    parent.appendChild(wrap);
+    var headH = opts.icons ? '54px' : '20px', rowW = opts.icons ? '46px' : '30px';
+    return {
+      cells: cells, grid: grid, wrap: wrap, dots: dots,
+      render: function (m, classes, label, shade) {
+        grid.style.gridTemplateColumns = rowW + ' ' + M.G.map(function (g) { return val(m.pg[g]).toFixed(5) + 'fr'; }).join(' ');
+        grid.style.gridTemplateRows = headH + ' ' + M.K.map(function (k) { return val(m.pk[k]).toFixed(5) + 'fr'; }).join(' ');
+        M.G.forEach(function (g) { heads[g].textContent = g + ' ' + str(m.pg[g]); });
+        M.K.forEach(function (k) { rows[k].textContent = k; rows[k].parentNode.title = M.K_NAME[k] + ', ' + str(m.pk[k]); });
+        M.OUTCOMES.forEach(function (o) {
+          var c = cells[o.id], cls = classes(o);
+          c.el.className = 'mcell ' + (cls || '');
+          var t = label(o);
+          c.val.textContent = t;
+          c.el.style.backgroundColor = shade ? shade(o) : '';
+          c.el.setAttribute('aria-label', '(' + o.k + ', ' + o.g + ') ' + (o.save ? 'save' : 'goal') + ', ' + t);
+          var area = val(m.pk[o.k]) * val(m.pg[o.g]);
+          c.el.classList.toggle('tight', area < 0.045);
+          c.el.classList.toggle('tiny', area < 0.02);
+        });
+        dots.textContent = '';
+      },
+      highlight: function (pred) {
+        M.OUTCOMES.forEach(function (o) { cells[o.id].el.classList.toggle('termhl', !!pred && pred(o)); });
+      }
+    };
+  }
+  function pOut(m, o) { return str(m.pOutcome(o)); }
+
+  /* ---------- 2 · Events ---------- */
+  var F1 = (function () {
+    var f = stage(1, 'click outcomes');
+    var TASKS = [
+      { key: 'A', pred: E.save, words: 'the keeper saves the shot' },
+      { key: 'B', pred: B, words: 'the kicker shoots to the right side' },
+      { key: 'C', pred: C, words: 'the keeper dives right' }
+    ];
+    var active, sel, shown;
+    para(f.text, 'note', 'Each card is one outcome: a (shot, dive) pair. An event is a statement about the kick.');
+    var tabs = h('div', 'evtabs'); tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Events');
+    TASKS.forEach(function (tk) {
+      var b = h('button', 'evtab', tk.key + ': ' + tk.words); b.type = 'button'; b.dataset.ev = tk.key; tabs.appendChild(b);
+      b.addEventListener('click', function () { active = tk.key; render(); });
+    });
+    f.text.appendChild(tabs);
+    var notation = para(f.text, 'set-notation', ''), count = para(f.text, 'set-count', '');
+    notation.id = 'f1-set'; count.id = 'f1-count';
+    f.visual.appendChild(h('div', 'head ecap', 'Outcome = (kicker’s shot, keeper’s dive)'));
+    var grid = h('div', 'ecards'); grid.setAttribute('role', 'group'); grid.setAttribute('aria-label', 'The 15 outcomes');
+    grid.appendChild(h('div', 'mcorner'));
+    M.G.forEach(function (g) { grid.appendChild(h('div', 'head colhead', 'Dive ' + LANE_NAME[g].toLowerCase())); });
+    var cards = {};
+    M.K.forEach(function (k) {
+      var rh = h('div', 'head rowhead', k); rh.title = M.K_NAME[k]; grid.appendChild(rh);
+      M.G.forEach(function (g) {
+        var b = h('button', 'ecard'); b.type = 'button'; b.id = 'e-' + k + '-' + g;
+        b.setAttribute('aria-pressed', 'false');
+        b.setAttribute('aria-label', '(' + k + ', ' + g + '): shot ' + M.K_NAME[k] + ', keeper dives ' + M.G_NAME[g]);
+        var art = S.mini(k, g); art.setAttribute('viewBox', '0 2 100 54');
+        b.appendChild(art);
+        b.appendChild(h('span', 'pair', '(' + k + ', ' + g + ')'));
+        b.appendChild(h('span', 'tick', '✓'));
+        b.addEventListener('click', function () { sel[active][k + ',' + g] = !sel[active][k + ',' + g]; render(); });
+        cards[k + ',' + g] = b; grid.appendChild(b);
+      });
+    });
+    f.visual.appendChild(grid);
+    var a = act(f.controls, 1, 'Show event A', 'the outcomes that make it true', 'Hide event A',
+      function () { shown[active] = true; render(); }, function () { shown[active] = false; render(); });
+    function reset() { active = 'A'; sel = { A: {}, B: {}, C: {} }; shown = { A: false, B: false, C: false }; }
+    function render() {
+      var tk = TASKS.filter(function (x) { return x.key === active; })[0];
+      f.h2.textContent = 'Which outcomes make “' + tk.words + '” true?';
+      tabs.querySelectorAll('.evtab').forEach(function (b) {
+        b.setAttribute('aria-pressed', String(b.dataset.ev === active));
+        b.classList.toggle('done', shown[b.dataset.ev]);
+      });
+      a.go.firstChild.textContent = 'Show event ' + active;
+      a.again.textContent = 'Hide event ' + active;
+      a.go.hidden = shown[active]; a.again.hidden = !shown[active];
+      var mine = M.OUTCOMES.filter(function (o) { return sel[active][o.id]; });
+      M.OUTCOMES.forEach(function (o) {
+        cards[o.id].setAttribute('aria-pressed', String(!!sel[active][o.id]));
+        cards[o.id].classList.toggle('truth', shown[active] && tk.pred(o));
+      });
+      notation.textContent = active + ' = ' + (mine.length ? '{ ' + mine.map(function (o) { return '(' + o.k + ', ' + o.g + ')'; }).join(', ') + ' }' : '{ }');
+      var n = M.OUTCOMES.filter(tk.pred).length;
+      count.textContent = mine.length + ' selected' + (shown[active] ? '. The dashed outline marks event ' + active + ': ' + n + ' outcomes.' : '.');
+      if (shown.A || shown.B || shown.C) showChanged(f, 'An event is a set of outcomes, a subset of the 15. The next steps use A, B and C.');
+      else hideChanged(f);
+    }
+    return { open: function () { reset(); render(); }, f: f };
+  })();
+
+  /* ---------- 3 · Lean ---------- */
+  var F2 = (function () {
+    var f = stage(2, 'click a side');
+    f.h2.textContent = 'Every outcome is 1/15 only if the keeper dives at random.';
+    para(f.text, 'note', 'Real keepers lean. Each outcome’s area is its probability.');
+    var picked = 'TR,R';
+    var mz = mosaic(f.visual, 2, { clickable: true, icons: true, onCell: function (id) { picked = id; render(); } });
+    var hf = hero(f.text, 'f2-hero');
+    var lean = leanPanel(f.controls, 2, function () {
+      render();
+      showChanged(f, 'An outcome’s probability is P(shot) times P(dive). The keeper commits before seeing the ball, so the dive probabilities are the same in every row.');
+    }, { kicker: true });
+    var rand = S.rand, busy = false;
+    var a = act(f.readout, 2, 'Take 40 kicks', 'kicks land in proportion to area', 'Clear the kicks', drop, function () { mz.dots.textContent = ''; tally.textContent = ''; });
+    var tally = para(f.readout, 'gsub', ''); tally.id = 'f2-tally';
+    function m() { var w = lean.get(); return M.Model(w.kw, w.gw); }
+    function shade(model) {
+      return function (o) { var L = Math.max(62, 97 - 230 * val(model.pOutcome(o))); return 'hsl(22, 80%, ' + L.toFixed(1) + '%)'; };
+    }
+    function render() {
+      var model = m(), o = M.OUTCOMES.filter(function (x) { return x.id === picked; })[0];
+      mz.render(model, function (x) { return x.id === picked ? 'picked' : ''; }, function (x) { return pOut(model, x); }, shade(model));
+      M.OUTCOMES.forEach(function (x) { mz.cells[x.id].el.setAttribute('aria-pressed', String(x.id === picked)); });
+      hf.innerHTML = fline([mP('<mi>' + o.k + '</mi><mo>,</mo><mi>' + o.g + '</mi>'), op('='), mP('<mi>' + o.k + '</mi>'), op('×'), mP('<mi>' + o.g + '</mi>')]) +
+        fline([op('='), mf(model.pk[o.k]), op('×'), mf(model.pg[o.g]), op('='), '<span class="ans">' + mf(model.pOutcome(o)) + '</span>']);
+      hf.dataset.value = str(model.pk[o.k]) + ' x ' + str(model.pg[o.g]) + ' = ' + str(model.pOutcome(o));
+      tally.textContent = '';
+      a.reset();
+    }
+    /* Each kick is drawn from the current model and lands at a random point inside its outcome. */
+    function drop() {
+      if (busy) return; busy = true;
+      var model = m(), cum = [], acc = 0;
+      M.OUTCOMES.forEach(function (o) { acc += val(model.pOutcome(o)); cum.push(acc); });
+      var wr = mz.wrap.getBoundingClientRect(), colCount = { L: 0, C: 0, R: 0 }, N = 40, i = 0;
+      mz.dots.textContent = '';
+      function one() {
+        var u = rand(), j = 0; while (j < cum.length - 1 && u >= cum[j]) j++;
+        var o = M.OUTCOMES[j], r = mz.cells[o.id].el.getBoundingClientRect();
+        var d = h('span', 'mdot');
+        d.style.left = (r.left - wr.left + 5 + rand() * Math.max(1, r.width - 10)).toFixed(1) + 'px';
+        d.style.top = (r.top - wr.top + 5 + rand() * Math.max(1, r.height - 10)).toFixed(1) + 'px';
+        mz.dots.appendChild(d);
+        colCount[o.g]++;
+      }
+      function finish() {
+        tally.textContent = 'Of 40 kicks: dive left ' + colCount.L + ', center ' + colCount.C + ', right ' + colCount.R +
+          '. Wider columns catch more kicks (P = ' + str(model.pg.L) + ', ' + str(model.pg.C) + ', ' + str(model.pg.R) + ').';
+        busy = false;
+      }
+      if (instant) { for (; i < N; i++) one(); finish(); return; }
+      (function step() { one(); i++; if (i < N) setTimeout(step, 22); else finish(); })();
+    }
+    return { open: function () { picked = 'TR,R'; lean.open(); render(); }, f: f };
+  })();
+
+  /* ---------- 4 · Count ---------- */
+  var F3 = (function () {
+    var f = stage(3, 'click a side');
+    f.h2.textContent = 'Counting says P(save) = 5/15.';
+    para(f.text, 'note', 'That assumes every outcome is equally likely. Make the keeper lean and compare the two answers.');
+    var mz = mosaic(f.visual, 3, {});
+    var hf = hero(f.text, 'f3-hero');
+    var lean = leanPanel(f.controls, 3, function () { render(); });
+    linkTerms(f, mz);
+    function render() {
+      var w = lean.get(), model = M.Model(w.kw, w.gw), pA = model.P(E.save), differs = !M.eq(pA, M.F(1, 3));
+      mz.render(model, function (o) { return o.save ? 'is-save' : 'is-goal'; }, function (o) { return pOut(model, o); });
+      var terms = [];
+      M.OUTCOMES.filter(E.save).forEach(function (o, i) { if (i) terms.push(op('+')); terms.push(mf(model.pOutcome(o))); });
+      hf.innerHTML =
+        fline(['<span class="flabel">Count</span>', '<math><mfrac><mn>5</mn><mn>15</mn></mfrac></math>', op('='), '<span class="ans">' + mf(M.F(1, 3)) + '</span>'], 'count') +
+        fline(['<span class="flabel">Add</span>', term('A'), op('=')].concat(terms).concat([op('='), '<span class="ans' + (differs ? ' hl' : '') + '">' + mf(pA) + '</span>']), 'sum') +
+        fline([mP('<mtext>goal</mtext>'), op('='), '<math><mn>1</mn><mo>&#x2212;</mo></math>', term('A'), op('='), mf(M.sub(M.F(1), pA))], 'dim');
+      hf.dataset.value = str(pA);
+      if (differs) showChanged(f, 'Counting is a shortcut for equally likely outcomes. Adding the outcomes’ probabilities always works.');
+    }
+    return { open: function () { lean.open(); render(); }, f: f };
+  })();
+
+  /* ---------- 5 · Union ---------- */
+  var F4 = (function () {
+    var f = stage(4);
+    f.h2.textContent = 'Adding P(B) and P(C) counts two outcomes twice.';
+    para(f.text, 'note', 'B: the kicker shoots right. C: the keeper dives right. Hover a term to see its outcomes.');
+    var mz = mosaic(f.visual, 4, {});
+    var hf = hero(f.text, 'f4-hero');
+    var fixed = false;
+    var a = act(f.controls, 4, 'Subtract the overlap', 'inclusion-exclusion', 'Add them again',
+      function () {
+        fixed = true; lean.box.hidden = false; render();
+        showChanged(f, 'Adding counts the overlap twice, so take it away once: P(B ∪ C) = P(B) + P(C) − P(B ∩ C).');
+      }, function () { fixed = false; render(); hideChanged(f); });
+    var lean = leanPanel(f.controls, 4, function () { render(); }, { note: 'Try a leaning keeper' });
+    linkTerms(f, mz);
+    function render() {
+      var w = lean.get(), model = M.Model(w.kw, w.gw);
+      mz.render(model, function (o) {
+        var c = [];
+        if (B(o)) c.push('in-B'); if (C(o)) c.push('in-C');
+        if (EV.BC(o)) c.push(fixed ? 'once' : 'twice');
+        return c.join(' ');
+      }, function (o) { return pOut(model, o); });
+      var pB = model.P(B), pC = model.P(C), pBC = model.P(EV.BC), pU = model.P(EV.U), sum = M.add(pB, pC);
+      var lines = [fline([term('B'), op('+'), term('C'), op('='), mf(pB), op('+'), mf(pC), op('='), '<span class="ans' + (fixed ? '' : ' over') + '">' + mf(sum) + '</span>'], fixed ? 'dim' : '')];
+      if (!fixed) lines.push('<p class="fnote problem">The shaded outcomes only add up to ' + mf(pU) + '. Two of them were counted twice.</p>');
+      else lines.push(fline([term('U'), op('='), term('B'), op('+'), term('C'), op('−'), term('BC')]),
+        fline([op('='), mf(pB), op('+'), mf(pC), op('−'), mf(pBC), op('='), '<span class="ans">' + mf(pU) + '</span>']));
+      hf.innerHTML = lines.join('');
+      hf.dataset.value = fixed ? str(pU) : str(sum) + ' vs ' + str(pU);
+    }
+    return { open: function () { fixed = false; a.reset(); lean.open(); lean.box.hidden = true; render(); }, f: f };
+  })();
+
+  /* ---------- 6 · Neither ---------- */
+  var F5 = (function () {
+    var f = stage(5);
+    f.h2.textContent = 'Which outcomes are in neither B nor C?';
+    para(f.text, 'note', 'B ∪ C is shaded. Way 1 takes the union away from 1. Way 2 never builds the union.');
+    var mz = mosaic(f.visual, 5, {});
+    var hf = hero(f.text, 'f5-hero');
+    var on = { B: false, C: false };
+    var a = act(f.controls, 5, 'Mark what is outside each event', 'complements, then their overlap', 'Show the union again',
+      function () {
+        on.B = true; render();
+        function second() {
+          if (!on.B) return;
+          on.C = true; lean.box.hidden = false; render();
+          showChanged(f, 'Not (B or C) is the same set as not B and not C: (B ∪ C)ᶜ = Bᶜ ∩ Cᶜ. The six outlined outcomes are exactly the unshaded ones.');
+        }
+        if (instant) second(); else setTimeout(second, 600);
+      }, function () { on = { B: false, C: false }; render(); hideChanged(f); });
+    var lean = leanPanel(f.controls, 5, function () { render(); }, { note: 'Try a leaning keeper' });
+    linkTerms(f, mz);
+    function render() {
+      var w = lean.get(), model = M.Model(w.kw, w.gw), both = on.B && on.C;
+      mz.render(model, function (o) {
+        var c = [];
+        if (EV.U(o)) c.push('in-union');
+        if (on.B && !B(o)) c.push('in-notB');
+        if (on.C && !C(o)) c.push('in-notC');
+        if (both && EV.N(o)) c.push('outlined');
+        return c.join(' ');
+      }, function (o) { return pOut(model, o); });
+      var pU = model.P(EV.U), pN = model.P(EV.N), l = M.sub(M.F(1), pU);
+      var lines = [fline(['<span class="flabel">Way 1</span>', '<math><mn>1</mn><mo>&#x2212;</mo></math>', term('U'), op('='), '<math><mn>1</mn><mo>&#x2212;</mo></math>', mf(pU), op('='), '<span class="ans">' + mf(l) + '</span>'])];
+      if (both) lines.push(fline(['<span class="flabel">Way 2</span>', term('N'), op('='), '<span class="ans">' + mf(pN) + '</span>']));
+      else if (on.B) lines.push('<p class="fnote">Not B marks 9 outcomes. Not C comes next.</p>');
+      hf.innerHTML = lines.join('');
+      hf.dataset.value = str(l) + (both ? ' = ' + str(pN) : '');
+    }
+    return { open: function () { on = { B: false, C: false }; a.reset(); lean.open(); lean.box.hidden = true; render(); }, f: f };
+  })();
+
+  /* ---------- 7 · Condition ---------- */
+  var F6 = (function () {
+    var f = stage(6);
+    f.h2.textContent = 'The ball is in the net. Did the kicker shoot right?';
+    para(f.text, 'note', 'Before the kick, P(B) = 2/5. Predict: is a right-side shot now more likely, or less?');
+    var mz = mosaic(f.visual, 6, {});
+    var hf = hero(f.text, 'f6-hero');
+    var cond = false;
+    var a = act(f.controls, 6, 'Keep only the goals', 'conditioning', 'Show every outcome again',
+      function () {
+        cond = true; lean.box.hidden = false; render();
+        showChanged(f, 'Knowing it’s a goal removes the saves and rescales the rest. With an even keeper P(B) stays 2/5; make the keeper lean right and it drops.');
+      }, function () { cond = false; render(); hideChanged(f); });
+    var lean = leanPanel(f.controls, 6, function () { render(); }, { note: 'Try a leaning keeper' });
+    linkTerms(f, mz);
+    function render() {
+      var w = lean.get(), model = M.Model(w.kw, w.gw), pG = model.P(G), pB = model.P(B), pBG = model.P(EV.BG);
+      mz.render(model, function (o) {
+        var c = [o.save ? 'is-save' : 'is-goal'];
+        if (cond && o.save) c.push('faded');
+        if (B(o) && (!cond || !o.save)) c.push('in-B');
+        return c.join(' ');
+      }, function (o) { return !cond ? pOut(model, o) : o.save ? '0' : str(M.div(model.pOutcome(o), pG)); });
+      var lines = [fline(['<span class="flabel">Before</span>', term('B'), op('='), mf(pB)], cond ? 'dim' : '')];
+      if (cond) {
+        var r = M.div(pBG, pG);
+        lines.push(fline(['<span class="flabel">After</span>', '<span class="term t-BG" tabindex="0" data-ev="BG">' + mP(MI.BgG) + '</span>', op('='), term('BG'), op('÷'), term('G')]),
+          fline([op('='), mf(pBG), op('÷'), mf(pG), op('='), '<span class="ans">' + mf(r) + '</span>']));
+        hf.dataset.value = str(r);
+      } else hf.dataset.value = str(pB);
+      hf.innerHTML = lines.join('');
+    }
+    return { open: function () { cond = false; a.reset(); lean.open(); lean.box.hidden = true; render(); }, f: f };
+  })();
+
+  /* ---------- 8 · Reverse ---------- */
+  var F7 = (function () {
+    var f = stage(7);
+    f.h2.textContent = 'You saw a goal, not the shot. Where did it go?';
+    para(f.text, 'note', 'The tree runs from shot to goal. The question runs the other way.');
+    var scene = el('svg', { viewBox: '0 0 300 120', 'class': 'mini-scene', role: 'img', 'aria-label': 'A goal with the net bulging and the shot hidden' });
+    el('rect', { x: 40, y: 14, width: 220, height: 90, 'class': 'lean-goal' }, scene);
+    for (var x = 40; x <= 260; x += 20) el('line', { x1: x, y1: 14, x2: x + (x - 150) * 0.03, y2: 104, 'class': 'netline' }, scene);
+    var q = el('text', { x: 150, y: 74, 'text-anchor': 'middle', 'class': 'hidden-q' }, scene); q.textContent = '?';
+    f.visual.appendChild(scene);
+    var tree = h('div', 'tree'); tree.id = 'f7-tree'; f.visual.appendChild(tree);
+    var rev = false;
+    var total = para(f.readout, 'formula', ''), chip = para(f.readout, 'formula strong', '');
+    total.id = 'f7-total'; chip.id = 'f7-compare';
+    var a = act(f.controls, 7, 'Reverse the tree', 'Bayes’ rule', 'Run the tree forward again',
+      function () {
+        rev = true; lean.box.hidden = false; render();
+        showChanged(f, 'Bayes’ rule is the same restriction as the last step, organized from the tree: multiplication rule on top, total probability below.');
+        rc.hidden = false;
+      }, function () { rev = false; render(); hideChanged(f); rc.hidden = true; });
+    var lean = leanPanel(f.controls, 7, function () { render(); }, { note: 'Try a leaning keeper' });
+    var rc = recap(); rc.hidden = true; f.sec.appendChild(rc);
+    function recap() {
+      var r = h('div', 'recap'); r.id = 'recap';
+      [['Kick', '15 outcomes'], ['Events', 'sets of outcomes'], ['Lean', 'P(shot) × P(dive)'], ['Count', 'only if equally likely'],
+        ['Union', 'subtract the overlap'], ['Neither', 'not B and not C'], ['Condition', 'keep the goals, rescale'], ['Reverse', 'Bayes’ rule']].forEach(function (x, i) {
+        var d = h('div'); d.dataset.tone = TONE[i]; d.appendChild(h('b', '', x[0])); d.appendChild(document.createTextNode(x[1])); r.appendChild(d);
+      });
+      return r;
+    }
+    function bar(v, cls) { var b = h('span', 'tbar ' + cls); b.style.width = (val(v) * 100).toFixed(2) + '%'; return b; }
+    function render() {
+      var w = lean.get(), m = M.Model(w.kw, w.gw), b = m.bayesSidesGivenGoal();
+      tree.innerHTML = '';
+      var head = h('div', 'trow thead');
+      ['Shot side', 'P(side)', '× P(goal | side)', '= both', rev ? 'P(side | goal)' : ''].forEach(function (x) { head.appendChild(h('span', 'head', x)); });
+      tree.appendChild(head);
+      M.G.forEach(function (s) {
+        var r = h('div', 'trow'); r.id = 'f7-row-' + s;
+        r.appendChild(h('span', 'tname', LANE_NAME[s]));
+        var c1 = h('span', 'tcell'); c1.appendChild(bar(b.prior[s], 'prior')); c1.appendChild(h('span', 'tval', str(b.prior[s]))); r.appendChild(c1);
+        r.appendChild(h('span', 'tcell tval', str(b.lik[s])));
+        var c3 = h('span', 'tcell' + (rev ? ' lit' : '')); c3.appendChild(bar(b.joint[s], 'joint')); c3.appendChild(h('span', 'tval', str(b.joint[s]))); r.appendChild(c3);
+        var c4 = h('span', 'tcell');
+        if (rev) { c4.appendChild(bar(b.post[s], 'post')); c4.appendChild(h('span', 'tval post-val', str(b.post[s]))); }
+        r.appendChild(c4);
+        tree.appendChild(r);
+      });
+      total.textContent = 'P(goal) = ' + M.G.map(function (s) { return str(b.joint[s]); }).join(' + ') + ' = ' + str(b.total) + (rev ? ' (total probability, the denominator)' : '');
+      chip.hidden = !rev;
+      chip.textContent = 'Restrict to goals: P(right | goal) = ' + str(m.cond(B, G)) + '. Bayes’ rule: ' + str(b.post.R) + '.';
+    }
+    return { open: function () { rev = false; a.reset(); rc.hidden = true; lean.open(); lean.box.hidden = true; render(); }, f: f };
+  })();
+
+  /* ---------- Steps bar and pager ---------- */
+  var FRAMES = { 1: F1, 2: F2, 3: F3, 4: F4, 5: F5, 6: F6, 7: F7 };
+  var current = 0, LAST = 7;
+  function showFrame(n, focus) {
+    n = +n;
+    document.querySelectorAll('main section.stage').forEach(function (s) { s.hidden = s.id !== 'frame-' + n; });
+    document.querySelectorAll('.step').forEach(function (b) {
+      b.setAttribute('aria-selected', String(+b.dataset.frame === n));
+      b.tabIndex = +b.dataset.frame === n ? 0 : -1;
+    });
+    if (FRAMES[n]) { hideChanged(FRAMES[n].f); FRAMES[n].open(); }
+    current = n;
+    $('prev').disabled = n === 0;
+    $('next').disabled = n === LAST;
+    $('pcount').textContent = (n + 1) + ' of ' + (LAST + 1);
+    $('next-label').textContent = n === LAST ? 'Next ' : 'Next: ' + STEP_NAME[n + 1] + ' ';
+    if (focus) { var t = $('f' + n + '-title'); if (t) t.focus(); }
+  }
+  document.querySelectorAll('.step').forEach(function (b) {
+    b.addEventListener('click', function () { showFrame(b.dataset.frame, true); });
+    b.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var n = Math.max(0, Math.min(LAST, current + d));
+      showFrame(n); document.getElementById('tab-' + n).focus();
+    });
+  });
+  $('prev').addEventListener('click', function () { if (current > 0) showFrame(current - 1, true); });
+  $('next').addEventListener('click', function () { if (current < LAST) showFrame(current + 1, true); });
+  var start = new URLSearchParams(location.search).get('frame');
+  showFrame(start && FRAMES[start] ? start : 0);
+  window.__pkFrames = { show: showFrame, frames: FRAMES, current: function () { return current; } };
+})();
+</script>
+</body>
+</html>
