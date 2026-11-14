@@ -63,14 +63,10 @@ math { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; 
 .pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
 .pager button { min-height: 46px; padding: 8px 14px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 15px; }
 .pcount { color: var(--muted); font-size: 13px; }
-.recap { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; margin: 10px 0 0; }
-.recap div { padding: 8px 6px; border-top: 4px solid var(--tone); background: var(--wash); font: 12.5px/1.3 Arial, sans-serif; text-align: center; }
-.recap b { display: block; color: var(--tone); }
 @media (max-width: 620px) {
   .steps { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .stage { padding: 15px 11px; }
   .changed { font-size: 16px; }
-  .recap { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .pager .wide { display: none; }
 }
 
@@ -199,16 +195,24 @@ math { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; 
 .fstage { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "text" "visual" "controls" "readout" "changed"; column-gap: 18px; }
 .f-text { grid-area: text; } .f-visual { grid-area: visual; margin: 4px 0 8px; } .f-controls { grid-area: controls; }
 .f-readout { grid-area: readout; margin-top: 6px; } .f-changed { grid-area: changed; }
+.f-left, .f-right { display: contents; }
 @media (min-width: 820px) {
-  .fstage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "head head" "visual text" "visual controls" "readout changed"; grid-template-rows: auto auto 1fr auto; align-items: start; }
+  .fstage { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); grid-template-areas: "head head" "left right"; grid-template-rows: auto 1fr; align-items: start; }
+  .f-left { display: block; grid-area: left; }
+  .f-right { display: block; grid-area: right; }
   .f-visual { margin: 0; }
+  .f-left .f-changed { margin: 8px 0 0; padding: 10px 14px; font-size: 16px; line-height: 1.38; }
+  /* Every step is the size of step 2 (Events) once its "What changed" shows, 560 px at 880 (Cody,
+     2026-11-14), so the pager stays put between steps. */
+  main section.stage { min-height: var(--frame-h, 560px); }
 }
 h2:focus { outline: none; }
 .fstage .lead { font-size: 1.02rem; }
 .next { margin-top: 4px; }
 
 /* Frame 1 cards and chips */
-.ecards { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)); gap: 4px; }
+.ecards { display: grid; grid-template-columns: 26px repeat(3, minmax(0, 1fr)); gap: 4px; max-width: 350px; }
+.f-visual .ecap { max-width: 350px; }
 .ecards .colhead, .ecards .rowhead { font-size: 0.78rem; }
 .ecards .rowhead { font-weight: 600; }
 .ecard { position: relative; font: inherit; border: 2px solid var(--line); border-radius: 6px; background: #fff; padding: 2px 2px 1px; cursor: pointer; display: flex; flex-direction: column; align-items: center; }
@@ -244,7 +248,8 @@ h2:focus { outline: none; }
 .lean-spot-c { fill: #fff; stroke: #8a97a3; stroke-width: 2; stroke-dasharray: 4 3; }
 .lean-spot:hover .lean-spot-c, .lean-spot:focus-visible .lean-spot-c { fill: rgba(47, 111, 219, 0.12); stroke: var(--hl); stroke-dasharray: none; }
 .lean-spot-t { font-size: 13px; font-weight: 600; fill: var(--muted); }
-.lean-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.lean-buttons { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
+.lean-strip:not(.kick-strip) { max-width: 280px; }
 .small { font: inherit; font-size: 0.8rem; padding: 3px 10px; border: 1px solid var(--ink); border-radius: 6px; background: #fff; color: var(--ink); cursor: pointer; }
 .action:disabled { opacity: 0.5; cursor: default; }
 .action.toggle { background: #fff; color: var(--ink); }
@@ -302,7 +307,6 @@ button.mcell { cursor: pointer; }
 .tcell .tval { position: relative; padding-left: 5px; font-weight: 600; }
 .tcell.lit { outline: 2px solid var(--goal-ink); }
 @media (max-width: 520px) {
-  .mosaic { height: 320px; }
   .trow { grid-template-columns: 44px minmax(0, 1fr) 50px minmax(0, 1fr) minmax(0, 1fr); font-size: 0.74rem; }
   .two { grid-template-columns: 1fr; }
 }
@@ -316,7 +320,7 @@ button.mcell { cursor: pointer; }
 .evtab[aria-pressed="true"] { background: var(--ink); color: #fff; }
 .evtab.done::after { content: " \2713"; }
 .evtab:focus-visible { outline: 3px solid var(--hl); outline-offset: 2px; }
-.ecap { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 4px; }
+.ecap { text-align: center; font-size: 0.8rem; color: var(--muted); margin-bottom: 2px; }
 .ecard.truth { outline: 3px dashed var(--save-ink); outline-offset: -1px; }
 
 /* Formula block: the frame's main readout */
@@ -347,20 +351,25 @@ button.mcell { cursor: pointer; }
 .mosaic-wrap { position: relative; }
 .mosaic { transition: grid-template-columns 380ms ease, grid-template-rows 380ms ease; }
 .with-icons .mosaic-cap { margin-left: 46px; }
-.with-icons .mosaic { height: 370px; }
-.mhead { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.with-icons .mosaic { height: 310px; }
+.with-icons .head-crab { width: 30px; height: 29px; }
+.mhead { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; line-height: 1.1; }
+.mcorner.head { align-self: end; font-size: 10px; padding-bottom: 2px; }
+
+/* Grids in steps 3-7 match step 2's card grid at most */
+.mosaic-wrap { max-width: 350px; }
 .head-crab { width: 38px; height: 37px; }
 .mrow { gap: 3px; }
 .head-ball { width: 22px; height: 15px; flex: none; }
 .mdots { position: absolute; inset: 0; pointer-events: none; }
-.mdot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: #fff; border: 2px solid var(--ink); animation: drop 240ms ease-out; }
+/* Kicks are tally dots, not balls: the grid is the outcome space, not the net. */
+.mdot { position: absolute; width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; border-radius: 50%; background: var(--ink); opacity: 0.8; animation: drop 240ms ease-out; }
 @keyframes drop { from { transform: scale(2.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 .instant .mdot { animation: none; }
 .instant .mosaic { transition: none; }
 @media (prefers-reduced-motion: reduce) { .mdot { animation: none; } .mosaic { transition: none; } }
 @media (max-width: 520px) {
   .fline { font-size: 1rem; }
-  .with-icons .mosaic { height: 340px; }
 }
 
 .again.small { min-height: 34px; padding: 4px 10px; font-size: 13px; }
@@ -1000,7 +1009,13 @@ button.mcell { cursor: pointer; }
     head.appendChild(kick); head.appendChild(h2);
     readout.setAttribute('aria-live', 'polite');
     changed.hidden = true; changed.id = 'f' + n + '-changed';
-    [head, text, visual, controls, readout, changed].forEach(function (x) { sec.appendChild(x); });
+    /* Two columns on wide screens: the visual with "What changed" under it, and the
+       text, controls and readout beside them, each flowing on its own. The wrappers
+       are display: contents below 820 px, so the stacked order is unchanged. */
+    var left = h('div', 'f-left'), right = h('div', 'f-right');
+    left.appendChild(visual); left.appendChild(changed);
+    [text, controls, readout].forEach(function (x) { right.appendChild(x); });
+    [head, left, right].forEach(function (x) { sec.appendChild(x); });
     $('frames-rest').appendChild(sec);
     return { sec: sec, h2: h2, text: text, visual: visual, controls: controls, readout: readout, changed: changed };
   }
@@ -1131,17 +1146,20 @@ button.mcell { cursor: pointer; }
     el('circle', { cx: 2 + (S.SPOT[k][0] - 100) / 400 * 36, cy: 2 + (S.SPOT[k][1] - 60) / 220 * 20, r: 3.6, 'class': 'mini-ball' }, s);
     return s;
   }
+  /* Mosaic sized to step 2's card grid at most (Cody, 2026-11-14): pictures sit in the
+     headers (crab dive poses over the columns, ball spots beside the rows), and each
+     cell keeps its (shot, dive) pair and value. */
   function mosaic(parent, n, opts) {
-    var wrap = h('div', 'mosaic-wrap' + (opts.icons ? ' with-icons' : ''));
+    var wrap = h('div', 'mosaic-wrap with-icons');
     wrap.appendChild(h('div', 'head mosaic-cap', "Keeper's dive"));
     var grid = h('div', 'mosaic'); grid.setAttribute('role', 'table');
     grid.setAttribute('aria-label', "Outcomes sized by probability: kicker's shot by keeper's dive");
     var heads = {}, rows = {}, cells = {};
     var hr = h('div'); hr.setAttribute('role', 'row'); hr.style.display = 'contents';
-    hr.appendChild(h('div', 'mcorner'));
+    hr.appendChild(h('div', 'mcorner head', 'Shot'));
     M.G.forEach(function (g) {
       var c = h('div', 'mhead'); c.setAttribute('role', 'columnheader');
-      if (opts.icons) c.appendChild(crabIcon(g));
+      c.appendChild(crabIcon(g));
       var t = h('span', 'mhead-t'); c.appendChild(t);
       heads[g] = t; hr.appendChild(c);
     });
@@ -1149,7 +1167,7 @@ button.mcell { cursor: pointer; }
     M.K.forEach(function (k) {
       var r = h('div'); r.setAttribute('role', 'row'); r.style.display = 'contents';
       var rh = h('div', 'mrow'); rh.setAttribute('role', 'rowheader');
-      if (opts.icons) rh.appendChild(ballIcon(k));
+      rh.appendChild(ballIcon(k));
       var rt = h('span', 'mrow-t'); rh.appendChild(rt);
       rows[k] = rt; r.appendChild(rh);
       M.G.forEach(function (g) {
@@ -1168,13 +1186,17 @@ button.mcell { cursor: pointer; }
     wrap.appendChild(grid);
     var dots = h('div', 'mdots'); dots.setAttribute('aria-hidden', 'true'); wrap.appendChild(dots);
     parent.appendChild(wrap);
-    var headH = opts.icons ? '54px' : '20px', rowW = opts.icons ? '46px' : '30px';
+    var headH = '62px', rowW = '46px';
     return {
       cells: cells, grid: grid, wrap: wrap, dots: dots,
       render: function (m, classes, label, shade) {
         grid.style.gridTemplateColumns = rowW + ' ' + M.G.map(function (g) { return val(m.pg[g]).toFixed(5) + 'fr'; }).join(' ');
         grid.style.gridTemplateRows = headH + ' ' + M.K.map(function (k) { return val(m.pk[k]).toFixed(5) + 'fr'; }).join(' ');
-        M.G.forEach(function (g) { heads[g].textContent = g + ' ' + str(m.pg[g]); });
+        M.G.forEach(function (g) {
+          var narrow = val(m.pg[g]) < 0.2;
+          heads[g].innerHTML = (narrow ? g : LANE_NAME[g]) + '<br>' + str(m.pg[g]);
+          heads[g].parentNode.title = 'Keeper dives ' + M.G_NAME[g] + ', ' + str(m.pg[g]);
+        });
         M.K.forEach(function (k) { rows[k].textContent = k; rows[k].parentNode.title = M.K_NAME[k] + ', ' + str(m.pk[k]); });
         M.OUTCOMES.forEach(function (o) {
           var c = cells[o.id], cls = classes(o);
@@ -1183,9 +1205,11 @@ button.mcell { cursor: pointer; }
           c.val.textContent = t;
           c.el.style.backgroundColor = shade ? shade(o) : '';
           c.el.setAttribute('aria-label', '(' + o.k + ', ' + o.g + ') ' + (o.save ? 'save' : 'goal') + ', ' + t);
-          var area = val(m.pk[o.k]) * val(m.pg[o.g]);
-          c.el.classList.toggle('tight', area < 0.045);
-          c.el.classList.toggle('tiny', area < 0.02);
+          /* Cells span about 300 x 270 px: the pair needs about 26 px of height and
+             44 px of width, the value about 15 and 26. */
+          var pk = val(m.pk[o.k]), pg = val(m.pg[o.g]);
+          c.el.classList.toggle('tight', pk < 0.1 || pg < 0.15);
+          c.el.classList.toggle('tiny', pk < 0.06 || pg < 0.09);
         });
         dots.textContent = '';
       },
@@ -1225,9 +1249,8 @@ button.mcell { cursor: pointer; }
         var b = h('button', 'ecard'); b.type = 'button'; b.id = 'e-' + k + '-' + g;
         b.setAttribute('aria-pressed', 'false');
         b.setAttribute('aria-label', '(' + k + ', ' + g + '): shot ' + M.K_NAME[k] + ', keeper dives ' + M.G_NAME[g]);
-        var art = S.mini(k, g); art.setAttribute('viewBox', '0 2 100 54');
+        var art = S.mini(k, g); art.setAttribute('viewBox', '0 3 100 49');
         b.appendChild(art);
-        b.appendChild(h('span', 'pair', '(' + k + ', ' + g + ')'));
         b.appendChild(h('span', 'tick', '✓'));
         b.addEventListener('click', function () { sel[active][k + ',' + g] = !sel[active][k + ',' + g]; render(); });
         cards[k + ',' + g] = b; grid.appendChild(b);
@@ -1267,7 +1290,7 @@ button.mcell { cursor: pointer; }
     f.h2.textContent = 'Every outcome is 1/15 only if the keeper picks at random.';
     para(f.text, 'note', 'A real keeper often favors one side, diving there more than elsewhere. Each outcome’s area is its probability.');
     var picked = 'TR,R';
-    var mz = mosaic(f.visual, 2, { clickable: true, icons: true, onCell: function (id) { picked = id; render(); } });
+    var mz = mosaic(f.visual, 2, { clickable: true, onCell: function (id) { picked = id; render(); } });
     var hf = hero(f.text, 'f2-hero');
     var lean = leanPanel(f.controls, 2, function () {
       render();
@@ -1277,8 +1300,10 @@ button.mcell { cursor: pointer; }
     var a = act(f.readout, 2, 'Take 40 kicks', 'kicks land in proportion to area', 'Clear the kicks', drop, function () { mz.dots.textContent = ''; tally.textContent = ''; });
     var tally = para(f.readout, 'gsub', ''); tally.id = 'f2-tally';
     function m() { var w = lean.get(); return M.Model(w.kw, w.gw); }
+    /* A pale orange, deeper where an outcome is more likely (Cody, 2026-11-14):
+       light enough to read, and unlike green or blue it means nothing later on. */
     function shade(model) {
-      return function (o) { var L = Math.max(62, 97 - 230 * val(model.pOutcome(o))); return 'hsl(22, 80%, ' + L.toFixed(1) + '%)'; };
+      return function (o) { var L = Math.max(86, 97.5 - 110 * val(model.pOutcome(o))); return 'hsl(30, 90%, ' + L.toFixed(1) + '%)'; };
     }
     function render() {
       var model = m(), o = M.OUTCOMES.filter(function (x) { return x.id === picked; })[0];
@@ -1307,7 +1332,7 @@ button.mcell { cursor: pointer; }
         colCount[o.g]++;
       }
       function finish() {
-        tally.textContent = 'Of 40 kicks: dive left ' + colCount.L + ', center ' + colCount.C + ', right ' + colCount.R + '. Wider columns catch more.';
+        tally.textContent = 'Each dot is one kick, filed under its (shot, dive) outcome. Of 40 kicks: dive left ' + colCount.L + ', center ' + colCount.C + ', right ' + colCount.R + '. Wider columns catch more.';
         busy = false;
       }
       if (instant) { for (; i < N; i++) one(); finish(); return; }
@@ -1463,18 +1488,8 @@ button.mcell { cursor: pointer; }
       function () {
         rev = true; lean.box.hidden = false; render();
         showChanged(f, 'Bayes’ rule is the same restriction as the last step, organized from the tree: multiplication rule on top, total probability below.');
-        rc.hidden = false;
-      }, function () { rev = false; render(); hideChanged(f); rc.hidden = true; });
+      }, function () { rev = false; render(); hideChanged(f); });
     var lean = leanPanel(f.controls, 7, function () { render(); }, { note: 'Try a keeper who favors a side' });
-    var rc = recap(); rc.hidden = true; f.sec.appendChild(rc);
-    function recap() {
-      var r = h('div', 'recap'); r.id = 'recap';
-      [['Kick', '15 outcomes'], ['Events', 'sets of outcomes'], ['Favor', 'P(shot) × P(dive)'], ['Count', 'only if equally likely'],
-        ['Union', 'subtract the overlap'], ['Neither', 'not B and not C'], ['Condition', 'keep the goals, rescale'], ['Reverse', 'Bayes’ rule']].forEach(function (x, i) {
-        var d = h('div'); d.dataset.tone = TONE[i]; d.appendChild(h('b', '', x[0])); d.appendChild(document.createTextNode(x[1])); r.appendChild(d);
-      });
-      return r;
-    }
     /* A two-stage tree: the kick splits by shot side (P(side)), each side splits
        off its goal branch (P(goal | side)), and each leaf holds the product. Reversing
        divides each leaf by their total, P(goal). */
@@ -1516,7 +1531,7 @@ button.mcell { cursor: pointer; }
       chip.hidden = !rev;
       chip.textContent = 'Restrict to goals: P(right | goal) = ' + str(m.cond(B, G)) + '. Bayes’ rule: ' + str(b.post.R) + '.';
     }
-    return { open: function () { rev = false; a.reset(); rc.hidden = true; lean.open(); lean.box.hidden = true; render(); }, f: f };
+    return { open: function () { rev = false; a.reset(); lean.open(); lean.box.hidden = true; render(); }, f: f };
   })();
 
   /* ---------- Steps bar and pager ---------- */
