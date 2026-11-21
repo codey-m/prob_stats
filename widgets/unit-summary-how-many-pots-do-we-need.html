@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How many pots do we need?</title>
+<style>
+/* House synthesis style, shared with the penalty-kick page and the CV/NLP and Deep
+   Learning unit summaries. Green always means a success and blue a miss, on every step. */
+:root {
+  --ink: #1d292b; --muted: #5a676a; --line: #cfd7d5; --paper: #f7f8f5; --panel: #ffffff;
+  --a: #a31f34; --bad: #7d2a33;
+  --win: #2ead4a; --win-ink: #1b6e2f; --win-bg: #e4f5e8;
+  --miss: #2f6fdb; --miss-ink: #1f4fa8; --miss-bg: #e6eefc;
+  --hl: #8a5f00;
+  --pot: #b8714f; --pot-dark: #8a4d31; --soil: #5b3b22; --stem: #3f8a3a; --petal: #f2c230; --petal-dark: #a8790c; --seedc: #6a3818;
+  --old: #8a6a3a; --new: #6b3fa0;
+  color-scheme: light;
+}
+[data-tone="plant"] { --tone: #9a5b00; --wash: #fff2d9; }
+[data-tone="sprout"] { --tone: #8e3b74; --wash: #f6eaf2; }
+[data-tone="packet"] { --tone: #684a8f; --wash: #f0ebf7; }
+[data-tone="count"] { --tone: #006b68; --wash: #e4f3f1; }
+[data-tone="decide"] { --tone: #7a4a1f; --wash: #f5ece2; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { padding: 18px 16px 26px; font: 16px/1.45 Arial, Helvetica, sans-serif; }
+main { max-width: 840px; margin: auto; padding: 0; --frame-h: 704px; }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
+button:focus-visible, h2:focus-visible { outline: 3px solid #176ca5; outline-offset: 3px; }
+h2:focus { outline: none; }
+.eyebrow { margin: 0 0 3px; color: var(--a); font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+h1 { margin: 0 0 12px; font: 500 clamp(28px, 5vw, 38px)/1.1 Georgia, "Times New Roman", serif; }
+h2 { margin: 0 0 12px; font: 500 clamp(22px, 4vw, 29px)/1.2 Georgia, "Times New Roman", serif; }
+p { margin: 0 0 10px; }
+.head { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+.note { font-size: 16px; }
+.problem { color: var(--bad); font-weight: 600; }
+math { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; math-style: normal; font-size: 1.15em; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Steps, stage, pager */
+.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+.step { display: grid; justify-items: center; gap: 1px; padding: 7px 2px; border: 1px solid var(--line); border-top: 4px solid var(--tone); border-radius: 4px; background: #fff; color: #4a5659; font-size: 13px; }
+.step b { font: 700 12px "Courier New", monospace; color: var(--tone); }
+.step[aria-selected="true"] { background: var(--wash); border-color: var(--tone); color: var(--ink); font-weight: 700; }
+.stage { position: relative; padding: 20px 20px 18px; border: 1px solid var(--line); border-top: 5px solid var(--tone); border-radius: 8px; background: #fff; }
+.kicker { margin: 0 0 2px; color: var(--tone); font: 700 13px "Courier New", monospace; text-transform: uppercase; }
+.kicker .how { margin-left: 10px; color: var(--muted); font: italic 13px Georgia, serif; text-transform: none; }
+.changed { margin: 4px 0 12px; padding: 12px 14px; border-left: 5px solid var(--tone); background: var(--wash); font: 17px/1.42 Georgia, "Times New Roman", serif; }
+.changed p { margin: 0; }
+.changed .head { display: block; margin-bottom: 3px; font-family: Arial, sans-serif; color: var(--tone); }
+.act { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 6px 0 8px; }
+.go { display: inline-grid; justify-items: start; gap: 1px; min-height: 52px; padding: 8px 18px; border: 2px solid var(--tone); border-radius: 7px; background: var(--tone); color: #fff; font-size: 17px; font-weight: 700; text-align: left; }
+.go small { font-size: 12px; font-weight: 400; opacity: 0.85; }
+.again { min-height: 44px; padding: 8px 12px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 14px; }
+.again.small { min-height: 34px; padding: 4px 10px; font-size: 13px; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
+.pager button { min-height: 46px; padding: 8px 14px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 15px; }
+.pcount { color: var(--muted); font-size: 13px; }
+@media (max-width: 620px) {
+  .stage { padding: 15px 11px; }
+  .changed { font-size: 16px; }
+  .pager .wide { display: none; }
+}
+
+/* Two columns from 820 px: the visual with "What changed" under it on the left; text,
+   controls and readout on the right. Below that the wrappers vanish and everything
+   stacks as head, text, visual, controls, readout, changed. */
+.fstage { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "text" "visual" "controls" "readout" "changed"; column-gap: 18px; }
+.f-head { grid-area: head; } .f-text { grid-area: text; } .f-visual { grid-area: visual; margin: 4px 0 8px; }
+.f-controls { grid-area: controls; } .f-readout { grid-area: readout; margin-top: 4px; } .f-changed { grid-area: changed; }
+.f-left, .f-right { display: contents; }
+@media (min-width: 820px) {
+  .fstage { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-areas: "head head" "left right"; grid-template-rows: auto 1fr; align-items: start; }
+  .f-left { display: block; grid-area: left; }
+  .f-right { display: block; grid-area: right; }
+  .f-visual { margin: 0; }
+  .f-left .f-changed { margin: 10px 0 0; padding: 10px 14px; font-size: 16px; line-height: 1.38; }
+  /* Every step keeps one height at this width so the pager stays put. */
+  main section.stage { min-height: var(--frame-h, 676px); }
+}
+/* Action buttons */
+.leap-btn { min-height: 48px; padding: 8px 22px; border: 2px solid var(--tone); border-radius: 7px; background: #fff; color: var(--tone); font-size: 17px; font-weight: 700; }
+.leap-btn:not(:disabled):hover { background: var(--wash); }
+/* Readout */
+.fhero { margin: 6px 0 8px; padding: 8px 10px; background: #f6f8f9; border-radius: 8px; }
+.fline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 1.05rem; margin: 2px 0; }
+.fsum { margin: 6px 0 0; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.fsum .ans { padding: 1px 6px; border-radius: 6px; background: #fbe7b5; font-weight: 700; }
+
+.changed math { font-size: 1.05em; }
+/* Charts */
+.chart { display: block; width: 100%; height: auto; margin-top: 6px; overflow: visible; }
+.c-gridline { stroke: #e3e8e7; stroke-width: 1.5; }
+.c-base { stroke: var(--ink); stroke-width: 2.5; }
+.c-tick { font-size: 16px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.c-title { font-size: 16px; fill: var(--muted); font-weight: 700; }
+.c-x { font-size: 18px; fill: var(--ink); font-weight: 600; }
+.c-val { font-size: 19px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.c-gval { font-size: 17px; font-weight: 700; fill: var(--muted); }
+.c-bar { stroke: var(--ink); stroke-width: 2; }
+.legend { font-size: 14px; color: var(--muted); margin: 0 0 6px; }
+.flabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.fline.dim { font-size: 0.95rem; color: var(--muted); }
+.fsum b { font-variant-numeric: tabular-nums; }
+.rs-cap { margin: 3px 0 0; font-size: 15px; }
+
+/* ---------- Garden pieces: pots and sunflowers, drawn in the family's ink-outline style ---------- */
+.pot-body { fill: var(--pot); stroke: var(--ink); stroke-width: 1.6; stroke-linejoin: round; }
+.pot-rim { fill: var(--pot-dark); stroke: var(--ink); stroke-width: 1.6; }
+.pot-soil { fill: var(--soil); }
+.stem { fill: none; stroke: var(--stem); stroke-width: 2.2; stroke-linecap: round; }
+.leaf { fill: #6fbf5e; stroke: var(--ink); stroke-width: 1; }
+.petal { fill: var(--petal); stroke: var(--petal-dark); stroke-width: 0.8; }
+.seedhead { fill: var(--seedc); stroke: var(--ink); stroke-width: 0.8; }
+.grow { transform-box: fill-box; transform-origin: 50% 100%; animation: grow 380ms ease-out both; }
+@keyframes grow { from { transform: scale(0.2); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.instant .grow { animation: none; }
+@media (prefers-reduced-motion: reduce) { .grow { animation: none; } }
+
+/* Step 1: the board of gardens */
+.plot-bg { fill: #f3efe6; stroke: var(--line); stroke-width: 1.5; }
+.plot.win .plot-bg { fill: var(--win-bg); stroke: #9fd3ac; stroke-width: 2.5; }
+.plot.miss .plot-bg { fill: var(--miss-bg); stroke: #a9c1ee; stroke-width: 2.5; }
+.plot-empty { fill: none; stroke: var(--line); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.tag-bg { stroke: var(--ink); stroke-width: 1.2; }
+.tag-bg.old { fill: #efe4cf; } .tag-bg.new { fill: #ece3f6; }
+.tag-t { font: 700 16px Arial, sans-serif; fill: var(--ink); letter-spacing: 0.04em; }
+.tag-t.old { fill: #5e461f; } .tag-t.new { fill: #4a2a75; }
+.board-empty { font: italic 17px Georgia, serif; fill: var(--muted); }
+.tally-row { display: flex; justify-content: space-between; gap: 10px; }
+
+/* Steps 2-3: outcome grid, one block per packet */
+.ogrid { display: grid; gap: 10px; }
+.pblock { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px 8px; background: #fff; transition: opacity 260ms; }
+.pblock.out .tiles, .pblock.out .share { opacity: 0.3; }
+.phead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 0 0 6px; min-height: 30px; }
+.pname { flex: none; font-weight: 700; font-size: 15px; min-width: 112px; text-align: left; padding: 3px 0; border: 0; background: none; color: var(--ink); }
+button.pname { min-height: 34px; padding: 4px 10px; border: 2px solid #8a9694; border-radius: 6px; background: #fff; }
+button.pname[aria-checked="true"] { border-color: var(--tone); background: var(--wash); }
+.pname small { font-weight: 400; color: var(--muted); }
+.share { flex: 1 1 220px; display: flex; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; font-size: 15px; }
+.share-track { flex: 1; height: 12px; border-radius: 6px; background: #eef1f0; overflow: hidden; }
+.share-fill { display: block; height: 100%; background: var(--tone); transition: width 420ms ease; }
+.share b { min-width: 42px; text-align: right; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.tile { position: relative; display: grid; justify-items: center; gap: 0; padding: 4px 3px 5px; border: 2px solid #dfe5e3; border-radius: 7px; background: #fbfcfb; transition: opacity 260ms; }
+.tile svg { width: 100%; max-width: 60px; height: auto; display: block; }
+.tile .tline { display: flex; align-items: baseline; justify-content: center; gap: 6px; flex-wrap: wrap; }
+.tile .pat { font: 600 12px "Courier New", monospace; color: var(--muted); letter-spacing: 0.08em; }
+.tile .val { font-weight: 700; font-size: 15px; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.tile .bar { width: 100%; height: 6px; border-radius: 3px; background: #eef1f0; overflow: hidden; margin-top: 2px; }
+.tile .bar i { display: block; height: 100%; background: var(--tone); transition: width 420ms ease; }
+.tile.inB { border-color: var(--hl); border-width: 3px; padding: 3px 2px 4px; }
+.tile.gone { opacity: 0.22; }
+.instant .share-fill, .instant .tile .bar i, .instant .tile, .instant .pblock { transition: none; }
+@media (prefers-reduced-motion: reduce) { .share-fill, .tile .bar i, .tile, .pblock { transition: none; } }
+.legend-b { display: inline-block; width: 14px; height: 14px; border: 3px solid var(--hl); border-radius: 4px; vertical-align: -2px; }
+
+/* Step 4: ordered picks, then grouped patterns */
+.pk-toggle { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 8px; }
+.pk-toggle button { min-height: 36px; padding: 5px 11px; border: 1px solid #a4b7b2; border-radius: 4px; background: #fff; color: var(--ink); font-size: 14px; }
+.pk-toggle button[aria-checked="true"] { background: var(--wash); border-color: var(--tone); font-weight: 700; }
+.picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.pick { display: grid; justify-items: center; padding: 5px 4px 6px; border: 2px solid #dfe5e3; border-radius: 8px; background: #fff; }
+.pick svg { width: 100%; max-width: 116px; height: auto; display: block; }
+.pick .lab { font: 700 15px "Courier New", monospace; }
+.badges { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; max-width: 116px; min-height: 18px; }
+.badge { justify-self: center; padding: 0 4px; border-radius: 3px; background: var(--tone); color: #fff; font: 700 13px/18px Arial, sans-serif; }
+.picks.grouped { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.prow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 1fr); align-items: center; gap: 8px; padding: 6px; border: 1px solid var(--line); border-radius: 8px; background: var(--wash); }
+.prow .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.prow .pick { padding: 3px 2px 4px; }
+.prow .pick .lab { font-size: 13px; }
+.prow .ptile { display: grid; justify-items: center; }
+.prow .ptile svg { width: 100%; max-width: 92px; height: auto; }
+.prow .ptile .pat { font: 700 14px "Courier New", monospace; letter-spacing: 0.08em; }
+.prow .wt { font-size: 14px; text-align: center; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.prow .wt b { font-size: 16px; }
+.picks-sum { margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; background: #f6f8f9; font-size: 16px; font-variant-numeric: tabular-nums; }
+.picks-sum b { padding: 1px 6px; border-radius: 6px; background: #fbe7b5; }
+.moving { transition: transform 520ms cubic-bezier(.3,.7,.2,1); }
+@media (max-width: 520px) {
+  .prow { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.5fr) minmax(0, 0.8fr); gap: 5px; padding: 5px 4px; }
+  .prow .wt { font-size: 13px; }
+  .pname { min-width: 0; }
+}
+
+/* Step 5: the chart of P(at least two) against n */
+.nchart { cursor: ew-resize; touch-action: none; outline: none; border-radius: 8px; -webkit-user-select: none; user-select: none; }
+.nchart:focus-visible { outline: 3px solid #176ca5; outline-offset: 2px; }
+.c-target { stroke: var(--a); stroke-width: 2; stroke-dasharray: 6 5; }
+.c-target-lab { font: 700 15px Arial, sans-serif; fill: var(--a); }
+.cv { fill: none; stroke-linejoin: round; stroke-linecap: round; }
+.cv-fair { stroke: #6f7b7e; stroke-width: 3; stroke-dasharray: 7 6; }
+.cv-mix { stroke: var(--tone); stroke-width: 4; }
+.cv-old { stroke: var(--old); stroke-width: 2.2; stroke-dasharray: 2 5; }
+.cv-new { stroke: var(--new); stroke-width: 2.2; stroke-dasharray: 2 5; }
+.cv-lab { font: 700 15px Arial, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 5px; }
+.cv-lab.fair { fill: #4f5a5d; } .cv-lab.mix { fill: var(--tone); } .cv-lab.old { fill: #5e461f; } .cv-lab.new { fill: #4a2a75; }
+.mk-line { stroke: var(--ink); stroke-width: 2; }
+.mk-knob { fill: #fff; stroke: var(--ink); stroke-width: 2.5; }
+.mk-t { font: 700 15px Arial, sans-serif; fill: var(--ink); }
+.mk-dot { stroke: #fff; stroke-width: 2; }
+.rtable { width: 100%; border-collapse: collapse; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.rtable caption { text-align: left; padding: 0 0 3px; }
+.rtable td { padding: 4px 6px; border-top: 1px solid #e3e8e7; font-size: 15px; }
+.rtable td:last-child { text-align: right; font-weight: 700; }
+.rtable tr.main td { font-size: 16px; background: var(--wash); }
+.rtable tr.prev td { color: var(--muted); font-weight: 400; }
+.rtable tr.prev td:last-child { font-weight: 600; }
+.sw { display: inline-block; width: 22px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+.sw.fair { border-color: #6f7b7e; border-top-style: dashed; } .sw.mix { border-color: var(--tone); border-top-width: 4px; }
+.sw.old { border-color: var(--old); border-top-style: dotted; } .sw.new { border-color: var(--new); border-top-style: dotted; }
+.sw.seen { width: 10px; height: 10px; border: 0; border-radius: 50%; background: var(--ink); margin: 0 12px 0 6px; }
+.ok { color: var(--win-ink); }
+.cap-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-top: 3px; }
+.cap-row .rs-cap { margin: 0; flex: 1 1 220px; }
+/* Grouped picks keep only their order label; the pattern beside them shows the pots. */
+.prow .pick svg, .prow .pick .badges { display: none; }
+.prow .pick { padding: 6px 2px; }
+
+/* ---------- Story beats: each step opens on its lines, then hands over to the demo ---------- */
+.intro { display: none; grid-column: 1 / -1; }
+.playing .intro { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 22px; min-height: 440px; padding: 8px 2px 0; }
+.playing .f-left, .playing .f-right { display: none !important; }
+.intro-lines { display: grid; gap: 18px; max-width: 32em; }
+.intro .ln { margin: 0; font: 400 clamp(21px, 3.3vw, 27px)/1.35 Georgia, "Times New Roman", serif; opacity: 0; transform: translateY(10px); transition: opacity 520ms ease, transform 520ms ease; }
+.intro .ln.on { opacity: 1; transform: none; }
+.intro .ln p { margin: 0 0 10px; }
+.intro .ln b { color: var(--tone); }
+.intro .ln math { font-size: 1em; }
+.intro .ln math[display="block"] { margin: 4px 0 0; font-size: 1.05em; }
+.revealed .f-left, .revealed .f-right { animation: rise 460ms ease-out both; }
+.revealed .f-right { animation-delay: 120ms; }
+.changed.rise { animation: rise 420ms ease-out both; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.instant .intro .ln { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .intro .ln { transition: none; }
+  .revealed .f-left, .revealed .f-right, .changed.rise { animation: none; }
+}
+.replay { margin-left: 12px; min-height: 24px; padding: 0; border: 0; background: none; color: var(--muted); font: 13px Arial, sans-serif; text-transform: none; text-decoration: underline; }
+.prompt { margin: 0 0 4px; font-size: 16px; color: var(--ink); }
+.packets { display: flex; gap: 18px; margin-top: 4px; }
+.packet { display: grid; justify-items: center; gap: 2px; font: 15px/1.2 Arial, sans-serif; }
+.packet svg { width: 64px; height: auto; }
+.pk-paper { stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
+.packet.old .pk-paper { fill: #efe4cf; } .packet.new .pk-paper { fill: #ece3f6; }
+.pk-edge { fill: none; stroke: var(--ink); stroke-width: 1.8; stroke-linejoin: round; }
+.pk-name { font-weight: 700; }
+.packet.old .pk-name { color: #5e461f; } .packet.new .pk-name { color: #4a2a75; }
+.pk-p { color: var(--muted); }
+
+/* Lean readouts */
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+.vs-cell { display: grid; gap: 2px; padding: 10px 12px; border-radius: 8px; background: #f6f8f9; }
+.vs-cell b { font-size: 30px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.vs-cell small { color: var(--muted); font-size: 13px; }
+.vs-cell.short { background: var(--miss-bg); }
+.vs-cell.short b { color: var(--miss-ink); }
+.big { margin: 6px 0 2px; font-size: 1.55rem; }
+.big .flabel { display: block; }
+.big-sm { font-size: 1.12rem; }
+.intro, .intro-lines, .intro .ln { min-width: 0; max-width: 100%; }
+.intro-lines { width: 100%; }
+@media (max-width: 520px) { .intro .ln math[display="block"] { font-size: 0.78em; } }
+.hypo { margin: 0 0 8px; padding: 8px 12px; border: 1px dashed var(--tone); border-radius: 8px; background: #fff; font: 16px/1.4 Georgia, "Times New Roman", serif; }
+.hypo .flabel { display: block; color: var(--tone); font-family: Arial, sans-serif; }
+
+/* Story figures beside each line: picture right of the text from 620 px, below it under that. */
+.intro .ln:has(.fig) { display: grid; gap: 8px 22px; align-items: center; }
+@media (min-width: 620px) { .intro .ln:has(.fig) { grid-template-columns: minmax(0, 1fr) auto; } .intro-lines { max-width: 100%; } }
+.fig { display: grid; justify-items: start; gap: 3px; }
+.frow { display: flex; align-items: flex-end; gap: 6px; flex-wrap: wrap; }
+.frow.tight { gap: 2px; }
+.frow.packets { gap: 16px; }
+.fpot { display: inline-grid; justify-items: center; }
+.fpot svg { display: block; overflow: visible; }
+.fpot-l { font: 700 13px Arial, sans-serif; color: var(--ink); }
+.fcap { font: 13px/1.3 Arial, sans-serif; color: var(--muted); }
+.farrow { align-self: center; font: 700 22px Arial, sans-serif; color: var(--tone); padding: 0 2px; }
+.ftile { width: 92px; }
+.grid8 { display: grid; grid-template-columns: repeat(4, 46px); gap: 4px; }
+.fpat svg { display: block; width: 46px; height: auto; }
+.fpat.big svg { width: 84px; }
+.twenty { max-width: 200px; }
+.fcurve { display: block; }
+.fpot.drop { transition: opacity 500ms ease 700ms, max-width 500ms ease 700ms, margin 500ms ease 700ms; max-width: 40px; }
+.ln.on .fpot.drop { opacity: 0; max-width: 0; margin: 0 -3px; }
+.instant .fpot.drop { transition: none; }
+@media (prefers-reduced-motion: reduce) { .fpot.drop { transition: none; } }
+.share-lab { flex: none; font-size: 12px; color: var(--muted); }
+.intro .ln.bridge { font-style: italic; color: var(--tone); }
+</style>
+</head>
+<body>
+<main id="app">
+  <p class="eyebrow">Unit 2 synthesis</p>
+  <h1>How many pots do we need?</h1>
+
+  <div class="steps" role="tablist" aria-label="Steps">
+    <button type="button" class="step" role="tab" id="tab-0" aria-controls="frame-0" data-frame="0" data-tone="plant"><b>1</b>Plant</button>
+    <button type="button" class="step" role="tab" id="tab-1" aria-controls="frame-1" data-frame="1" data-tone="sprout"><b>2</b>Sprout</button>
+    <button type="button" class="step" role="tab" id="tab-2" aria-controls="frame-2" data-frame="2" data-tone="packet"><b>3</b>Packet</button>
+    <button type="button" class="step" role="tab" id="tab-3" aria-controls="frame-3" data-frame="3" data-tone="count"><b>4</b>Count</button>
+    <button type="button" class="step" role="tab" id="tab-4" aria-controls="frame-4" data-frame="4" data-tone="decide"><b>5</b>Decide</button>
+  </div>
+
+  <!-- Each step opens on its story beat (.intro), which hands over to the demo by itself. -->
+
+  <!-- Step 1: plant gardens from a shared packet -->
+  <section id="frame-0" class="stage fstage" role="tabpanel" aria-labelledby="f0-title" data-tone="plant">
+    <div class="f-head">
+      <p class="kicker">1 · Plant<span class="how">plant, then show the packets</span><button type="button" class="replay" hidden>Replay the setup</button></p>
+      <h2 id="f0-title" tabindex="-1">Six pots look like enough.</h2>
+    </div>
+    <div class="intro" aria-live="polite" data-go="Start planting">
+      <div class="intro-lines">
+        <div class="ln"><p>You want at least two sunflowers in 95% of gardens.</p><div class="fig" data-fig="goal" aria-hidden="true"></div></div>
+        <div class="ln"><p>Each garden gets one packet of seeds, old or new, equally likely.</p><div class="fig" data-fig="packets" aria-hidden="true"></div></div>
+        <div class="ln"><p>All six pots in a garden come from that one packet.</p><div class="fig" data-fig="share" aria-hidden="true"></div></div>
+        <div class="ln"><p>Overall, 60% of seeds sprout. If each pot sprouted independently with chance 0.6, six pots would give <b>95.90%</b>.</p><div class="fig" data-fig="hypo" aria-hidden="true"></div></div>
+        <p class="ln bridge">Space is tight, so check before you buy pots.</p>
+      </div>
+      <button type="button" class="again small intro-skip">Show all</button>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <svg id="board" class="scene" viewBox="0 0 560 320" role="img" aria-labelledby="board-title" aria-describedby="board-desc">
+          <title id="board-title">Your gardens</title>
+          <desc id="board-desc">Twenty garden plots, each with six pots. Pots that sprouted show a sunflower.</desc>
+        </svg>
+        <p class="rs-cap" id="board-cap">Green: at least two sunflowers. Blue: fewer.</p>
+      </div>
+      <div id="f0-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span>Nearly every garden that fell short grew from the old packet. Bad luck can explain a shortfall, but it rarely checks the packet first. Is the packet tying the pots together?</p>
+      </div>
+    </div>
+    <div class="f-right">
+      <p class="hypo"><span class="flabel">Hypothesis</span>Each pot sprouts independently with chance 0.6, so six pots give at least two sunflowers 95.90% of the time.</p>
+      <p class="prompt" id="f0-prompt">Plant gardens to test it.</p>
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="plant" class="leap-btn">Plant 20 gardens</button>
+        </div>
+        <div class="act">
+          <button type="button" id="f0-go" class="go" hidden>Show each garden's packet<small>all six pots share it</small></button>
+          <button type="button" id="f0-again" class="again" hidden>Hide the packets</button>
+          <button type="button" id="replant" class="again small" hidden>Clear the gardens</button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <div class="vs">
+          <div class="vs-cell"><span class="flabel">Hypothesis</span><b>95.90%</b></div>
+          <div class="vs-cell" id="f0-seen"><span class="flabel">Your gardens</span><b id="f0-pct">?</b><small id="f0-count">none planted</small></div>
+        </div>
+        <p id="f0-split" class="fsum" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 2: a sprout in pot 1 changes the packet chances -->
+  <section id="frame-1" class="stage fstage" role="tabpanel" aria-labelledby="f1-title" data-tone="sprout" hidden>
+    <div class="f-head">
+      <p class="kicker">2 · Sprout<span class="how">learn about pot 1</span><button type="button" class="replay" hidden>Replay the setup</button></p>
+      <h2 id="f1-title" tabindex="-1">Does pot 1 tell you about pot 2?</h2>
+    </div>
+    <div class="intro" aria-live="polite" data-go="Show the outcomes">
+      <div class="intro-lines">
+        <div class="ln"><p>Shrink the garden to three pots.</p><div class="fig" data-fig="shrink" aria-hidden="true"></div></div>
+        <div class="ln"><p>Each tile is one outcome: a packet and which pots sprouted.</p><div class="fig" data-fig="tile" aria-hidden="true"></div></div>
+        <div class="ln"><p><math><mi>A</mi></math>: pot 1 sprouts. <math><mi>B</mi></math>: pot 2 sprouts.</p><div class="fig" data-fig="ab" aria-hidden="true"></div></div>
+        <p class="ln">Before you look, <math><mi>P</mi><mo>(</mo><mi>B</mi><mo>)</mo><mo>=</mo><mn>0.6</mn></math>. Does learning <math><mi>A</mi></math> change it?</p>
+        <p class="ln bridge">Predict first: up, down or unchanged?</p>
+      </div>
+      <button type="button" class="again small intro-skip">Show all</button>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <div id="grid1" class="ogrid" role="group" aria-label="Three-pot outcomes for each packet"></div>
+        <p class="rs-cap"><span class="legend-b"></span> outlined: <math><mi>B</mi></math></p>
+      </div>
+      <div id="f1-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span>The sprout points to the new packet, so pot 2's chance rises. <math><mi>A</mi></math> and <math><mi>B</mi></math> are dependent.</p>
+      </div>
+    </div>
+    <div class="f-right">
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="f1-go" class="go">Learn that pot 1 sprouted<small>condition on A</small></button>
+          <button type="button" id="f1-again" class="again" hidden>Forget about pot 1</button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <div class="big" id="f1-before">
+          <math aria-label="P of B equals 0.6"><mi>P</mi><mo>(</mo><mi>B</mi><mo>)</mo><mo>=</mo><mn>0.6</mn></math>
+        </div>
+        <div class="big" id="f1-after" hidden>
+          <math aria-label="P of B given A equals 0.75"><mi>P</mi><mo>(</mo><mi>B</mi><mo>|</mo><mi>A</mi><mo>)</mo><mo>=</mo><mn>0.75</mn></math>
+        </div>
+        <div class="fline dim" id="f1-check" hidden>
+          <math aria-label="0.25 times 0.3 plus 0.75 times 0.9 equals 0.75"><mo>=</mo><mn>0.25</mn><mo>&#xD7;</mo><mn>0.3</mn><mo>+</mo><mn>0.75</mn><mo>&#xD7;</mo><mn>0.9</mn></math>
+          <span>chance it's each packet × pot 2's chance in it</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3: within a known packet, pot 1 says nothing about pot 2 -->
+  <section id="frame-2" class="stage fstage" role="tabpanel" aria-labelledby="f2-title" data-tone="packet" hidden>
+    <div class="f-head">
+      <p class="kicker">3 · Packet<span class="how">pick a packet, then learn about pot 1</span><button type="button" class="replay" hidden>Replay the setup</button></p>
+      <h2 id="f2-title" tabindex="-1">Once you know the packet, does pot 1 still matter?</h2>
+    </div>
+    <div class="intro" aria-live="polite" data-go="Show the outcomes">
+      <div class="intro-lines">
+        <div class="ln"><p>Now someone tells you which packet the garden got.</p><div class="fig" data-fig="told" aria-hidden="true"></div></div>
+        <div class="ln"><p>Does pot 1 still tell you anything about pot 2?</p><div class="fig" data-fig="arrow" aria-hidden="true"></div></div>
+        <p class="ln bridge">Repeat step 2 inside one packet.</p>
+      </div>
+      <button type="button" class="again small intro-skip">Show all</button>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <div id="grid2" class="ogrid" role="group" aria-label="Three-pot outcomes, given the packet"></div>
+        <p class="rs-cap">Click a packet's name to choose it.</p>
+      </div>
+      <div id="f2-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span>Given the packet, pot 2 keeps that packet's chance. The pots are conditionally independent.</p>
+      </div>
+    </div>
+    <div class="f-right">
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="f2-go" class="go">Learn that pot 1 sprouted<small>condition on A as well</small></button>
+          <button type="button" id="f2-again" class="again" hidden>Forget about pot 1</button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <div class="big" id="f2-before"></div>
+        <div class="big" id="f2-after" hidden></div>
+        <div class="fline dim" id="f2-prod" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 4: count ordered picks, then group them -->
+  <section id="frame-3" class="stage fstage" role="tabpanel" aria-labelledby="f3-title" data-tone="count" hidden>
+    <div class="f-head">
+      <p class="kicker">4 · Count<span class="how">group the ordered picks</span><button type="button" class="replay" hidden>Replay the setup</button></p>
+      <h2 id="f3-title" tabindex="-1">Twenty pots have over a million sprout patterns.</h2>
+    </div>
+    <div class="intro" aria-live="polite" data-go="Show the picks">
+      <div class="intro-lines">
+        <div class="ln"><p>Three pots have 8 sprout patterns per packet. Twenty pots have <b>1,048,576</b>.</p><div class="fig" data-fig="count" aria-hidden="true"></div></div>
+        <div class="ln bridge"><p>Build the count on three pots, where you can still check it: exactly two sprouts.</p><div class="fig" data-fig="two3" aria-hidden="true"></div></div>
+      </div>
+      <button type="button" class="again small intro-skip">Show all</button>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <div class="pk-toggle" id="pk-toggle" role="radiogroup" aria-label="Packet" hidden>
+          <span class="flabel">Packet</span>
+          <button type="button" role="radio" data-pk="new" aria-checked="true">New, p = 0.9</button>
+          <button type="button" role="radio" data-pk="old" aria-checked="false">Old, p = 0.3</button>
+        </div>
+        <div id="picks" class="picks" aria-label="Ordered picks of two sprouting pots"></div>
+        <p id="picks-sum" class="picks-sum" hidden></p>
+      </div>
+      <div id="f3-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span>Order does not matter, so divide by 2!. Every pattern has the same probability, so multiply the count by it.</p>
+        <math display="block" aria-label="P of k sprouts given the packet equals n choose k times p to the k times 1 minus p to the n minus k">
+          <mi>P</mi><mo>(</mo><mi>k</mi><mtext>&#xA0;sprouts</mtext><mo>|</mo><mtext>packet</mtext><mo>)</mo><mo>=</mo><mrow><mo>(</mo><mfrac linethickness="0"><mi>n</mi><mi>k</mi></mfrac><mo>)</mo></mrow><msup><mi>p</mi><mi>k</mi></msup><msup><mrow><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>p</mi><mo>)</mo></mrow><mrow><mi>n</mi><mo>&#x2212;</mo><mi>k</mi></mrow></msup>
+        </math>
+      </div>
+    </div>
+    <div class="f-right">
+      <p class="prompt">Each card picks the two sprouting pots in order: 3 choices, then 2.</p>
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="f3-go" class="go">Group picks that plant the same pots<small>order does not matter</small></button>
+          <button type="button" id="f3-again" class="again" hidden>Show the ordered picks</button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <div class="fline big-sm">
+          <math aria-label="ordered picks: 3 times 2 equals 6, which is 3 factorial over 1 factorial">
+            <mtext>ordered</mtext><mo>=</mo><mn>3</mn><mo>&#xD7;</mo><mn>2</mn><mo>=</mo><mfrac><mrow><mn>3</mn><mo>!</mo></mrow><mrow><mo>(</mo><mn>3</mn><mo>&#x2212;</mo><mn>2</mn><mo>)</mo><mo>!</mo></mrow></mfrac><mo>=</mo><mn>6</mn>
+          </math>
+        </div>
+        <div class="fline big-sm" id="f3-comb" hidden>
+          <math aria-label="patterns: 6 over 2 factorial equals 3, which is 3 choose 2">
+            <mtext>patterns</mtext><mo>=</mo><mfrac><mn>6</mn><mrow><mn>2</mn><mo>!</mo></mrow></mfrac><mo>=</mo><mrow><mo>(</mo><mfrac linethickness="0"><mn>3</mn><mn>2</mn></mfrac><mo>)</mo></mrow><mo>=</mo><mn>3</mn>
+          </math>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 5: average over the packet and find the first n -->
+  <section id="frame-4" class="stage fstage" role="tabpanel" aria-labelledby="f4-title" data-tone="decide" hidden>
+    <div class="f-head">
+      <p class="kicker">5 · Decide<span class="how">average, then move the marker</span><button type="button" class="replay" hidden>Replay the setup</button></p>
+      <h2 id="f4-title" tabindex="-1">Independent pots at 0.6 say six pots are enough.</h2>
+    </div>
+    <div class="intro" aria-live="polite" data-go="Show the curve">
+      <div class="intro-lines">
+        <div class="ln"><p>Back to the question: how many pots?</p><div class="fig" data-fig="question" aria-hidden="true"></div></div>
+        <div class="ln"><p>At least two sprouts means neither zero nor one:</p>
+          <math display="block" aria-label="q of n and p equals 1 minus 1 minus p to the n, minus n p times 1 minus p to the n minus 1">
+            <mi>q</mi><mo>(</mo><mi>n</mi><mo>,</mo><mi>p</mi><mo>)</mo><mo>=</mo><mn>1</mn><mo>&#x2212;</mo><msup><mrow><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>p</mi><mo>)</mo></mrow><mi>n</mi></msup><mo>&#x2212;</mo><mi>n</mi><mi>p</mi><msup><mrow><mo>(</mo><mn>1</mn><mo>&#x2212;</mo><mi>p</mi><mo>)</mo></mrow><mrow><mi>n</mi><mo>&#x2212;</mo><mn>1</mn></mrow></msup>
+          </math>
+        </div>
+        <div class="ln"><p>The dashed curve treats every pot as independent with <math><mi>p</mi><mo>=</mo><mn>0.6</mn></math>.</p><div class="fig" data-fig="curve" aria-hidden="true"></div></div>
+        <p class="ln bridge">That six assumed independent pots. Drop the assumption.</p>
+      </div>
+      <button type="button" class="again small intro-skip">Show all</button>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <svg id="chart" class="chart nchart" viewBox="0 0 540 330" role="slider" tabindex="0" aria-label="Number of pots" aria-valuemin="1" aria-valuemax="20" aria-valuenow="6" aria-valuetext="6 pots"></svg>
+        <p class="rs-cap">Drag the marker, or use the arrow keys.</p>
+      </div>
+      <div id="f4-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span>12 is the first number of pots to reach 95%. That 95% averages over the packet: with the old packet known, 12 pots give 91.50%.</p>
+      </div>
+    </div>
+    <div class="f-right">
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="f4-go" class="go">Average over the packet<small>total probability theorem</small></button>
+          <button type="button" id="f4-again" class="again" hidden>Show the dashed curve only</button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <div id="f4-mixline" class="fline dim" hidden>
+          <math aria-label="P of at least two"><mi>P</mi><mo>(</mo><mtext>at least two</mtext><mo>)</mo></math>
+          <math aria-label="equals 0.5 q of n and 0.3, plus 0.5 q of n and 0.9"><mo>=</mo><mn>0.5</mn><mi>q</mi><mo>(</mo><mi>n</mi><mo>,</mo><mn>0.3</mn><mo>)</mo><mo>+</mo><mn>0.5</mn><mi>q</mi><mo>(</mo><mi>n</mi><mo>,</mo><mn>0.9</mn><mo>)</mo></math>
+        </div>
+        <table class="rtable" id="f4-table"><caption class="flabel" id="f4-cap">6 pots</caption><tbody></tbody></table>
+        <p id="f4-problem" class="problem" hidden></p>
+      </div>
+    </div>
+  </section>
+
+  <div class="pager"><button type="button" id="prev" disabled>←<span class="wide"> Previous</span></button><span class="pcount" id="pcount">1 of 5</span><button type="button" id="next"><span class="wide" id="next-label">Next: Sprout </span>→</button></div>
+
+  <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+</main>
+<script>
+/* Garden model: one packet per garden (old p = 0.3, new p = 0.9, equally likely);
+   pots are independent given the packet. Pure functions only; the page reads them. */
+(function () {
+  var P = { old: 0.3, new: 0.9 };
+  var AVG = (P.old + P.new) / 2; // 0.6: share of all seeds that sprout
+
+  function rng(seed) {
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) | 0;
+      var t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  // One garden: draw the packet once, then every pot from it.
+  function plant(r, n) {
+    var packet = r() < 0.5 ? 'old' : 'new', pots = [], k = 0;
+    for (var i = 0; i < n; i++) { var s = r() < P[packet]; pots.push(s); if (s) k++; }
+    return { packet: packet, pots: pots, sprouts: k, reached: k >= 2 };
+  }
+
+  function choose(n, k) {
+    if (k < 0 || k > n) return 0;
+    var c = 1;
+    for (var i = 1; i <= k; i++) c = c * (n - k + i) / i;
+    return Math.round(c);
+  }
+
+  // q(n, p) = P(at least two | packet) = 1 - (1-p)^n - n p (1-p)^(n-1)
+  function q(n, p) { return Math.max(0, 1 - Math.pow(1 - p, n) - n * p * Math.pow(1 - p, n - 1)); }
+  function mix(n) { return 0.5 * q(n, P.old) + 0.5 * q(n, P.new); }
+  function fair(n) { return q(n, AVG); } // every pot treated as an independent toss at the average chance
+  function firstN(f, target) { for (var n = 1; n < 200; n++) if (f(n) >= target - 1e-12) return n; return null; }
+
+  // Three-pot outcome space: 16 (packet, pattern) outcomes.
+  var PATTERNS = ['000', '001', '010', '011', '100', '101', '110', '111'];
+  function patternP(pat, p) {
+    var out = 1;
+    for (var i = 0; i < pat.length; i++) out *= pat[i] === '1' ? p : 1 - p;
+    return out;
+  }
+  var OUTCOMES = [];
+  ['old', 'new'].forEach(function (pk) {
+    PATTERNS.forEach(function (pat) { OUTCOMES.push({ packet: pk, pat: pat, w: 0.5 * patternP(pat, P[pk]) }); });
+  });
+  var EV = {
+    A: function (o) { return o.pat[0] === '1'; },
+    B: function (o) { return o.pat[1] === '1'; },
+    packet: function (pk) { return function (o) { return o.packet === pk; }; },
+  };
+
+  // Condition the 16 outcomes on an event: kept outcomes rescaled to sum to 1.
+  function condition(given) {
+    var kept = OUTCOMES.filter(given || function () { return true; });
+    var tot = kept.reduce(function (s, o) { return s + o.w; }, 0);
+    var map = {};
+    OUTCOMES.forEach(function (o) { map[o.packet + o.pat] = 0; });
+    kept.forEach(function (o) { map[o.packet + o.pat] = o.w / tot; });
+    function prob(ev) { return OUTCOMES.reduce(function (s, o) { return s + (ev(o) ? map[o.packet + o.pat] : 0); }, 0); }
+    return { p: function (o) { return map[o.packet + o.pat]; }, prob: prob, kept: function (o) { return map[o.packet + o.pat] > 0; } };
+  }
+
+  // q < 1 whenever p < 1, so a value that rounds to 100.00 prints as >99.99.
+  function pct(x) { var s = (x * 100).toFixed(2); return (s === '100.00' ? '>99.99' : s) + '%'; }
+  function dec(x) { // up to four decimals, trailing zeros dropped
+    var s = (Math.round(x * 10000) / 10000).toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+    return s;
+  }
+
+  window.GardenModel = {
+    P: P, AVG: AVG, rng: rng, plant: plant, choose: choose, q: q, mix: mix, fair: fair, firstN: firstN,
+    PATTERNS: PATTERNS, OUTCOMES: OUTCOMES, EV: EV, patternP: patternP, condition: condition, pct: pct, dec: dec,
+  };
+})();
+</script>
+<script>
+/* Unit 2 synthesis: how many pots do we need? Five steps, one action each.
+   ?seed=N replays the planting in step 1; ?anim=0 skips animation. */
+(function () {
+  var M = window.GardenModel;
+  var Q = new URLSearchParams(location.search);
+  var NS = 'http://www.w3.org/2000/svg';
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ANIM = Q.get('anim') !== '0' && !REDUCED;
+  // Story beats play on first visit to each step; ?anim=0 (tests, screenshots) skips them.
+  var SKIP_INTRO = Q.get('anim') === '0';
+  var NAIVE = M.firstN(M.fair, 0.95); // 6: the every-pot-at-0.6 answer
+  if (!ANIM) document.documentElement.classList.add('instant');
+  var $ = function (id) { return document.getElementById(id); };
+  var NAMES = ['Plant', 'Sprout', 'Packet', 'Count', 'Decide'];
+
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function h(tag, cls, parent, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function say(msg) { $('status').textContent = msg; }
+
+  // A pot at (x, y) = centre of its rim, width s. A sprout adds a stem, leaves and a sunflower.
+  function pot(g, x, y, s, sprout, grow) {
+    var w = s, hgt = s * 0.82, rim = s * 0.2;
+    el('path', { d: 'M' + (x - w * 0.42) + ' ' + (y + rim) + ' L' + (x + w * 0.42) + ' ' + (y + rim) + ' L' + (x + w * 0.32) + ' ' + (y + hgt) + ' L' + (x - w * 0.32) + ' ' + (y + hgt) + ' Z', class: 'pot-body' }, g);
+    el('rect', { x: x - w * 0.5, y: y, width: w, height: rim, rx: rim * 0.3, class: 'pot-rim' }, g);
+    el('ellipse', { cx: x, cy: y + rim * 0.35, rx: w * 0.4, ry: rim * 0.22, class: 'pot-soil' }, g);
+    if (!sprout) return;
+    var f = el('g', { class: grow ? 'grow' : '' }, g);
+    var top = y - s * 0.95, r = s * 0.2;
+    el('path', { d: 'M' + x + ' ' + y + ' L' + x + ' ' + (top + r), class: 'stem' }, f);
+    el('ellipse', { cx: x - s * 0.16, cy: y - s * 0.32, rx: s * 0.16, ry: s * 0.08, transform: 'rotate(-30 ' + (x - s * 0.16) + ' ' + (y - s * 0.32) + ')', class: 'leaf' }, f);
+    el('ellipse', { cx: x + s * 0.16, cy: y - s * 0.5, rx: s * 0.16, ry: s * 0.08, transform: 'rotate(30 ' + (x + s * 0.16) + ' ' + (y - s * 0.5) + ')', class: 'leaf' }, f);
+    for (var i = 0; i < 8; i++) {
+      var a = i * Math.PI / 4, px = x + Math.cos(a) * r * 1.15, py = top + Math.sin(a) * r * 1.15;
+      el('ellipse', { cx: px, cy: py, rx: r * 0.62, ry: r * 0.36, transform: 'rotate(' + (i * 45) + ' ' + px + ' ' + py + ')', class: 'petal' }, f);
+    }
+    el('circle', { cx: x, cy: top, r: r * 0.85, class: 'seedhead' }, f);
+  }
+  // Pattern icon: three pots in a row, "110" means pots 1 and 2 sprouted.
+  function patternSvg(pat, badges) {
+    var svg = document.createElementNS(NS, 'svg');
+    var sp = 22;
+    svg.setAttribute('viewBox', '0 0 66 40');
+    svg.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 3; i++) {
+      var cx = 11 + i * sp;
+      pot(svg, cx, 22, 16, pat[i] === '1');
+    }
+    return svg;
+  }
+
+  // ---------- Pager and steps ----------
+  var cur = 0;
+  var steps = [].slice.call(document.querySelectorAll('.step'));
+  function show(i, focus) {
+    leaveIntro(cur);
+    cur = i;
+    for (var k = 0; k < 5; k++) $('frame-' + k).hidden = k !== i;
+    steps.forEach(function (b, k) { b.setAttribute('aria-selected', k === i ? 'true' : 'false'); b.tabIndex = k === i ? 0 : -1; });
+    $('prev').disabled = i === 0;
+    $('next').disabled = i === 4;
+    $('pcount').textContent = (i + 1) + ' of 5';
+    $('next-label').textContent = i < 4 ? 'Next: ' + NAMES[i + 1] + ' ' : 'Next ';
+    if (enter[i]) enter[i]();
+    if (focus) $('f' + i + '-title').focus();
+    if (!played[i] && !SKIP_INTRO) playIntro(i); else endIntro(i, false);
+  }
+
+  // ---------- Story beats: lines appear one at a time, then the demo takes over ----------
+  var played = {}, timers = [];
+  function sec(k) { return $('frame-' + k); }
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  // Lines arrive on a short, steady stagger; nothing leaves on a timer. Once every line is
+  // in, the button becomes Continue and the student starts the demo when ready.
+  var STAGGER = 900;
+  function introBtn(k, done) {
+    var b = sec(k).querySelector('.intro-skip');
+    b.textContent = done ? (sec(k).querySelector('.intro').dataset.go || 'Continue') : 'Show all';
+    b.className = done ? 'go intro-skip' : 'again small intro-skip';
+    sec(k).classList.toggle('told', !!done);
+  }
+  function showAll(k) {
+    clearTimers();
+    [].forEach.call(sec(k).querySelectorAll('.intro .ln'), function (l) { l.classList.add('on'); });
+    introBtn(k, true);
+  }
+  function playIntro(k) {
+    var s = sec(k), ls = [].slice.call(s.querySelectorAll('.intro .ln'));
+    clearTimers();
+    s.classList.remove('revealed'); s.classList.add('playing');
+    s.querySelector('.replay').hidden = true;
+    if (REDUCED) { showAll(k); return; }
+    introBtn(k, false);
+    ls.forEach(function (l, i) {
+      l.classList.remove('on');
+      timers.push(setTimeout(function () { l.classList.add('on'); if (i === ls.length - 1) introBtn(k, true); }, 250 + i * STAGGER));
+    });
+  }
+  function endIntro(k, animate) {
+    if (k === cur) clearTimers();
+    var s = sec(k);
+    s.classList.remove('playing');
+    s.classList.toggle('revealed', !!animate && ANIM);
+    [].forEach.call(s.querySelectorAll('.intro .ln'), function (l) { l.classList.add('on'); });
+    s.querySelector('.replay').hidden = false;
+    played[k] = true;
+  }
+  function leaveIntro(k) {
+    clearTimers();
+    var s = sec(k);
+    if (s && s.classList.contains('playing')) { s.classList.remove('playing'); played[k] = false; }
+  }
+  [0, 1, 2, 3, 4].forEach(function (k) {
+    var s = sec(k);
+    s.querySelector('.intro-skip').addEventListener('click', function () {
+      if (!s.classList.contains('told')) { showAll(k); s.querySelector('.intro-skip').focus(); return; }
+      endIntro(k, true); $('f' + k + '-title').focus();
+    });
+    s.querySelector('.replay').addEventListener('click', function () { playIntro(k); s.querySelector('.intro-skip').focus(); });
+  });
+  // "What changed" rises a moment after the figure changes, so the change is seen first.
+  function reveal(id, on) {
+    var e = $(id);
+    clearTimeout(e._t);
+    if (!on) { e.hidden = true; e.classList.remove('rise'); return; }
+    if (!e.hidden) return;
+    if (!ANIM) { e.hidden = false; return; }
+    e._t = setTimeout(function () { e.hidden = false; e.classList.add('rise'); }, 700);
+  }
+  steps.forEach(function (b, k) {
+    b.addEventListener('click', function () { show(k, true); });
+    b.addEventListener('keydown', function (e) {
+      var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!d) return;
+      e.preventDefault();
+      var n = (k + d + 5) % 5; show(n); steps[n].focus();
+    });
+  });
+  $('prev').addEventListener('click', function () { if (cur > 0) show(cur - 1, true); });
+  $('next').addEventListener('click', function () { if (cur < 4) show(cur + 1, true); });
+  var enter = {};
+
+  // ---------- Step 1: plant gardens ----------
+  var seed = +(Q.get('seed') || 20261119);
+  var S1 = { r: M.rng(seed), gardens: [], shown: false, batch: [] };
+  var BATCH = 20, MAXB = 10, CW = 104, CH = 70, GX = 8, GY = 6, COLS = 5;
+  // Below 560 px the board is four plots wide so each pot stays large enough to read.
+  function cols() { return window.innerWidth < 480 ? 4 : 5; }
+  function drawBoard(grow) {
+    var svg = $('board');
+    COLS = cols();
+    var rows = Math.ceil(BATCH / COLS);
+    svg.setAttribute('viewBox', '0 0 ' + (COLS * CW + (COLS - 1) * GX + 4) + ' ' + (rows * CH + (rows - 1) * GY + 4));
+    [].slice.call(svg.querySelectorAll('g.plot, .board-empty')).forEach(function (n) { n.remove(); });
+    for (var i = 0; i < BATCH; i++) {
+      var col = i % COLS, row = Math.floor(i / COLS);
+      var x = 2 + col * (CW + GX), y = 2 + row * (CH + GY);
+      var gd = S1.batch[i];
+      var g = el('g', { class: 'plot' + (gd ? (gd.reached ? ' win' : ' miss') : ''), transform: 'translate(' + x + ' ' + y + ')' }, svg);
+      el('rect', { x: 0, y: 0, width: CW, height: CH, rx: 7, class: gd ? 'plot-bg' : 'plot-empty' }, g);
+      if (!gd) continue;
+      gd.pots.forEach(function (s, j) {
+        var px = 22 + (j % 3) * 30, py = j < 3 ? 29 : 55;
+        pot(g, px, py, 15, s, grow && ANIM);
+      });
+      if (S1.shown) {
+        var cls = gd.packet;
+        el('rect', { x: CW / 2 - 24, y: -3, width: 48, height: 20, rx: 3, class: 'tag-bg ' + cls }, g);
+        el('text', { x: CW / 2, y: 12.5, 'text-anchor': 'middle', class: 'tag-t ' + cls }, g).textContent = cls.toUpperCase();
+      }
+    }
+    if (!S1.batch.length) {
+      el('text', { x: (COLS * CW) / 2, y: 2 * CH, 'text-anchor': 'middle', class: 'board-empty' }, svg).textContent = 'No gardens planted yet.';
+    }
+    var reached = S1.batch.filter(function (g) { return g.reached; }).length;
+    $('board-desc').textContent = S1.batch.length
+      ? 'The latest ' + S1.batch.length + ' gardens of six pots. ' + reached + ' have at least two sunflowers.' + (S1.shown ? ' Each garden is tagged with its packet.' : '')
+      : 'Twenty empty garden plots, six pots each.';
+  }
+  // The prompt after planting reports what the gardens actually did against 95.90%.
+  function afterPlant() {
+    var G = S1.gardens, r = G.filter(function (g) { return g.reached; }).length;
+    return (r / G.length < 0.95 ? 'Fewer gardens reach two sunflowers than the hypothesis predicts.' : 'So far the gardens match the hypothesis.') + ' Plant again, or show the packets.';
+  }
+  function tally() {
+    var G = S1.gardens, n = G.length, r = G.filter(function (g) { return g.reached; }).length;
+    $('f0-seen').classList.toggle('short', n > 0 && r / n < 0.95);
+    $('f0-pct').textContent = n ? Math.round(100 * r / n) + '%' : '?';
+    $('f0-count').textContent = n ? r + ' of ' + n + ' reached two' : 'none planted';
+    $('f0-split').hidden = !S1.shown || !n;
+    if (S1.shown) {
+      var part = function (pk) {
+        var gs = G.filter(function (g) { return g.packet === pk; });
+        return gs.filter(function (g) { return g.reached; }).length + ' of ' + gs.length;
+      };
+      $('f0-split').innerHTML = 'Old packet: <b>' + part('old') + '</b> reached two. New packet: <b>' + part('new') + '</b>.';
+    }
+  }
+  $('plant').addEventListener('click', function () {
+    S1.batch = [];
+    for (var i = 0; i < BATCH; i++) S1.batch.push(M.plant(S1.r, NAIVE));
+    S1.gardens = S1.gardens.concat(S1.batch);
+    drawBoard(true);
+    tally();
+    var nb = S1.gardens.length / BATCH;
+    $('plant').disabled = nb >= MAXB;
+    $('plant').hidden = nb >= MAXB;
+    $('plant').textContent = 'Plant 20 more gardens';
+    $('replant').hidden = false;
+    if (!S1.shown) $('f0-go').hidden = false;
+    $('f0-prompt').textContent = S1.shown ? 'New gardens arrive tagged.' : afterPlant();
+    say(S1.batch.filter(function (g) { return g.reached; }).length + ' of 20 new gardens reached two sunflowers.');
+    S5.seen = { n: S1.gardens.length, r: S1.gardens.filter(function (g) { return g.reached; }).length };
+  });
+  $('replant').addEventListener('click', function () {
+    S1.r = M.rng(seed); S1.gardens = []; S1.batch = []; S1.shown = false; S5.seen = null;
+    $('plant').disabled = false; $('plant').hidden = false; $('plant').textContent = 'Plant 20 gardens';
+    $('replant').hidden = true; $('f0-go').hidden = true; $('f0-again').hidden = true; reveal('f0-changed', false);
+    $('f0-prompt').textContent = 'Plant gardens to test it.';
+    drawBoard(false); tally();
+  });
+  function setShown(v) {
+    S1.shown = v;
+    $('f0-go').hidden = v; $('f0-again').hidden = !v; reveal('f0-changed', v);
+    drawBoard(false); tally();
+    $('f0-prompt').textContent = v ? 'New gardens arrive tagged.' : afterPlant();
+    if (v) say('Packets shown. ' + $('f0-split').textContent);
+  }
+  $('f0-go').addEventListener('click', function () { setShown(true); $('f0-again').focus(); });
+  $('f0-again').addEventListener('click', function () { setShown(false); $('f0-go').focus(); });
+
+  // ---------- Steps 2 and 3: the three-pot outcome grid ----------
+  function buildGrid(root, opts) {
+    root.textContent = '';
+    var parts = {};
+    ['old', 'new'].forEach(function (pk) {
+      var blk = h('div', 'pblock', root); blk.dataset.pk = pk;
+      var head = h('div', 'phead', blk);
+      var label = (pk === 'old' ? 'Old packet' : 'New packet');
+      var name;
+      if (opts.pick) {
+        name = h('button', 'pname', head); name.type = 'button';
+        name.setAttribute('role', 'radio');
+        name.innerHTML = label + ' <small>p = ' + M.P[pk] + '</small>';
+        name.addEventListener('click', function () { opts.pick(pk); });
+      } else {
+        name = h('span', 'pname', head); name.innerHTML = label + ' <small>p = ' + M.P[pk] + '</small>';
+      }
+      var share = h('span', 'share', head);
+      h('span', 'share-lab', share, 'chance it\'s this packet');
+      var track = h('span', 'share-track', share), fill = h('span', 'share-fill', track);
+      var pctT = h('b', '', share);
+      share.setAttribute('aria-hidden', 'true');
+      var tiles = h('div', 'tiles', blk), cells = {};
+      M.PATTERNS.forEach(function (pat) {
+        var t = h('div', 'tile', tiles);
+        t.appendChild(patternSvg(pat));
+        var line = h('span', 'tline', t); h('span', 'pat', line, pat);
+        var v = h('span', 'val', line);
+        if (pat[1] === '1') t.classList.add('inB');
+        cells[pat] = { t: t, v: v };
+      });
+      parts[pk] = { blk: blk, name: name, fill: fill, pct: pctT, cells: cells };
+    });
+    return parts;
+  }
+  function paintGrid(parts, given) {
+    var c = M.condition(given);
+    ['old', 'new'].forEach(function (pk) {
+      var P = parts[pk], share = c.prob(M.EV.packet(pk));
+      P.fill.style.width = (share * 100) + '%';
+      P.pct.textContent = Math.round(share * 100) + '%';
+      P.blk.classList.toggle('out', share === 0);
+      M.PATTERNS.forEach(function (pat) {
+        var o = { packet: pk, pat: pat }, v = c.p(o), cell = P.cells[pat];
+        cell.v.textContent = M.dec(v);
+        cell.t.classList.toggle('gone', v === 0);
+        cell.t.setAttribute('aria-label', (pk === 'old' ? 'Old' : 'New') + ' packet, pattern ' + pat + ', probability ' + M.dec(v) + (pat[1] === '1' ? ', in B' : ''));
+      });
+    });
+    return c;
+  }
+
+  // Step 2
+  var g1 = buildGrid($('grid1'), {});
+  var S2 = { A: false };
+  function paint2() {
+    paintGrid(g1, S2.A ? M.EV.A : null);
+    $('f1-before').hidden = S2.A; $('f1-after').hidden = !S2.A; $('f1-check').hidden = !S2.A;
+    $('f1-go').hidden = S2.A; $('f1-again').hidden = !S2.A; reveal('f1-changed', S2.A);
+  }
+  $('f1-go').addEventListener('click', function () { S2.A = true; paint2(); $('f1-again').focus(); say('Pot 1 sprouted. Old packet 25%, new packet 75%. P(B given A) = 0.75.'); });
+  $('f1-again').addEventListener('click', function () { S2.A = false; paint2(); $('f1-go').focus(); say('Back to all 16 outcomes. P(B) = 0.6.'); });
+  paint2();
+
+  // Step 3
+  var S3 = { pk: 'new', A: false };
+  var g2 = buildGrid($('grid2'), { pick: function (pk) { S3.pk = pk; paint3(); say((pk === 'new' ? 'New' : 'Old') + ' packet chosen.'); } });
+  function m(x) { return '<math><mn>' + x + '</mn></math>'; }
+  function paint3() {
+    var pkEv = M.EV.packet(S3.pk), pkName = S3.pk === 'new' ? 'new' : 'old', p = M.P[S3.pk];
+    paintGrid(g2, S3.A ? function (o) { return pkEv(o) && M.EV.A(o); } : pkEv);
+    ['old', 'new'].forEach(function (k) { g2[k].name.setAttribute('aria-checked', k === S3.pk ? 'true' : 'false'); });
+    var mrow = function (cond) {
+      return '<math><mi>P</mi><mo>(</mo><mi>B</mi><mo>|</mo>' + cond + '<mo>)</mo><mo>=</mo><mn>' + p + '</mn></math>';
+    };
+    $('f2-before').innerHTML = '<span class="flabel">pot 2, before</span> ' + mrow('<mtext>' + pkName + '</mtext>');
+    $('f2-after').innerHTML = '<span class="flabel">pot 2, after</span> ' + mrow('<mi>A</mi><mo>&#x2229;</mo><mtext>' + pkName + '</mtext>');
+    $('f2-prod').innerHTML = '<math><mi>P</mi><mo>(</mo><mi>A</mi><mo>&#x2229;</mo><mi>B</mi><mo>|</mo><mtext>' + pkName + '</mtext><mo>)</mo><mo>=</mo><mn>' + M.dec(p * p) + '</mn><mo>=</mo><mn>' + p + '</mn><mo>&#xD7;</mo><mn>' + p + '</mn></math>';
+    $('f2-after').hidden = $('f2-prod').hidden = !S3.A;
+    $('f2-go').hidden = S3.A; $('f2-again').hidden = !S3.A; reveal('f2-changed', S3.A);
+  }
+  $('f2-go').addEventListener('click', function () { S3.A = true; paint3(); $('f2-again').focus(); say('Pot 1 sprouted. Pot 2 still sprouts with probability ' + M.P[S3.pk] + '.'); });
+  $('f2-again').addEventListener('click', function () { S3.A = false; paint3(); $('f2-go').focus(); });
+  paint3();
+
+  // ---------- Step 4: ordered picks, then grouped patterns ----------
+  var PICKS = [[1, 2], [1, 3], [2, 1], [2, 3], [3, 1], [3, 2]];
+  var S4 = { grouped: false, pk: 'new' };
+  function patOf(pr) { return [1, 2, 3].map(function (i) { return pr.indexOf(i) >= 0 ? '1' : '0'; }).join(''); }
+  var pickEls = PICKS.map(function (pr) {
+    var c = h('div', 'pick'), bd = h('div', 'badges', c);
+    [1, 2, 3].forEach(function (i) { h('span', i === pr[0] || i === pr[1] ? 'badge' : '', bd, i === pr[0] ? '1st' : i === pr[1] ? '2nd' : ''); });
+    c.appendChild(patternSvg(patOf(pr)));
+    h('span', 'lab', c, '(' + pr[0] + ', ' + pr[1] + ')');
+    c.setAttribute('role', 'img');
+    c.setAttribute('aria-label', 'Pot ' + pr[0] + ' first, then pot ' + pr[1]);
+    c.dataset.pat = patOf(pr);
+    return c;
+  });
+  function flip(mutate) {
+    var before = pickEls.map(function (e) { return e.getBoundingClientRect(); });
+    mutate();
+    if (!ANIM) return;
+    pickEls.forEach(function (e, i) {
+      var a = before[i], b = e.getBoundingClientRect();
+      if (!a.width || !b.width) return;
+      e.classList.remove('moving');
+      e.style.transform = 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')';
+      e.style.transformOrigin = '0 0';
+      e.getBoundingClientRect();
+      e.classList.add('moving');
+      e.style.transform = '';
+    });
+  }
+  function layout4() {
+    var root = $('picks');
+    root.textContent = '';
+    root.classList.toggle('grouped', S4.grouped);
+    if (!S4.grouped) {
+      pickEls.forEach(function (e) { root.appendChild(e); });
+      return;
+    }
+    ['110', '101', '011'].forEach(function (pat) {
+      var row = h('div', 'prow', root);
+      var pt = h('div', 'ptile', row); pt.appendChild(patternSvg(pat)); h('span', 'pat', pt, pat);
+      var pair = h('div', 'pair', row);
+      pickEls.filter(function (e) { return e.dataset.pat === pat; }).forEach(function (e) { pair.appendChild(e); });
+      var wt = h('div', 'wt', row); wt.dataset.pat = pat;
+    });
+  }
+  function weights4() {
+    var p = M.P[S4.pk], w = M.patternP('110', p), q1 = (1 - p).toFixed(1), p1 = p.toFixed(1);
+    [].slice.call(document.querySelectorAll('#picks .wt')).forEach(function (wt) {
+      var pat = wt.dataset.pat;
+      var factors = pat.split('').map(function (c) { return c === '1' ? p1 : q1; }).join(' × ');
+      wt.innerHTML = factors + '<br>= <b>' + M.dec(w) + '</b>';
+    });
+    $('picks-sum').innerHTML = 'Exactly two sprouts, ' + S4.pk + ' packet: 3 × ' + M.dec(w) + ' = <b>' + M.dec(3 * w) + '</b>';
+    [].slice.call($('pk-toggle').querySelectorAll('button')).forEach(function (b) { b.setAttribute('aria-checked', b.dataset.pk === S4.pk ? 'true' : 'false'); });
+  }
+  function set4(v) {
+    S4.grouped = v;
+    flip(layout4);
+    $('pk-toggle').hidden = !v; $('picks-sum').hidden = !v; $('f3-comb').hidden = !v;
+    $('f3-go').hidden = v; $('f3-again').hidden = !v; reveal('f3-changed', v);
+    if (v) weights4();
+  }
+  $('f3-go').addEventListener('click', function () { set4(true); $('f3-again').focus(); say('Six ordered picks grouped into three patterns: 110, 101, 011.'); });
+  $('f3-again').addEventListener('click', function () { set4(false); $('f3-go').focus(); });
+  [].slice.call($('pk-toggle').querySelectorAll('button')).forEach(function (b) {
+    b.addEventListener('click', function () { S4.pk = b.dataset.pk; weights4(); say($('picks-sum').textContent); });
+  });
+  layout4();
+
+  // ---------- Step 5: the decision chart ----------
+  var S5 = { n: NAIVE, mix: false, reachedFirst: false, seen: null };
+  // The chart's coordinate width shrinks below 560 px so its text stays at least 12.5 px tall.
+  var NMAX = 20, X0 = 58, X1 = 500, Y0 = 268, Y1 = 22, VBW = 540;
+  function xs(n) { return X0 + (n - 1) / (NMAX - 1) * (X1 - X0); }
+  function ys(v) { return Y0 - v * (Y0 - Y1); }
+  var FIRST = M.firstN(M.mix, 0.95);
+  function curve(svg, f, cls) {
+    var d = '';
+    for (var n = 1; n <= NMAX; n++) d += (n === 1 ? 'M' : 'L') + xs(n).toFixed(1) + ' ' + ys(f(n)).toFixed(1);
+    el('path', { d: d, class: 'cv ' + cls }, svg);
+  }
+  function drawChart() {
+    var svg = $('chart');
+    VBW = window.innerWidth < 560 ? 380 : 540; X1 = VBW - 40;
+    svg.setAttribute('viewBox', '0 0 ' + VBW + ' 330');
+    svg.textContent = '';
+    for (var v = 0; v <= 1.001; v += 0.25) {
+      el('line', { x1: X0, x2: X1, y1: ys(v), y2: ys(v), class: 'c-gridline' }, svg);
+      el('text', { x: X0 - 8, y: ys(v) + 5, 'text-anchor': 'end', class: 'c-tick' }, svg).textContent = Math.round(v * 100) + '%';
+    }
+    el('line', { x1: X0, x2: X1, y1: Y0, y2: Y0, class: 'c-base' }, svg);
+    [1, 5, 10, 15, 20].forEach(function (n) {
+      el('text', { x: xs(n), y: Y0 + 22, 'text-anchor': 'middle', class: 'c-tick' }, svg).textContent = n;
+    });
+    el('text', { x: (X0 + X1) / 2, y: Y0 + 50, 'text-anchor': 'middle', class: 'c-title' }, svg).textContent = 'pots planted, n';
+    el('line', { x1: X0, x2: X1, y1: ys(0.95), y2: ys(0.95), class: 'c-target' }, svg);
+    el('text', { x: X1 + 6, y: ys(0.95) + 5, 'text-anchor': 'start', class: 'c-target-lab' }, svg).textContent = '95%';
+    if (S5.mix) {
+      curve(svg, function (n) { return M.q(n, M.P.old); }, 'cv-old');
+      curve(svg, function (n) { return M.q(n, M.P.new); }, 'cv-new');
+    }
+    curve(svg, M.fair, 'cv-fair');
+    if (S5.mix) curve(svg, M.mix, 'cv-mix');
+    // Marker
+    var n = S5.n, x = xs(n);
+    el('line', { x1: x, x2: x, y1: Y1 - 4, y2: Y0, class: 'mk-line' }, svg);
+    var dots = [[M.fair(n), '#6f7b7e']];
+    if (S5.mix) dots = [[M.q(n, M.P.old), 'var(--old)'], [M.q(n, M.P.new), 'var(--new)'], [M.fair(n), '#6f7b7e'], [M.mix(n), 'var(--tone)']];
+    dots.forEach(function (d) { el('circle', { cx: x, cy: ys(d[0]), r: 5.5, class: 'mk-dot', fill: d[1] }, svg); });
+    el('rect', { x: x - 20, y: Y0 + 3, width: 40, height: 26, rx: 6, class: 'mk-knob' }, svg);
+    el('text', { x: x, y: Y0 + 22, 'text-anchor': 'middle', class: 'mk-t' }, svg).textContent = n;
+    // Direct labels where the curves are apart, drawn over the marker so their halo hides it.
+    var lab = function (n, f, dy, cls, text, anchor) {
+      el('text', { x: xs(n), y: ys(f(n)) + dy, 'text-anchor': anchor || 'start', class: 'cv-lab ' + cls }, svg).textContent = text;
+    };
+    // The dashed curve is named in the step's story and in the table's swatch; a label here would sit on another curve.
+    if (S5.mix) {
+      lab(1.9, function (n) { return M.q(n, M.P.new); }, -12, 'new', 'new', 'end');
+      lab(7.5, M.mix, 30, 'mix', 'random packet');
+      lab(4.2, function (n) { return M.q(n, M.P.old); }, 22, 'old', 'old packet');
+    }
+    svg.setAttribute('aria-valuenow', n);
+    svg.setAttribute('aria-valuetext', n + ' pots: ' + (S5.mix ? 'random packet ' + M.pct(M.mix(n)) + ', ' : '') + 'independent pots at 0.6 ' + M.pct(M.fair(n)));
+  }
+  function row(tb, sw, name, val, cls) {
+    var tr = h('tr', cls || '', tb);
+    var a = h('td', '', tr); a.innerHTML = '<span class="sw ' + sw + '"></span>' + name;
+    h('td', '', tr, val);
+  }
+  function paint5() {
+    var n = S5.n, tb = $('f4-table').tBodies[0];
+    tb.textContent = '';
+    $('f4-cap').textContent = n + (n === 1 ? ' pot' : ' pots');
+    if (S5.mix) row(tb, 'mix', 'Random packet', M.pct(M.mix(n)), 'main');
+    row(tb, 'fair', 'Independent pots at 0.6', M.pct(M.fair(n)));
+    if (S5.mix) {
+      row(tb, 'old', 'Old packet, known', M.pct(M.q(n, M.P.old)));
+      row(tb, 'new', 'New packet, known', M.pct(M.q(n, M.P.new)));
+      if (n > 1) row(tb, 'mix', 'Random packet, ' + (n - 1) + (n - 1 === 1 ? ' pot' : ' pots'), M.pct(M.mix(n - 1)), 'prev');
+    }
+    if (S5.seen && n === NAIVE) row(tb, 'seen', 'Your ' + S5.seen.n + ' gardens in step 1', Math.round(100 * S5.seen.r / S5.seen.n) + '%', 'prev');
+    $('f4-mixline').hidden = !S5.mix;
+    $('f4-go').hidden = S5.mix; $('f4-again').hidden = !S5.mix;
+    if (S5.mix && n === FIRST) S5.reachedFirst = true;
+    reveal('f4-changed', S5.mix && S5.reachedFirst);
+    var pr = $('f4-problem');
+    if (!S5.mix) { pr.hidden = !(n === NAIVE); pr.textContent = 'This curve ignores that a garden shares one packet.'; }
+    else if (n < FIRST) { pr.hidden = false; pr.textContent = 'With a random packet, ' + n + (n === 1 ? ' pot gives ' : ' pots give ') + M.pct(M.mix(n)) + ': short of 95%.'; }
+    else if (n > FIRST && !S5.reachedFirst) { pr.hidden = false; pr.textContent = n + ' pots reach 95%. Do fewer pots still reach it?'; }
+    else pr.hidden = true;
+    drawChart();
+  }
+  function setN(n) {
+    n = Math.max(1, Math.min(NMAX, Math.round(n)));
+    if (n === S5.n) return;
+    S5.n = n; paint5();
+  }
+  (function () {
+    var svg = $('chart'), drag = false;
+    function toN(e) {
+      var r = svg.getBoundingClientRect(), vx = (e.clientX - r.left) / r.width * VBW;
+      return 1 + (vx - X0) / (X1 - X0) * (NMAX - 1);
+    }
+    svg.addEventListener('pointerdown', function (e) { drag = true; svg.setPointerCapture(e.pointerId); setN(toN(e)); });
+    svg.addEventListener('pointermove', function (e) { if (drag) setN(toN(e)); });
+    svg.addEventListener('pointerup', function () { drag = false; });
+    svg.addEventListener('pointercancel', function () { drag = false; });
+    svg.addEventListener('keydown', function (e) {
+      var d = { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1, PageUp: 5, PageDown: -5 }[e.key];
+      if (e.key === 'Home') { e.preventDefault(); setN(1); return; }
+      if (e.key === 'End') { e.preventDefault(); setN(NMAX); return; }
+      if (d) { e.preventDefault(); setN(S5.n + d); }
+    });
+  })();
+  $('f4-go').addEventListener('click', function () { S5.mix = true; paint5(); $('chart').focus(); say('Random packet at ' + S5.n + ' pots: ' + M.pct(M.mix(S5.n)) + '.'); });
+  $('f4-again').addEventListener('click', function () { S5.mix = false; paint5(); $('f4-go').focus(); });
+  enter[4] = paint5;
+
+  // ---------- Story figures: a small picture beside each story line ----------
+  // A pot for the story figures; its label is HTML so it keeps its size at every width.
+  function potSvg(sprout, size, label, cls) {
+    var w = size || 30, box = h('span', 'fpot' + (cls ? ' ' + cls : ''));
+    var svg = el('svg', { viewBox: '0 0 24 30', width: w, height: w * 30 / 24 }, box);
+    pot(svg, 12, 14, 16, sprout);
+    if (label) h('span', 'fpot-l', box, label);
+    return box;
+  }
+  function packetEl(pk, note) {
+    var c = h('div', 'packet ' + pk);
+    var svg = el('svg', { viewBox: '0 0 60 70' }, c);
+    el('path', { d: 'M6 10 L54 10 L54 66 L6 66 Z', class: 'pk-paper' }, svg);
+    el('path', { d: 'M6 10 L12 4 L18 10 L24 4 L30 10 L36 4 L42 10 L48 4 L54 10', class: 'pk-edge' }, svg);
+    pot(svg, 30, 44, 22, true);
+    h('span', 'pk-name', c, pk === 'old' ? 'Old' : 'New');
+    h('span', 'pk-p', c, note || 'sprouts ' + M.P[pk]);
+    return c;
+  }
+  function frow(parent, cls) { return h('div', 'frow' + (cls ? ' ' + cls : ''), parent); }
+  var FIGS = {
+    goal: function (f) {
+      var r = frow(f); [1, 0, 0, 1, 0, 0].forEach(function (s) { r.appendChild(potSvg(!!s)); });
+      h('span', 'fcap', f, 'at least 2 of 6 sprout, in 95% of gardens');
+    },
+    packets: function (f) { var r = frow(f, 'packets'); r.appendChild(packetEl('old')); r.appendChild(packetEl('new')); },
+    share: function (f) {
+      var r = frow(f); r.appendChild(packetEl('old', 'one packet'));
+      h('span', 'farrow', r, '→');
+      var pots = frow(r, 'tight'); for (var i = 0; i < 6; i++) pots.appendChild(potSvg(i === 1));
+    },
+    hypo: function (f) {
+      var r = frow(f); for (var i = 0; i < 6; i++) r.appendChild(potSvg(false, 30, '0.6'));
+      h('span', 'fcap', f, 'each pot on its own');
+    },
+    shrink: function (f) {
+      var r = frow(f, 'shrink'); for (var i = 0; i < 6; i++) r.appendChild(potSvg(i === 0 || i === 4, 30, String(i + 1), i > 2 ? 'drop' : ''));
+    },
+    tile: function (f) {
+      var t = h('div', 'tile ftile', f); t.appendChild(patternSvg('110'));
+      var line = h('span', 'tline', t); h('span', 'pat', line, '110'); h('span', 'val', line, M.dec(0.5 * M.patternP('110', M.P.new)));
+      h('span', 'fcap', f, 'new packet, pots 1 and 2 sprouted');
+    },
+    ab: function (f) {
+      var r = frow(f); r.appendChild(potSvg(true, 34, 'A')); r.appendChild(potSvg(true, 34, 'B')); r.appendChild(potSvg(false, 34, '3'));
+    },
+    told: function (f) { var r = frow(f); r.appendChild(packetEl('new', 'you know it')); },
+    arrow: function (f) {
+      var r = frow(f); r.appendChild(potSvg(true, 34, '1')); h('span', 'farrow', r, '→ ?'); r.appendChild(potSvg(false, 34, '2'));
+    },
+    patterns8: function (f) {
+      var r = frow(f, 'grid8'); M.PATTERNS.forEach(function (pat) { var c = h('span', 'fpat', r); c.appendChild(patternSvg(pat)); });
+    },
+    twenty: function (f) {
+      var r = frow(f, 'tight twenty'); for (var i = 0; i < 20; i++) r.appendChild(potSvg(i % 3 === 0, 16));
+      h('span', 'fcap', f, 'twenty pots: 2²⁰ patterns');
+    },
+    count: function (f) { FIGS.patterns8(f); h('span', 'fcap', f, 'three pots: 8 patterns'); FIGS.twenty(f); },
+    two3: function (f) { var c = h('span', 'fpat big', f); c.appendChild(patternSvg('110')); h('span', 'fcap', f, 'one of the patterns with two sprouts'); },
+    question: function (f) { var r = frow(f); for (var i = 0; i < 6; i++) r.appendChild(potSvg(false)); h('span', 'farrow', r, '+ ?'); },
+    curve: function (f) {
+      var svg = el('svg', { viewBox: '0 0 200 90', width: 200, height: 90, class: 'fcurve' }, f);
+      var X = function (n) { return 10 + (n - 1) / 19 * 180; }, Y = function (v) { return 80 - v * 70; };
+      el('line', { x1: 10, x2: 190, y1: Y(0.95), y2: Y(0.95), class: 'c-target' }, svg);
+      el('line', { x1: 10, x2: 190, y1: 80, y2: 80, class: 'c-base' }, svg);
+      var d = ''; for (var n = 1; n <= 20; n++) d += (n === 1 ? 'M' : 'L') + X(n).toFixed(1) + ' ' + Y(M.fair(n)).toFixed(1);
+      el('path', { d: d, class: 'cv cv-fair' }, svg);
+      el('circle', { cx: X(NAIVE), cy: Y(M.fair(NAIVE)), r: 5, class: 'mk-dot', fill: '#6f7b7e' }, svg);
+      h('span', 'fcap', f, 'reaches 95% at ' + NAIVE + ' pots');
+    },
+  };
+  [].forEach.call(document.querySelectorAll('.fig[data-fig]'), function (f) { FIGS[f.dataset.fig](f); });
+  drawBoard(false); tally();
+  var lastCols = cols();
+  window.addEventListener('resize', function () { if (cols() !== lastCols) { lastCols = cols(); drawBoard(false); drawChart(); } });
+  show(0);
+  window.__garden = { M: M, S1: S1, S2: S2, S3: S3, S4: S4, S5: S5, show: show, setN: setN, FIRST: FIRST, NAIVE: NAIVE, played: played };
+})();
+</script>
+</body>
+</html>
