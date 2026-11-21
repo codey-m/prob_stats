@@ -1,0 +1,2871 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which distribution fits the count?</title>
+<style>
+/* House synthesis style, shared with the penalty-kick page and the CV/NLP and Deep
+   Learning unit summaries. Green always means a success and blue a miss, on every step. */
+:root {
+  --ink: #1d292b; --muted: #5a676a; --line: #cfd7d5; --paper: #f7f8f5; --panel: #ffffff;
+  --a: #a31f34; --bad: #7d2a33;
+  --win: #2ead4a; --win-ink: #1b6e2f; --win-bg: #e4f5e8;
+  --miss: #2f6fdb; --miss-ink: #1f4fa8; --miss-bg: #e6eefc;
+  --hl: #8a5f00;
+  --fox: #e8743b; --fox-dark: #b5501f; --cream: #fff4e4; --paw: #4a2a17;
+  --grass: #cfe6c3; --grass-edge: #8fb57f; --water: #bfe1ee; --water-line: #8cc3d9;
+  --rock: #a3aaae; --rock-dark: #7b8387;
+  --nut: #93552b; --nut-dark: #6a3818;
+  --frog: #f2c230; --frog-dark: #a8790c; --pad: #a9b89b; --pad-edge: #6f7f62;
+  color-scheme: light;
+}
+[data-tone="morning"] { --tone: #9a5b00; --wash: #fff2d9; }
+[data-tone="pmf"] { --tone: #8e3b74; --wash: #f6eaf2; }
+[data-tone="mean"] { --tone: #684a8f; --wash: #f0ebf7; }
+[data-tone="spread"] { --tone: #a31f34; --wash: #f9e8eb; }
+[data-tone="hops"] { --tone: #006b68; --wash: #e4f3f1; }
+[data-tone="digs"] { --tone: #7a4a1f; --wash: #f5ece2; }
+[data-tone="trails"] { --tone: #4f5d6b; --wash: #eef1f3; }
+[data-tone="compare"] { --tone: #8a5f00; --wash: #fbf1dc; }
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--paper); color: var(--ink); }
+body { padding: 18px 16px 26px; font: 16px/1.45 Arial, Helvetica, sans-serif; }
+main { max-width: 840px; margin: auto; padding: 0; }
+button { font: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.45; }
+button:focus-visible, h2:focus-visible { outline: 3px solid #176ca5; outline-offset: 3px; }
+h2:focus { outline: none; }
+.eyebrow { margin: 0 0 3px; color: var(--a); font-size: 12px; font-weight: 700; letter-spacing: 0.11em; text-transform: uppercase; }
+h1 { margin: 0 0 12px; font: 500 clamp(28px, 5vw, 38px)/1.1 Georgia, "Times New Roman", serif; }
+h2 { margin: 0 0 12px; font: 500 clamp(22px, 4vw, 29px)/1.2 Georgia, "Times New Roman", serif; }
+p { margin: 0 0 10px; }
+.head { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; }
+.note { font-size: 16px; }
+.problem { color: var(--bad); font-weight: 600; }
+math { font-family: 'STIX Two Math', 'Cambria Math', 'Latin Modern Math', math; math-style: normal; font-size: 1.15em; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Steps, stage, pager */
+.steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; margin-bottom: 12px; }
+.step { display: grid; justify-items: center; gap: 1px; padding: 7px 2px; border: 1px solid var(--line); border-top: 4px solid var(--tone); border-radius: 4px; background: #fff; color: #4a5659; font-size: 13px; }
+.step b { font: 700 12px "Courier New", monospace; color: var(--tone); }
+.step[aria-selected="true"] { background: var(--wash); border-color: var(--tone); color: var(--ink); font-weight: 700; }
+.stage { position: relative; padding: 20px 20px 18px; border: 1px solid var(--line); border-top: 5px solid var(--tone); border-radius: 8px; background: #fff; }
+.kicker { margin: 0 0 2px; color: var(--tone); font: 700 13px "Courier New", monospace; text-transform: uppercase; }
+.kicker .how { margin-left: 10px; color: var(--muted); font: italic 13px Georgia, serif; text-transform: none; }
+.changed { margin: 4px 0 12px; padding: 12px 14px; border-left: 5px solid var(--tone); background: var(--wash); font: 17px/1.42 Georgia, "Times New Roman", serif; }
+.changed p { margin: 0; }
+.changed .head { display: block; margin-bottom: 3px; font-family: Arial, sans-serif; color: var(--tone); }
+.act { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin: 6px 0 8px; }
+.go { display: inline-grid; justify-items: start; gap: 1px; min-height: 52px; padding: 8px 18px; border: 2px solid var(--tone); border-radius: 7px; background: var(--tone); color: #fff; font-size: 17px; font-weight: 700; text-align: left; }
+.go small { font-size: 12px; font-weight: 400; opacity: 0.85; }
+.again { min-height: 44px; padding: 8px 12px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 14px; }
+.again.small { min-height: 34px; padding: 4px 10px; font-size: 13px; }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; }
+.pager button { min-height: 46px; padding: 8px 14px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; color: var(--ink); font-size: 15px; }
+.pcount { color: var(--muted); font-size: 13px; }
+@media (max-width: 620px) {
+  .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .stage { padding: 15px 11px; }
+  .changed { font-size: 16px; }
+  .pager .wide { display: none; }
+}
+
+/* Two columns from 820 px: the visual with "What changed" under it on the left; text,
+   controls and readout on the right. Below that the wrappers vanish and everything
+   stacks as head, text, visual, controls, readout, changed. */
+.fstage { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: "head" "text" "visual" "controls" "readout" "changed"; column-gap: 18px; }
+.f-head { grid-area: head; } .f-text { grid-area: text; } .f-visual { grid-area: visual; margin: 4px 0 8px; }
+.f-controls { grid-area: controls; } .f-readout { grid-area: readout; margin-top: 4px; } .f-changed { grid-area: changed; }
+.f-left, .f-right { display: contents; }
+@media (min-width: 820px) {
+  .fstage { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); grid-template-areas: "head head" "left right"; grid-template-rows: auto 1fr; align-items: start; }
+  .f-left { display: block; grid-area: left; }
+  .f-right { display: block; grid-area: right; }
+  .f-visual { margin: 0; }
+  .f-left .f-changed { margin: 10px 0 0; padding: 10px 14px; font-size: 16px; line-height: 1.38; }
+  /* Every step keeps one height at this width so the pager stays put. */
+  main section.stage { min-height: var(--frame-h, 676px); }
+}
+
+/* Scene */
+#scene, .scene { display: block; width: 100%; height: auto; border-radius: 8px; touch-action: manipulation; }
+.sky { fill: #fdf3dc; }
+.sun { fill: #f6cf6e; }
+.bank { fill: var(--grass); stroke: var(--grass-edge); stroke-width: 3; stroke-linejoin: round; }
+.water { fill: var(--water); }
+.wave { fill: none; stroke: var(--water-line); stroke-width: 3; stroke-linecap: round; }
+.reed { stroke: var(--grass-edge); stroke-width: 3; stroke-linecap: round; }
+.rock-body { fill: var(--rock); stroke: var(--ink); stroke-width: 3; }
+.rock-shine { fill: none; stroke: #d3d8db; stroke-width: 4; stroke-linecap: round; }
+.rock-ripple { fill: none; stroke: var(--water-line); stroke-width: 2.5; }
+.drop { fill: var(--miss); opacity: 0.85; }
+.ring { fill: none; stroke: var(--miss); stroke-width: 3; opacity: 0.7; }
+.verdict { font-size: 34px; font-weight: 800; letter-spacing: 0.02em; pointer-events: none; }
+.verdict.win { fill: var(--win-ink); }
+.verdict.miss { fill: var(--miss-ink); }
+@media (max-width: 520px) { .verdict { font-size: 44px; } }
+
+/* Finn the fox, drawn in the crab's style: ink outlines, flat fills, short legs. */
+.fox-fur { fill: var(--fox); }
+.fox-line { fill: none; stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.fox-skin { fill: var(--fox); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.fox-cream { fill: var(--cream); }
+.fox-ear-in { fill: var(--paw); }
+.fox-leg-o { fill: none; stroke: var(--ink); stroke-width: 8; stroke-linecap: round; }
+.fox-leg { fill: none; stroke: var(--paw); stroke-width: 4; stroke-linecap: round; }
+.fox-eye { fill: var(--ink); }
+.fox-eye-shut { fill: none; stroke: var(--ink); stroke-width: 2.4; stroke-linecap: round; }
+.fox-nose { fill: var(--ink); }
+.fox-mouth { fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; }
+.fox-mouth-o { fill: #7a2430; stroke: var(--ink); stroke-width: 1.8; }
+.fox-blush { fill: #f2707a; opacity: 0.5; }
+#finn { pointer-events: none; }
+
+/* Leap buttons and outcome strip */
+.leap-btn { min-height: 48px; padding: 8px 22px; border: 2px solid var(--tone); border-radius: 7px; background: #fff; color: var(--tone); font-size: 17px; font-weight: 700; }
+.leap-btn:not(:disabled):hover { background: var(--wash); }
+.strip-wrap { margin-top: 8px; }
+.strip-head { margin: 0 0 4px; }
+.strip { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.strip-empty { margin: 0; min-height: 66px; padding: 20px 0 0; color: var(--muted); font-size: 14px; border: 2px dashed var(--line); border-radius: 8px; text-align: center; }
+.chip { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px 3px; border: 2px solid transparent; border-radius: 7px; font-size: 13px; font-weight: 700; line-height: 1.1; }
+.chip svg { width: 34px; height: 22px; }
+.chip.win { background: var(--win-bg); color: var(--win-ink); border-color: #b5ddc0; }
+.chip.miss { background: var(--miss-bg); color: var(--miss-ink); border-color: #bccdf0; }
+.chip .x { display: none; font: 700 21px/1 Arial, Helvetica, sans-serif; color: var(--ink); margin-top: 3px; }
+.numbered .chip .x { display: block; }
+.chip.pop { animation: pop 420ms ease-out; }
+@keyframes pop { 0% { transform: scale(1.3); } 100% { transform: scale(1); } }
+.ic-rock { fill: var(--rock); stroke: var(--ink); stroke-width: 1.6; }
+.ic-tick { fill: none; stroke: var(--win-ink); stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.ic-drop { fill: var(--miss); }
+.ic-ring { fill: none; stroke: var(--miss-ink); stroke-width: 1.8; }
+
+/* Readout */
+.fhero { margin: 6px 0 8px; padding: 8px 10px; background: #f6f8f9; border-radius: 8px; }
+.fline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 1.05rem; margin: 2px 0; }
+.fsum { margin: 6px 0 0; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.fsum .ans { padding: 1px 6px; border-radius: 6px; background: #fbe7b5; font-weight: 700; }
+
+.instant .chip.pop { animation: none; }
+@media (prefers-reduced-motion: reduce) { .chip.pop { animation: none; } }
+.changed math { font-size: 1.05em; }
+
+/* ---------- Steps 2-7: charts, the rock control, the plank and the spread plot ---------- */
+.chart { display: block; width: 100%; height: auto; margin-top: 6px; overflow: visible; }
+.c-gridline { stroke: #e3e8e7; stroke-width: 1.5; }
+.c-base { stroke: var(--ink); stroke-width: 2.5; }
+.c-tick { font-size: 16px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.c-title { font-size: 16px; fill: var(--muted); font-weight: 700; }
+.c-x { font-size: 18px; fill: var(--ink); font-weight: 600; }
+.c-val { font-size: 19px; font-weight: 700; fill: var(--ink); font-variant-numeric: tabular-nums; }
+.c-gval { font-size: 17px; font-weight: 700; fill: var(--muted); }
+.c-bar { stroke: var(--ink); stroke-width: 2; }
+.c-bar.win { fill: #8fd3a0; }
+.c-bar.miss { fill: #9fbdf2; }
+.c-ghost { fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-dasharray: 6 5; }
+.c-tickmark { stroke: var(--muted); stroke-width: 2; }
+.c-dist { font-size: 18px; font-weight: 700; fill: var(--tone); font-variant-numeric: tabular-nums; }
+.mean-line { stroke: var(--ink); stroke-width: 2.5; stroke-dasharray: 7 5; }
+.mean-lab { font-size: 17px; font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: #fff; stroke-width: 5px; }
+.sd-band { fill: var(--tone); opacity: 0.13; }
+.arrow { fill: none; stroke: var(--tone); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.curve { fill: none; stroke: var(--tone); stroke-width: 3.5; }
+.curve-dot { fill: var(--tone); stroke: #fff; stroke-width: 2.5; }
+.mini-plot { margin-top: 2px; }
+.plank { fill: #b9875a; stroke: var(--ink); stroke-width: 2; }
+.pivot { fill: var(--tone); stroke: var(--ink); stroke-width: 2; }
+.beam-svg { cursor: ew-resize; touch-action: none; outline: none; border-radius: 8px; }
+.beam-svg:focus-visible { outline: 3px solid #176ca5; outline-offset: 2px; }
+.beam-svg[aria-disabled="true"] { cursor: default; }
+.beam-msg { font-size: 22px; font-weight: 800; fill: var(--win-ink); }
+.legend { font-size: 14px; color: var(--muted); margin: 0 0 6px; }
+.flabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.fline.dim { font-size: 0.95rem; color: var(--muted); }
+.fsum b { font-variant-numeric: tabular-nums; }
+
+.rockstrip { margin: 2px 0 6px; max-width: 340px; }
+.rs-svg { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid var(--line); }
+.rs-sky { fill: #fdf3dc; }
+.rs-tick { stroke: var(--water-line); stroke-width: 2; }
+.rs-rock .rock-body { stroke-width: 2.5; }
+.rs-cap { margin: 3px 0 0; font-size: 15px; }
+.rs-cap.ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; }
+.rock-ctl { cursor: ew-resize; touch-action: none; outline: none; -webkit-user-select: none; user-select: none; }
+.rock-ctl:focus-visible { outline: 3px solid #176ca5; outline-offset: 2px; }
+.f-visual > .rs-cap { margin: 4px 0 0; }
+
+/* Beats: one figure at a time, chosen with numbered toggles (as in the DL synthesis). */
+.beat-nav { display: flex; margin: 0 0 6px; }
+.beat-nav > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.beat-nav button { min-height: 37px; padding: 7px 11px; border: 1px solid #a4b7b2; border-radius: 4px; background: #fff; color: var(--ink); font-size: 13px; }
+.beat-nav button[aria-pressed="true"] { background: var(--wash); border-color: var(--tone); font-weight: 700; }
+.beat > .rs-cap { margin: 2px 0 0; }
+.f-visual > .rs-cap { margin: 2px 0 0; }
+.band-stream .rs-sky { fill: #fdf3dc; }
+.changed p.def { margin: 6px 0 0; }
+.fstrip { margin: 6px 0 0; padding: 4px 0 0; line-height: 1.3; border-top: 1px solid var(--tone); display: flex; flex-wrap: wrap; gap: 2px 16px; align-items: baseline; }
+.changed .fstrip p { margin: 0; }
+.fstrip-name { font: bold 14px Arial, sans-serif; color: var(--tone); }
+.fstrip-range { margin-left: 6px; font: 14px Arial, sans-serif; color: #555; }
+@media (max-width: 640px) { .fstrip { gap: 0 12px; } .fstrip-range { margin-left: 4px; } }
+
+/* Step 5: Tad, the pond and the board of hop sequences */
+.frog-skin { fill: var(--frog); stroke: var(--ink); stroke-width: 2.5; stroke-linejoin: round; }
+.frog-belly { fill: #fff3c4; }
+.frog-eye { fill: #fff; stroke: var(--ink); stroke-width: 1.6; }
+.frog-leg-o { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; }
+.frog-leg { fill: none; stroke: var(--frog); stroke-width: 3.5; stroke-linecap: round; }
+.frog-leg-long { fill: none; stroke: var(--frog); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; paint-order: stroke; }
+.pad-leaf { fill: var(--pad); stroke: var(--pad-edge); stroke-width: 2.5; }
+.pad-notch { stroke: var(--pad-edge); stroke-width: 2.5; }
+.pad.win .pad-leaf { fill: var(--win); stroke: var(--win-ink); }
+.seq-rect { fill: #fff; stroke: #8a9694; stroke-width: 1.4; }
+.chip-seq.hit .seq-rect { fill: #fbe7b5; stroke: var(--hl); stroke-width: 3; }
+.dot-win { fill: var(--win); }
+.dot-miss { fill: var(--miss); }
+.col-sel { fill: var(--wash); }
+.col-hit { fill: transparent; cursor: pointer; outline: none; }
+.col-hit:focus-visible { stroke: #176ca5; stroke-width: 3; }
+.hint { font-size: 13px; color: var(--muted); margin: 6px 0 0; }
+.params { display: flex; flex-wrap: wrap; gap: 8px 18px; margin: 8px 0 2px; }
+.stepper { display: flex; align-items: center; gap: 6px; font-size: 15px; }
+.st-lab { flex: none; margin-right: 2px; }
+.st-btn { width: 34px; height: 36px; border: 1px solid #8a9694; border-radius: 6px; background: #fff; font-size: 20px; line-height: 1; color: var(--ink); }
+.st-val { min-width: 34px; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+.col-hit { cursor: pointer; }
+.col-hit:hover + * { opacity: 1; }
+.kbar { fill: var(--wash); stroke: var(--ink); stroke-width: 1.6; }
+.slice-rect { fill: #fff; stroke: var(--tone); stroke-width: 1.4; }
+.slice-rect.alt { fill: #f3f8f7; }
+.factor { font-size: 19px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.factor.win { fill: var(--win-ink); }
+.factor.miss { fill: var(--miss-ink); }
+.factor-w { font-size: 15px; fill: var(--muted); }
+.factor-dot { font-size: 22px; font-weight: 700; fill: var(--ink); }
+.pad.tappable { cursor: pointer; outline: none; }
+.pad.tappable:focus-visible .pad-leaf { stroke: #176ca5; stroke-width: 4; }
+.drip { opacity: 0.8; }
+.beat-nav button:disabled { opacity: 0.45; }
+
+/* Step 5: Tad (front view), flies, the jar and the tries row */
+.frog-hi { fill: #fff; }
+.tongue { stroke: #e8607a; stroke-width: 5; stroke-linecap: round; }
+.fly-b { fill: var(--ink); }
+.fly-w { fill: #fff; stroke: var(--ink); stroke-width: 1.2; opacity: 0.9; }
+.jar-glass { fill: #eef7fa; stroke: var(--ink); stroke-width: 2.5; opacity: 0.95; }
+.jar-lid { fill: #b9875a; stroke: var(--ink); stroke-width: 2; }
+.jar-lab { font-size: 18px; }
+.try-bg { fill: transparent; stroke: none; }
+.try.win .try-bg { fill: var(--win-bg); }
+.try.miss .try-bg { fill: var(--miss-bg); }
+.try.tappable { cursor: pointer; outline: none; }
+.try.tappable:focus-visible .try-bg { stroke: #176ca5; stroke-width: 3; }
+.factor-w { font-size: 16px; }
+
+/* Step 6: Nutmeg, the dig site and the restart chart */
+.sq-fur { fill: var(--nut); stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; }
+.sq-tail { fill: #c08a4e; stroke: var(--ink); stroke-width: 2.4; stroke-linejoin: round; }
+.sq-tail-line { fill: none; stroke: #8e5e2c; stroke-width: 2; stroke-linecap: round; }
+.sq-belly { fill: #f4e1c4; }
+.sq-foot { fill: var(--nut-dark); stroke: var(--ink); stroke-width: 2; }
+.sq-ear-in { fill: #e8a98a; }
+.sq-arm { fill: none; stroke: var(--ink); stroke-width: 3.5; stroke-linecap: round; }
+.soil { fill: #d9b98f; }
+.dig-sky { fill: #fbe9cf; }
+.dig-grass { fill: var(--grass); }
+.soil-dot { fill: #b8936a; }
+.hole-pit { fill: #5b3b22; stroke: var(--ink); stroke-width: 1.6; }
+.hole.miss .hole-pit { stroke: var(--miss-ink); stroke-width: 2.2; }
+.hole-ring { fill: none; stroke: var(--win); stroke-width: 3; }
+.mound { fill: #b78a5c; }
+.dirt { fill: #6e4a2a; stroke: var(--ink); stroke-width: 0.8; }
+.acorn-nut { fill: #d6a35a; stroke: var(--ink); stroke-width: 1.8; }
+.acorn-cap { fill: #7a4f22; stroke: var(--ink); stroke-width: 1.8; }
+.acorn-stem { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; }
+.dig-n { font-size: 16px; font-weight: 700; }
+.dig-n.win { fill: var(--win-ink); }
+.dig-n.miss { fill: var(--miss-ink); }
+.dig-k { font-size: 16px; }
+.kbar.after { fill: #fbe7b5; }
+.kbar.faded { opacity: 0.35; }
+.over-bar { fill: none; stroke: var(--tone); stroke-width: 2.5; stroke-dasharray: 5 4; }
+.over-cap { fill: var(--tone); }
+.note.only { font-size: 15px; }
+.fly-slow .fly-b { fill: #4a4f55; }
+.fly-quick .fly-b { fill: #6b3fa0; }
+.fly-dragon .fly-b { fill: #c2551f; }
+.fly-speed { stroke: var(--muted); stroke-width: 1.6; stroke-linecap: round; }
+.kind-lab { align-self: center; font-size: 14px; color: var(--muted); }
+.sq-fur.dark { fill: #8a5a2b; }
+.sq-limb-o { fill: none; stroke: var(--ink); stroke-width: 7.5; stroke-linecap: round; stroke-linejoin: round; }
+.sq-limb { fill: none; stroke: var(--nut); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.sq-limb.dark { stroke: #8a5a2b; }
+.sq-paw { fill: #f4e1c4; stroke: var(--ink); stroke-width: 1.8; }
+.sq-paw.dark { fill: #d9bf9a; }
+.sq-whisker { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.7; }
+.sq-o * { fill: var(--ink); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
+.sq-f > *, .sq-f > g > * { stroke: none; }
+.sq-f > path, .sq-f > ellipse, .sq-f > g > path, .sq-f > g > ellipse { fill: var(--nut); }
+.sq-f .dark { fill: #8a5a2b; }
+.sq-f .sq-belly { fill: #f4e1c4; }
+.sq-f .sq-ear-in { fill: #e8a98a; }
+.sq-f .fox-blush { fill: #f2707a; }
+.sq-f .fox-nose, .sq-f .fox-eye { fill: var(--ink); }
+.sq-f .frog-hi { fill: #fff; }
+.sq-f .fox-mouth { fill: none; stroke: var(--ink); stroke-width: 2.2; stroke-linecap: round; }
+.sq-f .fox-mouth-o { fill: #7a2430; stroke: var(--ink); stroke-width: 1.8; }
+.sq-f .sq-whisker { fill: none; stroke: var(--ink); stroke-width: 1; opacity: 0.7; }
+.sq-f .sq-crease { fill: none; stroke: #8a5a2b; stroke-width: 1.8; stroke-linecap: round; }
+.sq-tail-hi { fill: #d9a86a; }
+.sq-paw { fill: #f4e1c4; stroke: none; }
+.sq-paw.dark { fill: #d9bf9a; }
+.sq-limb-edge { fill: none; stroke: #8a5a2b; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.sq-shoulder { fill: var(--nut); }
+/* Lighter line weight and soft creases at the joints (design review, 2026-11-16) */
+.sq-o * { stroke-width: 3.2; }
+.sq-limb-o { stroke-width: 6.4; }
+.sq-limb-edge { stroke-width: 5; }
+.sq-tail { stroke-width: 1.8; }
+.sq-tail-hi { stroke: none; }
+.sq-f .foot { fill: var(--nut-dark); }
+.sq-crease { fill: none; stroke: #8a5a2b; stroke-width: 1.8; stroke-linecap: round; }
+/* Nutmeg, design F */
+.squirrel .sq-o * { stroke-width: 2.6; }
+.squirrel .sq-tail { fill: #b4703b; stroke: none; }
+.squirrel .sq-tail-tip { fill: #e2b27b; }
+.squirrel .sq-f .sq-belly { fill: #f8e8d2; }
+.squirrel .sq-f .sq-ear-in { fill: #e9a184; }
+.squirrel .sq-f .foot { fill: var(--nut); }
+.squirrel .sq-crease { stroke: #6a3818; stroke-width: 1.4; }
+.squirrel .sq-limb-o { stroke-width: 7.6; }
+.squirrel .sq-limb { stroke: var(--nut); stroke-width: 5; }
+.squirrel .sq-limb.dark { stroke: #7a4220; }
+.squirrel .sq-limb-edge { stroke: #6a3818; stroke-width: 6.2; }
+.squirrel .sq-paw { fill: #f8e8d2; }
+.squirrel .sq-paw.dark { fill: #e6cfb2; }
+.sq-f > circle, .sq-f > g > circle { fill: var(--nut); }
+
+/* Step 7: Professor Hoot, the fork and the flat PMF */
+.owl-o { fill: var(--ink); stroke: var(--ink); stroke-width: 2.6; stroke-linejoin: round; }
+.owl-body { fill: #a8743f; }
+.owl-wing { fill: #8c5c2e; }
+.owl-belly { fill: #f3e0c6; }
+.owl-disc { fill: #ead2ad; }
+.owl-eyew { fill: #fff; }
+.owl-squint { fill: none; stroke: var(--ink); stroke-width: 2.3; stroke-linecap: round; }
+.owl-beak, .owl-foot { fill: #f0a43a; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
+.owl-gold-edge * { fill: none; stroke: #7a5e2c; stroke-width: 2.15; stroke-linecap: round; stroke-linejoin: round; }
+.owl-gold * { fill: none; stroke: #ddbc6a; stroke-width: 1.1; stroke-linecap: round; stroke-linejoin: round; }
+.owl-tint { fill: rgba(255, 246, 222, 0.18); stroke: none; }
+.glint { fill: none; stroke: #fff; stroke-width: 1.3; stroke-linecap: round; opacity: 0.9; }
+.trail-ground { fill: #cfe6c3; }
+.trail-edge { fill: none; stroke: #b8936a; stroke-width: 11; stroke-linecap: round; }
+.trail-path { fill: none; stroke: #e4cba4; stroke-width: 8; stroke-linecap: round; }
+.trail-hit { fill: none; stroke: transparent; stroke-width: 24; stroke-linecap: round; }
+.trail { cursor: pointer; outline: none; }
+.trail:focus-visible .trail-edge { stroke: #176ca5; }
+.trail.oak-trail .trail-path { stroke: #d8c79a; }
+.trail.chosen .trail-path { stroke: #f2cf6a; }
+.trail.chosen .trail-edge { stroke: #b88a1e; }
+.trail-n.chosen { font-weight: 800; fill: #8a5f00; }
+.oak-trunk { fill: #7a5232; stroke: var(--ink); stroke-width: 1; }
+.oak-crown { fill: #6f8a3c; stroke: var(--ink); stroke-width: 1.2; stroke-linejoin: round; }
+.marker { fill: #f2cf6a; stroke: #8a5f00; stroke-width: 1.6; }
+.marker-glow { fill: #f2cf6a; opacity: 0.35; }
+.kbar.oakbar { fill: #e6ddb8; }
+.tally { font-size: 15px; margin: 0 0 6px; }
+.trail-band { opacity: 0.6; }
+/* Step 7 board (study A) */
+.board-svg { touch-action: manipulation; }
+.bd-board { fill: #f4ecda; stroke: #2b2622; stroke-width: 4; }
+.bd-rust { fill: #c96f4f; } .bd-ochre { fill: #e0b14d; } .bd-grey { fill: #8f8a80; } .bd-black { fill: #2b2622; }
+.bd-edge { fill: none; stroke: #2b2622; stroke-width: 9.2; stroke-linecap: square; stroke-linejoin: round; }
+.bd-top { fill: none; stroke: #fbf6ea; stroke-width: 6.2; stroke-linecap: square; stroke-linejoin: round; }
+.bd-road.lit .bd-edge { stroke: #8a5f00; }
+.bd-road.lit .bd-top { stroke: #f2cf6a; }
+.bd-space { fill: #fbf6ea; stroke: #2b2622; stroke-width: 1.1; }
+.bd-node, .bd-start { fill: #fbf6ea; stroke: #2b2622; stroke-width: 1.6; }
+.bd-start { stroke-width: 1.8; }
+.bd-oaknode { fill: #f2cf6a; stroke: #2b2622; stroke-width: 1.8; }
+.bd-shadow { fill: rgba(40, 30, 20, 0.22); }
+.bd-deck { fill: #c99a5e; stroke: #2b2622; stroke-width: 1.3; }
+.bd-plank { stroke: rgba(40, 30, 20, 0.45); stroke-width: 1; }
+.bd-rail { stroke: #2b2622; stroke-width: 1.3; }
+.bd-berm { fill: #d9c39a; stroke: #2b2622; stroke-width: 1.3; }
+.portal { fill: #2b2622; }
+.bd-hollow { fill: #3b2b1e; }
+.bd-label { font: italic 600 14px Georgia, serif; fill: #3d3225; }
+.bd-small { font: italic 13px Georgia, serif; fill: #5a4a34; }
+.bd-token-o { fill: #f2cf6a; stroke: #2b2622; stroke-width: 2; }
+.bd-token-i { fill: #8a5f00; }
+.trail-chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 0; }
+.trail-chip { font: 14px Arial, sans-serif; border: 2px solid #2b2622; background: #fbf6ea; color: var(--ink); padding: 4px 8px; border-radius: 0; display: inline-flex; gap: 5px; align-items: center; min-height: 34px; }
+.trail-chip[aria-pressed="true"] { background: #f2cf6a; font-weight: 700; }
+.trail-chip .oakdot { width: 10px; height: 10px; border-radius: 50%; background: #6f8a3c; display: inline-block; }
+.bd-start-t { font-size: 9.5px; }
+/* narrow screens: larger board labels; the bridge and tunnel drawings speak for themselves */
+@media (max-width: 620px) { .bd-label { font-size: 16.5px; } .bd-small { display: none; } }
+/* Finn as one silhouette */
+.fox-ol > path, .fox-ol > ellipse, .fox-ol > g > * { fill: var(--ink); stroke: var(--ink); stroke-width: 5; stroke-linejoin: round; }
+.fox-f { fill: var(--fox); stroke: none; }
+.fox-fl .fox-leg { stroke-width: 4; }
+/* Step 8: one row of trials, three charts */
+.cmp-panel { fill: #fffdf7; stroke: var(--line); stroke-width: 1.4; }
+.cmp-who { font: 700 15.5px Arial, sans-serif; fill: var(--ink); }
+.cmp-tick { font: 600 15.5px Arial, sans-serif; fill: var(--muted); }
+.cmp-cell { fill: #f1f4f3; stroke: #8a9694; stroke-width: 1.4; }
+.cmp-cell.win { fill: var(--win); stroke: var(--win-ink); }
+.cmp-cell.miss { fill: var(--miss); stroke: var(--miss-ink); }
+.cmp-n { font: 700 15.5px Arial, sans-serif; fill: var(--muted); }
+.cmp-n.on { fill: #fff; }
+.cmp-ring { fill: none; stroke: var(--hl); stroke-width: 3; }
+.cmp-bracket { fill: none; stroke: var(--ink); stroke-width: 2; }
+.cmp-arrow { fill: var(--hl); stroke: var(--ink); stroke-width: 1.2; }
+.cmp-mark { font: italic 15.5px Georgia, serif; fill: var(--ink); }
+.kbar.cmp-hit { fill: #f2cf6a; stroke: #8a5f00; stroke-width: 2.4; }
+/* six-frame page: beat nav in the head of merged frames; a one-line title at 380 */
+.kicker .beat-nav { display: inline-flex; margin: 0 0 0 12px; vertical-align: middle; text-transform: none; font-family: Arial, sans-serif; }
+.kicker .beat-nav > div { gap: 4px; }
+.kicker .beat-nav button { min-height: 26px; padding: 2px 8px; font-size: 12px; }
+@media (max-width: 620px) { .kicker .beat-nav { margin-left: 8px; } .kicker:has(.beat-nav) .how { display: none; } }
+@media (max-width: 420px) { h1 { font-size: 20px; letter-spacing: -0.01em; } }
+.extreme { font-size: 15px; }
+h1 { font-size: clamp(22px, 5vw, 38px); }
+.cmp-line { justify-content: space-between; font-size: 15px; } .cmp-mean { color: var(--muted); }
+
+/* Leap chart, below the strip (Kimia review, 2026-11-20) */
+.leap-chart { margin-top: 6px; }
+.leap-chart .chart { width: 100%; height: auto; display: block; }
+
+/* ---------- Story beats (from the garden pots pilot, 2026-11-20): each of frames 1-5 opens on
+   its lines, then hands over to the demo ---------- */
+.intro { display: none; grid-column: 1 / -1; }
+.playing .intro { display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 22px; min-height: 440px; padding: 8px 2px 0; }
+.playing .f-left, .playing .f-right { display: none !important; }
+.intro-lines { display: grid; gap: 18px; width: 100%; max-width: 32em; }
+.intro, .intro-lines, .intro .ln { min-width: 0; }
+.intro .ln { margin: 0; font: 400 clamp(21px, 3.3vw, 27px)/1.35 Georgia, "Times New Roman", serif; opacity: 0; transform: translateY(10px); transition: opacity 520ms ease, transform 520ms ease; }
+.intro .ln.on { opacity: 1; transform: none; }
+.intro .ln math { font-size: 1em; }
+.intro .ln.bridge { font-style: italic; color: var(--tone); }
+.revealed .f-left, .revealed .f-right { animation: rise 460ms ease-out both; }
+.revealed .f-right { animation-delay: 120ms; }
+@keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.instant .intro .ln { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .intro .ln { transition: none; }
+  .revealed .f-left, .revealed .f-right { animation: none; }
+}
+.replay { margin-left: 12px; min-height: 24px; padding: 0; border: 0; background: none; color: var(--muted); font: 13px Arial, sans-serif; text-transform: none; text-decoration: underline; cursor: pointer; }
+/* Story figures */
+.intro .ln p { margin: 0; }
+.intro .ln:has(.fig) { display: grid; gap: 8px 22px; align-items: center; }
+@media (min-width: 620px) { .intro .ln:has(.fig) { grid-template-columns: minmax(0, 1fr) auto; } .intro-lines { max-width: 100%; } }
+.fig { display: grid; justify-items: start; gap: 3px; }
+.frow { display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap; }
+.fcrit { display: inline-grid; justify-items: center; gap: 2px; }
+.fcrit > svg { display: block; overflow: visible; }
+.fcap { font: 13px Arial, sans-serif; color: var(--muted); font-style: normal; }
+.fdot.win { fill: var(--win-bg); stroke: var(--win-ink); stroke-width: 2; }
+.fdot.miss { fill: var(--miss-bg); stroke: var(--miss-ink); stroke-width: 2; }
+.fbar { stroke: var(--ink); stroke-width: 1.5; }
+.fbar.win { fill: var(--win-bg); } .fbar.miss { fill: var(--miss-bg); }
+.fbeam { stroke: var(--ink); stroke-width: 3; stroke-linecap: round; }
+.fpivot { fill: var(--muted); }
+.fq { font: 700 20px Georgia, serif; fill: var(--tone); }
+.fhole { fill: #6b4f32; }
+.facorn { fill: #a8742f; stroke: #5e3f17; stroke-width: 1.5; }
+.ftrails { display: inline-flex; gap: 6px; }
+.ftrails b { display: inline-grid; place-items: center; width: 26px; height: 26px; border: 2px solid var(--line); border-radius: 6px; font: 700 14px Arial, sans-serif; color: var(--ink); }
+
+/* Compare: the campfire and the cards (2026-11-20) */
+.campfire { display: block; width: 100%; height: auto; border-radius: 8px; }
+.cf-sky { fill: #26304a; } .cf-star { fill: #fdf3dc; opacity: 0.8; } .cf-ground { fill: #3c4a3a; }
+.friend { cursor: pointer; outline: none; }
+.friend-ring { fill: transparent; stroke: transparent; stroke-width: 3; }
+.friend[aria-pressed="true"] .friend-ring { fill: rgba(246, 207, 110, 0.25); stroke: #f6cf6e; }
+.friend:focus-visible .friend-ring { stroke: #ffffff; stroke-dasharray: 5 4; }
+.friend-name { font: 700 16px Arial, sans-serif; fill: #fdf3dc; }
+.fire-log { stroke: #7a5532; stroke-width: 7; stroke-linecap: round; }
+.fire-out { fill: #f08a3c; } .fire-in { fill: #f6cf6e; }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin-top: 8px; }
+.card { padding: 5px 8px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 14px; }
+.card.told { border-color: var(--tone); }
+.card p { margin: 0; }
+.card-who { font: 700 13px Arial, sans-serif; color: var(--tone); }
+.card-ask { font: italic 14px Georgia, serif; color: var(--ink); }
+.card-q { display: block; width: 100%; padding: 2px 0; border: 0; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.card-q:focus-visible { outline: 3px solid var(--tone); outline-offset: 2px; border-radius: 4px; }
+.card:not(.told) .card-ask { color: var(--muted); }
+.card-body { display: grid; grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr); gap: 2px 10px; align-items: start; margin-top: 2px; }
+.card-body[hidden] { display: none; }
+.card-pmf { display: block; width: 100%; height: auto; }
+.card-bar { fill: var(--tone); opacity: 0.75; } .card-bar.tail { opacity: 0.4; }
+.card-axis { display: flex; justify-content: space-between; font: 12.5px Arial, sans-serif; color: var(--muted); }
+.card .fstrip { margin: 0; padding: 0; border-top: 0; flex-direction: row; flex-wrap: wrap; gap: 2px 14px; line-height: 1.2; font-size: 14px; }
+.card .fstrip-name { display: none; }
+.cf-params { margin-top: 8px; }
+</style>
+</head>
+<body>
+<main id="app">
+  <p class="eyebrow">Unit 1 synthesis</p>
+  <h1>Which distribution fits the count?</h1>
+
+  <div class="steps" role="tablist" aria-label="Steps">
+    <button type="button" class="step" role="tab" id="tab-0" data-frame="0" data-tone="morning"><b>1</b>Leap</button>
+    <button type="button" class="step" role="tab" id="tab-2" data-frame="2" data-tone="mean"><b>2</b>Balance</button>
+    <button type="button" class="step" role="tab" id="tab-4" data-frame="4" data-tone="hops"><b>3</b>Flies</button>
+    <button type="button" class="step" role="tab" id="tab-5" data-frame="5" data-tone="digs"><b>4</b>Digs</button>
+    <button type="button" class="step" role="tab" id="tab-6" data-frame="6" data-tone="trails"><b>5</b>Trails</button>
+    <button type="button" class="step" role="tab" id="tab-7" data-frame="7" data-tone="compare"><b>6</b>Compare</button>
+  </div>
+
+  <section id="frame-0" class="stage fstage" role="tabpanel" aria-labelledby="f0-title" data-tone="morning">
+    <div class="f-head">
+      <p class="kicker">1 · Leap<span class="how">leap, record each leap, then keep leaping</span></p>
+      <h2 id="f0-title" tabindex="-1">A landing and a splash aren't numbers yet.</h2>
+    </div>
+    <div class="f-left">
+      <div class="f-visual">
+        <svg id="scene" viewBox="0 24 600 266" role="img" aria-labelledby="scene-title" aria-describedby="scene-desc">
+          <title id="scene-title">Finn at the stream</title>
+          <desc id="scene-desc">Finn the fox stands on the near bank of a stream. One rock sits in the water halfway across.</desc>
+        </svg>
+        <div class="strip-wrap">
+          <p class="head strip-head" id="strip-head">Finn's leaps</p>
+          <ol id="strip" class="strip" aria-labelledby="strip-head"></ol>
+          <p id="strip-empty" class="strip-empty">No leaps yet.</p>
+        </div>
+      </div>
+      <div id="f0-changed" class="changed f-changed" hidden>
+        <p><span class="head">What changed</span><math><mi>X</mi></math> turns each leap into a number: <math><mn>1</mn></math> for a landing, <math><mn>0</mn></math> for a splash. A random variable that takes only the values <math><mn>1</mn></math> and <math><mn>0</mn></math> is a Bernoulli random variable, here the indicator of a landing. Its PMF gives the chance of each value. The share of landings changes with every leap, but the PMF stays the same.</p>
+      </div>
+    </div>
+    <div class="f-right">
+      <div class="f-text">
+        <p class="note"><span id="f0-prompt">Press Leap a few times.</span></p>
+      </div>
+      <div class="f-controls">
+        <div class="act">
+          <button type="button" id="leap" class="leap-btn">Leap</button>
+          <button type="button" id="restart" class="again small" hidden>Start the morning over</button>
+        </div>
+        <div class="act">
+          <button type="button" id="f0-go" class="go" hidden>Record each leap as a number<small>a random variable X and its PMF</small></button>
+        </div>
+      </div>
+      <div class="f-readout" aria-live="polite">
+        <p id="f0-problem" class="problem" hidden></p>
+        <div id="f0-hero" class="fhero" hidden>
+          <div class="fline">
+            <math display="block" aria-label="X equals 1 if Finn lands, and 0 if Finn splashes">
+              <mi>X</mi><mo>=</mo>
+              <mrow><mo stretchy="true">{</mo>
+                <mtable columnalign="left">
+                  <mtr><mtd><mn>1</mn></mtd><mtd><mtext>if Finn lands</mtext></mtd></mtr>
+                  <mtr><mtd><mn>0</mn></mtd><mtd><mtext>if Finn splashes</mtext></mtd></mtr>
+                </mtable>
+              </mrow>
+            </math>
+          </div>
+          <p id="f0-share" class="fsum"></p>
+          <div id="f0-pmf"></div>
+        </div>
+        <div id="f0-chart" class="leap-chart" hidden>
+        </div>
+      </div>
+    </div>
+  </section>
+  <div id="frames-rest"></div>
+
+  <div class="pager"><button type="button" id="prev" disabled>←<span class="wide"> Previous</span></button><span class="pcount" id="pcount">1 of 6</span><button type="button" id="next"><span class="wide" id="next-label">Next: Balance </span>→</button></div>
+
+  <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+</main>
+<script>
+/* Exact model for the woodland synthesis: Bernoulli, binomial, geometric and discrete
+   uniform PMFs, with means and variances as fractions. Parameters p are in tenths so
+   every displayed value is an exact fraction. tests/check_model.py checks the same
+   values independently with Python fractions. */
+(function () {
+  'use strict';
+  function big(x) { return typeof x === 'bigint' ? x : BigInt(x); }
+  function gcd(a, b) { a = a < 0n ? -a : a; b = b < 0n ? -b : b; while (b) { var t = a % b; a = b; b = t; } return a || 1n; }
+  function F(n, d) {
+    n = big(n); d = d === undefined ? 1n : big(d);
+    if (d === 0n) throw new Error('zero denominator');
+    if (d < 0n) { n = -n; d = -d; }
+    var g = gcd(n, d);
+    return { n: n / g, d: d / g };
+  }
+  function add(a, b) { return F(a.n * b.d + b.n * a.d, a.d * b.d); }
+  function sub(a, b) { return F(a.n * b.d - b.n * a.d, a.d * b.d); }
+  function mul(a, b) { return F(a.n * b.n, a.d * b.d); }
+  function div(a, b) { return F(a.n * b.d, a.d * b.n); }
+  function pow(a, k) { var r = F(1); for (var i = 0; i < k; i++) r = mul(r, a); return r; }
+  function eq(a, b) { return a.n === b.n && a.d === b.d; }
+  function str(a) { return a.d === 1n ? String(a.n) : a.n + '/' + a.d; }
+  function val(a) { return Number(a.n) / Number(a.d); }
+  var ZERO = F(0), ONE = F(1);
+
+  function choose(n, k) {
+    var r = 1n;
+    for (var i = 1; i <= k; i++) r = r * BigInt(n - k + i) / BigInt(i);
+    return r;
+  }
+  /* Mean and variance computed from the bars themselves: E[X] = sum k p(k) and
+     var(X) = sum (k - E[X])^2 p(k). Every chapter's readout uses these, and the
+     closed forms the lectures give are checked against them. */
+  function moments(values, pmf, tailMass) {
+    var mean = ZERO, v = ZERO;
+    values.forEach(function (k, i) { mean = add(mean, mul(F(k), pmf[i])); });
+    values.forEach(function (k, i) { var dv = sub(F(k), mean); v = add(v, mul(mul(dv, dv), pmf[i])); });
+    return { mean: mean, variance: v };
+  }
+
+  function bernoulli(p) {
+    return { name: 'bernoulli', values: [0, 1], pmf: [sub(ONE, p), p], mean: p, variance: mul(p, sub(ONE, p)) };
+  }
+  function binomial(n, p) {
+    var values = [], pmf = [], q = sub(ONE, p);
+    for (var k = 0; k <= n; k++) { values.push(k); pmf.push(mul(F(choose(n, k)), mul(pow(p, k), pow(q, n - k)))); }
+    var m = moments(values, pmf);
+    /* The mean n p comes from linearity (Lec. 2). The variance is computed from the
+       bars, since the formula n p (1 - p) needs independence of random variables,
+       taught in Unit 3. */
+    return { name: 'binomial', values: values, pmf: pmf, mean: mul(F(n), p), variance: m.variance };
+  }
+  /* Geometric on {1, 2, ...}: bars 1..K and one tail bar P(X > K) = (1 - p)^K. */
+  function geometric(p, K) {
+    K = K || 12;
+    var values = [], pmf = [], q = sub(ONE, p);
+    for (var k = 1; k <= K; k++) { values.push(k); pmf.push(mul(pow(q, k - 1), p)); }
+    return { name: 'geometric', values: values, pmf: pmf, tail: pow(q, K), K: K,
+      mean: div(ONE, p), variance: div(q, mul(p, p)) };
+  }
+  /* Memorylessness: given X > t, the extra digs X - t have the original PMF. */
+  function geometricAfter(p, t, K) {
+    var g = geometric(p, K + t), base = pow(sub(ONE, p), t), out = [];
+    for (var j = 1; j <= K; j++) out.push(div(g.pmf[t + j - 1], base));
+    return out;
+  }
+  function uniform(n) {
+    var values = [], pmf = [];
+    for (var k = 1; k <= n; k++) { values.push(k); pmf.push(F(1, n)); }
+    return { name: 'uniform', values: values, pmf: pmf, mean: F(n + 1, 2), variance: F(n * n - 1, 12) };
+  }
+  function tenths(t) { return F(t, 10); }
+
+  /* Seeded generator (mulberry32) so ?seed=N replays the same leaps. */
+  function rng(seed) {
+    if (seed === null || seed === undefined || isNaN(seed)) seed = Math.floor(Math.random() * 4294967296);
+    var a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      var t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function trial(rand, p) { return rand() < val(p) ? 1 : 0; }
+
+  window.WDModel = {
+    F: F, add: add, sub: sub, mul: mul, div: div, pow: pow, eq: eq, str: str, val: val, choose: choose,
+    moments: moments, bernoulli: bernoulli, binomial: binomial, geometric: geometric,
+    geometricAfter: geometricAfter, uniform: uniform, tenths: tenths, rng: rng, trial: trial,
+    /* Finn's leap in the first step: the rock sits halfway across. */
+    LEAP_P: F(1, 2), MAX_LEAPS: 12
+  };
+})();
+</script>
+<script>
+/* Shared helpers, Finn the fox, and the stream scene for the Leap step. */
+(function () {
+  'use strict';
+  var M = window.WDModel;
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var Q = new URLSearchParams(location.search);
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var instant = reduced || Q.get('anim') === '0';
+  var rand = M.rng(Q.has('seed') ? parseInt(Q.get('seed'), 10) : null);
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS(SVGNS, tag);
+    for (var a in attrs) n.setAttribute(a, attrs[a]);
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+  function h(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text !== undefined) n.textContent = text;
+    return n;
+  }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function tween(ms, fn) {
+    return new Promise(function (done) {
+      if (instant || ms <= 0) { fn(1); done(); return; }
+      /* Frames drive the motion; a timer finishes on schedule if frames stop
+         (a backgrounded tab), so a leap never leaves the button locked. */
+      var t0 = performance.now(), finished = false;
+      function end() { if (finished) return; finished = true; fn(1); done(); }
+      function step() {
+        if (finished) return;
+        var t = Math.min(1, (performance.now() - t0) / ms);
+        if (t >= 1) { end(); return; }
+        fn(t);
+        requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+      setTimeout(end, ms + 60);
+    });
+  }
+
+  /* ---------- Finn: local coordinates, feet at y = 0, facing right ---------- */
+  var LEGS = {
+    stand: [[-13, -14, -14, 0], [-5, -12, -5, 0], [8, -12, 8, 0], [15, -14, 16, 0]],
+    leap: [[-13, -14, -27, -7], [-5, -12, -18, -3], [8, -12, 23, -5], [15, -14, 31, -11]]
+  };
+  var TAIL = 'M-15 -30 C-32 -24 -52 -32 -56 -54 C-50 -63 -36 -57 -28 -47 C-22 -41 -16 -37 -12 -34 Z';
+  var uid = 0;
+  /* Finn as one silhouette (design review, 2026-11-18, as for Nutmeg): every part's ink
+     outline is drawn first, then every fill on top, so no outline crosses where the tail,
+     legs, body and head meet. Details (cream, eyes, mouth) sit on the fills. */
+  function buildFox(parent) {
+    var id = 'foxtail' + (++uid);
+    var g = el('g', { 'class': 'fox' }, parent);
+    var O = el('g', { 'class': 'fox-ol' }, g), Fl = el('g', { 'class': 'fox-fl' }, g);
+    function both(grpO, grpF, tag, attrs, cls) { el(tag, attrs, grpO); var n = el(tag, attrs, grpF); n.setAttribute('class', cls || 'fox-f'); return n; }
+    var cp = el('clipPath', { id: id }, el('defs', {}, g));
+    el('path', { d: TAIL }, cp);
+    both(O, Fl, 'path', { d: TAIL });
+    el('circle', { cx: -54, cy: -57, r: 11, 'class': 'fox-cream', 'clip-path': 'url(#' + id + ')' }, Fl);
+    var legs = [];
+    function leg(i) { legs[i] = [el('line', { 'class': 'fox-leg-o' }, O), el('line', { 'class': 'fox-leg' }, Fl)]; }
+    leg(0); leg(1);
+    both(O, Fl, 'ellipse', { cx: 0, cy: -22, rx: 21, ry: 13 });
+    el('path', { d: 'M-6 -13 C2 -9 12 -11 18 -17 C12 -13 2 -12 -6 -13 Z', 'class': 'fox-cream' }, Fl);
+    leg(2); leg(3);
+    var HT = 'translate(22 -39) scale(1.15)';
+    var headO = el('g', { transform: HT }, O), head = el('g', { transform: HT }, Fl);
+    both(headO, head, 'path', { d: 'M-8 -6 L-9 -24 L1 -11 Z' });
+    both(headO, head, 'circle', { cx: 0, cy: 0, r: 12 });
+    both(headO, head, 'path', { d: 'M0 -10 L7 -25 L11 -7 Z' });
+    both(headO, head, 'path', { d: 'M5 -5 C11 -4 16 -1 20 2 C16 6 10 8 4 8 Z' });
+    el('path', { d: 'M-6 -9 L-7 -19 L-1 -11 Z', 'class': 'fox-ear-in' }, head);
+    el('path', { d: 'M3 -10 L7 -20 L9 -9 Z', 'class': 'fox-ear-in' }, head);
+    el('path', { d: 'M-10 3 C-5 11 6 12 14 6 L5 1 Z', 'class': 'fox-cream' }, head);
+    el('circle', { cx: -1, cy: 5, r: 3.2, 'class': 'fox-blush' }, head);
+    el('circle', { cx: 20, cy: 2, r: 2.8, 'class': 'fox-nose' }, head);
+    var eye = el('g', {}, head);
+    var pupil = el('circle', { cx: 4, cy: -3, r: 2.7, 'class': 'fox-eye' }, eye);
+    el('circle', { cx: 4.9, cy: -4, r: 0.9, fill: '#fff' }, eye);
+    var eyeShut = el('path', { d: 'M0.5 -1.5 Q4 -6 7.5 -1.5', 'class': 'fox-eye-shut' }, head);
+    var smile = el('path', { d: 'M6 7 Q10 10.5 14 6.5', 'class': 'fox-mouth' }, head);
+    var grin = el('path', { d: 'M4.5 6 Q10 13.5 15 5.5 Z', 'class': 'fox-mouth-o' }, head);
+    var oh = el('ellipse', { cx: 10, cy: 8.5, rx: 2.3, ry: 2.8, 'class': 'fox-mouth-o' }, head);
+    function pose(name) {
+      LEGS[name].forEach(function (L, i) {
+        legs[i].forEach(function (ln) { ln.setAttribute('x1', L[0]); ln.setAttribute('y1', L[1]); ln.setAttribute('x2', L[2]); ln.setAttribute('y2', L[3]); });
+      });
+    }
+    /* calm: eye open, small smile; happy: eye shut, open grin; oops: wide eye, "o" mouth. */
+    function mood(name) {
+      eye.style.display = name === 'happy' ? 'none' : '';
+      pupil.setAttribute('r', name === 'oops' ? 3.1 : 2.7);
+      eyeShut.style.display = name === 'happy' ? '' : 'none';
+      smile.style.display = name === 'calm' ? '' : 'none';
+      grin.style.display = name === 'happy' ? '' : 'none';
+      oh.style.display = name === 'oops' ? '' : 'none';
+    }
+    pose('stand'); mood('calm');
+    return { g: g, pose: pose, mood: mood };
+  }
+
+  /* ---------- Stream scene (viewBox 600 x 290) ----------
+     buildScene(svg, prefix) draws into an existing <svg>. Step 1 uses prefix '' so its
+     groups keep the ids finn, splash and verdict; later steps pass their own prefix.
+     The rock is drawn at x = 340 and moved with setRock(x). */
+  var WATER_Y = 226, START = [104, 196], ROCK_X = 340, HOP = 112, SCALE = 1.6;
+  function buildScene(svg, prefix) {
+    prefix = prefix || '';
+    var clipId = prefix + 'above-water';
+    var cp = el('clipPath', { id: clipId }, el('defs', {}, svg));
+    el('rect', { x: 0, y: 0, width: 600, height: 236 }, cp);
+    /* The scene is drawn mirrored so Finn's bank is on the right, as in the Mean and Spread
+       steps, where the stream runs along the chart axis (a closer rock is a larger p). */
+    var world = el('g', { transform: 'translate(600 0) scale(-1 1)', 'class': 'world' }, svg);
+    var bd = el('g', {}, world);
+    el('rect', { x: 0, y: 0, width: 600, height: 290, 'class': 'sky' }, bd);
+    el('circle', { cx: 528, cy: 60, r: 28, 'class': 'sun' }, bd);
+    el('rect', { x: 0, y: WATER_Y, width: 600, height: 290 - WATER_Y, 'class': 'water' }, bd);
+    [[214, 250], [282, 272], [430, 256], [470, 278], [250, 284]].forEach(function (w) {
+      el('path', { d: 'M' + w[0] + ' ' + w[1] + ' q10 -6 20 0 q10 6 20 0', 'class': 'wave' }, bd);
+    });
+    el('path', { d: 'M0 196 L150 196 Q170 210 178 290 L0 290 Z', 'class': 'bank' }, bd);
+    el('path', { d: 'M600 196 L514 196 Q494 212 488 290 L600 290 Z', 'class': 'bank' }, bd);
+    [[28, 196], [40, 196], [560, 196], [574, 196]].forEach(function (r, i) {
+      el('line', { x1: r[0], y1: r[1], x2: r[0] + (i % 2 ? 5 : -4), y2: r[1] - 22, 'class': 'reed' }, bd);
+    });
+    var rock = el('g', { 'class': 'rock' }, world);
+    el('ellipse', { cx: ROCK_X, cy: WATER_Y, rx: 46, ry: 22, 'class': 'rock-body' }, rock);
+    el('path', { d: 'M' + (ROCK_X - 30) + ' ' + (WATER_Y - 12) + ' q14 -8 30 -8', 'class': 'rock-shine' }, rock);
+    el('rect', { x: ROCK_X - 60, y: WATER_Y + 8, width: 120, height: 20, 'class': 'water' }, rock);
+    el('path', { d: 'M' + (ROCK_X - 66) + ' ' + (WATER_Y + 9) + ' q66 12 132 0', 'class': 'rock-ripple' }, rock);
+    var splash = el('g', { id: prefix + 'splash' }, world);
+    var holder = el('g', { id: prefix + 'finn' }, el('g', { 'clip-path': 'url(#' + clipId + ')' }, world));
+    var verdict = el('text', { id: prefix + 'verdict', x: 300, y: 64, 'text-anchor': 'middle', 'aria-hidden': 'true', 'class': 'verdict' }, svg);
+    var fox = buildFox(holder);
+    var rockX = ROCK_X;
+    function setRock(x) { rockX = x; rock.setAttribute('transform', 'translate(' + (x - ROCK_X) + ' 0)'); }
+    function place(x, y, deg) { fox.g.setAttribute('transform', 'translate(' + x + ' ' + y + ') rotate(' + deg + ') scale(' + SCALE + ')'); }
+    function reset() {
+      place(START[0], START[1], 0); fox.pose('stand'); fox.mood('calm');
+      splash.textContent = ''; verdict.textContent = ''; verdict.setAttribute('class', 'verdict');
+    }
+    function drawSplash(x) {
+      el('ellipse', { cx: x, cy: WATER_Y + 4, rx: 56, ry: 9, 'class': 'ring' }, splash);
+      [[-52, -14], [-40, -32], [44, -30], [58, -12], [52, -46]].forEach(function (d) {
+        el('ellipse', { cx: x + d[0], cy: WATER_Y + d[1], rx: 5, ry: 7, 'class': 'drop' }, splash);
+      });
+    }
+    /* Where a miss ends: short of a far rock, past a near one, always in open water. */
+    function splashX() { return rockX >= 330 ? rockX - 124 : rockX + 116; }
+    /* Final pose without the flight, for a batch of leaps. */
+    function show(x) {
+      reset();
+      if (x) { place(rockX, WATER_Y - 22, 0); fox.mood('happy'); }
+      else { place(splashX(), WATER_Y + 36, 6); fox.mood('oops'); drawSplash(splashX() + 6); }
+      verdict.textContent = x ? 'Lands!' : 'Splash!';
+      verdict.setAttribute('class', 'verdict ' + (x ? 'win' : 'miss'));
+    }
+    /* One leap: an arc from the bank to the rock top (x = 1) or into the water (x = 0). */
+    function leap(x) {
+      reset();
+      var end = x ? [rockX, WATER_Y - 22] : [splashX(), WATER_Y + 36];
+      fox.pose('leap'); fox.mood('calm');
+      return tween(720, function (t) {
+        var px = lerp(START[0], end[0], t), py = lerp(START[1], end[1], t) - HOP * 4 * t * (1 - t);
+        place(px, py, lerp(-18, x ? 6 : 26, t));
+      }).then(function () { fox.pose('stand'); show(x); });
+    }
+    reset();
+    return { reset: reset, leap: leap, show: show, setRock: setRock, fox: fox };
+  }
+
+  /* Small icons for the outcome strip. */
+  function icon(x) {
+    var s = el('svg', { viewBox: '0 0 34 22', 'aria-hidden': 'true' });
+    if (x) {
+      el('ellipse', { cx: 17, cy: 16, rx: 13, ry: 5.5, 'class': 'ic-rock' }, s);
+      el('path', { d: 'M10 7 L15 11 L24 2', 'class': 'ic-tick' }, s);
+    } else {
+      el('ellipse', { cx: 17, cy: 17, rx: 13, ry: 4, 'class': 'ic-ring' }, s);
+      [[9, 9], [17, 5], [25, 9]].forEach(function (d) { el('ellipse', { cx: d[0], cy: d[1], rx: 2.6, ry: 3.6, 'class': 'ic-drop' }, s); });
+    }
+    return s;
+  }
+
+  if (instant) document.documentElement.classList.add('instant');
+  window.__wdShared = { $: $, el: el, h: h, tween: tween, instant: instant, rand: rand, buildFox: buildFox, buildScene: buildScene, icon: icon };
+})();
+</script>
+<script>
+/* Shared pieces for steps 2-7: the stage scaffold, the fix button with its undo,
+   MathML for fractions, the rock control shared by Finn's steps, and the bar chart. */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, el = S.el, h = S.h, $ = S.$;
+  var NAMES = ['Leap', 'PMF', 'Mean', 'Spread', 'Flies', 'Digs', 'Trails', 'Compare'];
+  var TONES = ['morning', 'pmf', 'mean', 'spread', 'hops', 'digs', 'trails', 'compare'];
+
+  /* ---------- Stage: head; left column visual + What changed; right column text, controls, readout ---------- */
+  function stage(n, how, title) {
+    var sec = h('section', 'stage fstage'); sec.id = 'frame-' + n; sec.hidden = true;
+    sec.setAttribute('role', 'tabpanel'); sec.setAttribute('aria-labelledby', 'f' + n + '-title');
+    sec.dataset.tone = TONES[n];
+    var head = h('div', 'f-head'), left = h('div', 'f-left'), right = h('div', 'f-right');
+    var kick = h('p', 'kicker', (n + 1) + ' · ' + NAMES[n]);
+    if (how) kick.appendChild(h('span', 'how', how));
+    var h2 = h('h2', '', title); h2.id = 'f' + n + '-title'; h2.tabIndex = -1;
+    head.appendChild(kick); head.appendChild(h2);
+    var visual = h('div', 'f-visual'), changed = h('div', 'changed f-changed');
+    changed.id = 'f' + n + '-changed'; changed.hidden = true;
+    var text = h('div', 'f-text'), controls = h('div', 'f-controls'), readout = h('div', 'f-readout');
+    readout.setAttribute('aria-live', 'polite');
+    left.appendChild(visual); left.appendChild(changed);
+    [text, controls, readout].forEach(function (x) { right.appendChild(x); });
+    [head, left, right].forEach(function (x) { sec.appendChild(x); });
+    $('frames-rest').appendChild(sec);
+    return { n: n, sec: sec, h2: h2, text: text, visual: visual, controls: controls, readout: readout, changed: changed };
+  }
+  function para(parent, cls, html) { var p = h('p', cls); p.innerHTML = html; parent.appendChild(p); return p; }
+  /* One button named for the fix, with the method under it, and an undo. */
+  function act(parent, n, label, method, againLabel, onGo, onAgain) {
+    var row = h('div', 'act');
+    var go = h('button', 'go'); go.type = 'button'; go.id = 'f' + n + '-go';
+    go.appendChild(document.createTextNode(label));
+    if (method) { var sm = h('small', ''); sm.innerHTML = method; go.appendChild(sm); }
+    var again = h('button', 'again', againLabel); again.type = 'button'; again.id = 'f' + n + '-again'; again.hidden = true;
+    row.appendChild(go); row.appendChild(again); parent.appendChild(row);
+    go.addEventListener('click', function () { go.hidden = true; again.hidden = false; onGo(); again.focus(); });
+    again.addEventListener('click', function () { again.hidden = true; go.hidden = false; onAgain(); go.focus(); });
+    return { go: go, again: again, row: row };
+  }
+  function changed(f, html) { f.changed.innerHTML = '<p><span class="head">What changed</span>' + html + '</p>'; }
+
+  /* ---------- MathML ---------- */
+  function mn(x) { return '<mn>' + x + '</mn>'; }
+  function mfrac(F) {
+    var neg = F.n < 0n, n = neg ? -F.n : F.n;
+    var body = F.d === 1n ? mn(n) : '<mfrac>' + mn(n) + mn(F.d) + '</mfrac>';
+    return neg ? '<mo>−</mo>' + body : body;
+  }
+  function math(inner, label) { return '<math' + (label ? ' aria-label="' + label + '"' : '') + '>' + inner + '</math>'; }
+  function frac(F) { return math(mfrac(F)); }
+  /* One formula strip per distribution, in the same three rows on every frame (Kimia's review, 2026-11-20). */
+  var PXK = '<msub><mi>p</mi><mi>X</mi></msub><mo stretchy="false">(</mo><mi>k</mi><mo stretchy="false">)</mo>';
+  var EXM = '<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo>';
+  var VARM = '<mi>var</mi><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo>';
+  /* Rows: PMF, E[X], var(X). Each frame calls stripSet with its current values; a null variance
+     formula shows the value only (the binomial: its formula waits for independence, 2x Unit 3). */
+  var STRIPS = {};
+  function strip(id, name, pmf, range, mean, variance) {
+    STRIPS[id] = { mean: mean, variance: variance };
+    return '<div class="fstrip" id="' + id + '-strip" data-dist="' + name.toLowerCase() + '"><p class="fstrip-name">' + name + '</p>' +
+      '<p class="fstrip-row">' + math((pmf.indexOf('<msub><mi>p</mi><mi>X</mi></msub>') === 0 ? '' : PXK + '<mo>=</mo>') + pmf) + (range ? '<span class="fstrip-range">' + range + '</span>' : '') + '</p>' +
+      '<p class="fstrip-row" id="' + id + '-mean">' + math(EXM + '<mo>=</mo>' + mean) + '</p>' +
+      '<p class="fstrip-row" id="' + id + '-var">' + math(VARM + '<mo>=</mo>' + (variance || '')) + '</p></div>';
+  }
+  function stripSet(id, meanVal, varVal, varNote, noPivot) {
+    var s = STRIPS[id], m = $(id + '-mean'), v = $(id + '-var');
+    if (!s || !m || !v) return;
+    m.innerHTML = math(EXM + '<mo>=</mo>' + s.mean + '<mo>=</mo>' + mfrac(meanVal)) + (noPivot ? '' : '<span class="fstrip-range">at the pivot</span>');
+    v.innerHTML = math(VARM + '<mo>=</mo>' + (s.variance ? s.variance + '<mo>=</mo>' : '') + mfrac(varVal)) + (varNote ? '<span class="fstrip-range">' + varNote + '</span>' : '');
+    m.dataset.value = M.str(meanVal); v.dataset.value = M.str(varVal);
+  }
+  /* Plain-text fraction for SVG labels and aria text, with a true minus sign. */
+  function ftext(F) { return M.str(F).replace('-', '−'); }
+
+  /* ---------- Finn's rock, shared by steps 2-4: t = 0..10, p = t/10 ---------- */
+  var rock = {
+    t: 7, subs: [],
+    p: function () { return M.tenths(this.t); },
+    set: function (t) {
+      t = Math.max(0, Math.min(10, t));
+      if (t === this.t) return;
+      this.t = t; this.subs.forEach(function (f) { f(t); });
+    },
+    on: function (f) { this.subs.push(f); }
+  };
+  function rockX(t) { return 262 - t * 19; }
+  /* Rock control: click or drag in an svg to place the rock; arrow keys move it one
+     step (left and up bring it closer, so p grows). toT maps an svg x to a slot t.
+     The caption under it names the ends, or p once the PMF has been drawn. */
+  function attachRock(svg, toT, capParent, showP, onRefresh, flip) {
+    svg.setAttribute('role', 'slider'); svg.setAttribute('tabindex', '0');
+    svg.setAttribute('aria-label', 'Rock position'); svg.setAttribute('aria-valuemin', '0'); svg.setAttribute('aria-valuemax', '10');
+    svg.classList.add('rock-ctl');
+    var cap = h('p', 'rs-cap'); capParent.appendChild(cap);
+    function refresh() {
+      svg.setAttribute('aria-valuenow', String(rock.t));
+      svg.setAttribute('aria-valuetext', showP ? 'Chance of a landing p = ' + ftext(rock.p()) : 'Rock ' + (10 - rock.t) + ' steps from Finn\'s bank');
+      cap.innerHTML = showP ? 'Chance of a landing ' + math('<mi>p</mi><mo>=</mo>' + mfrac(rock.p())) : (flip ? '<span>← farther rock</span><span>closer rock →</span>' : '<span>← closer rock</span><span>farther rock →</span>');
+      cap.classList.toggle('ends', !showP);
+      if (onRefresh) onRefresh(rock.t);
+    }
+    function fromEvent(e) {
+      var pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+      rock.set(toT(pt.matrixTransform(svg.getScreenCTM().inverse()).x));
+    }
+    var dragging = false;
+    /* Dragging must not select page text: cancel the press's default (which starts a
+       text selection), keep focus on the control for the arrow keys, and capture the pointer. */
+    svg.addEventListener('pointerdown', function (e) {
+      e.preventDefault(); svg.focus({ preventScroll: true }); dragging = true;
+      try { svg.setPointerCapture(e.pointerId); } catch (err) { /* synthetic pointer */ }
+      fromEvent(e);
+    });
+    svg.addEventListener('selectstart', function (e) { e.preventDefault(); });
+    svg.addEventListener('pointermove', function (e) { if (dragging) fromEvent(e); });
+    svg.addEventListener('pointerup', function () { dragging = false; });
+    svg.addEventListener('pointercancel', function () { dragging = false; });
+    svg.addEventListener('keydown', function (e) {
+      var k = e.key, d = (flip ? { ArrowRight: 1, ArrowUp: 1, ArrowLeft: -1, ArrowDown: -1 } : { ArrowLeft: 1, ArrowUp: 1, ArrowRight: -1, ArrowDown: -1 })[k];
+      if (d) { e.preventDefault(); rock.set(rock.t + d); }
+      else if (k === 'Home') { e.preventDefault(); rock.set(10); }
+      else if (k === 'End') { e.preventDefault(); rock.set(0); }
+    });
+    rock.on(refresh);
+    refresh();
+    return { node: svg, cap: cap, refresh: refresh, showP: function (on) { showP = on; refresh(); } };
+  }
+  /* A stream band across the top of a chart (viewBox width 420, rows 0..84), on the
+     chart's own scale: the rock sits at Xof(p), right above that value on the axis.
+     The far bank is on the left and Finn's bank on the right, so a closer rock is a
+     larger p. Returns set(t). */
+  function streamBand(svg, Xof, L, R) {
+    var WY = 40, H = 84, g = el('g', { 'class': 'band-stream' }, svg);
+    el('rect', { x: 0, y: 0, width: 420, height: H, rx: 8, 'class': 'rs-sky' }, g);
+    el('rect', { x: 0, y: WY, width: 420, height: H - WY, 'class': 'water' }, g);
+    el('path', { d: 'M0 ' + (WY - 4) + ' L' + (L - 10) + ' ' + (WY - 4) + ' Q' + (L - 2) + ' ' + (WY + 6) + ' ' + L + ' ' + H + ' L0 ' + H + ' Z', 'class': 'bank' }, g);
+    el('path', { d: 'M420 ' + (WY - 4) + ' L' + (R + 10) + ' ' + (WY - 4) + ' Q' + (R + 2) + ' ' + (WY + 6) + ' ' + R + ' ' + H + ' L420 ' + H + ' Z', 'class': 'bank' }, g);
+    S.buildFox(el('g', { transform: 'translate(' + (R + 24) + ' ' + (WY - 4) + ') scale(-0.45 0.45)' }, g)).mood('calm');
+    for (var t = 0; t <= 10; t++) el('line', { x1: Xof(t / 10), x2: Xof(t / 10), y1: H - 9, y2: H - 3, 'class': 'rs-tick' }, g);
+    var r = el('g', { 'class': 'rs-rock' }, g);
+    el('ellipse', { cx: 0, cy: WY + 6, rx: 18, ry: 9, 'class': 'rock-body' }, r);
+    return { set: function (t) { r.setAttribute('transform', 'translate(' + Xof(t / 10).toFixed(1) + ' 0)'); }, bottom: H };
+  }
+  /* A small stream for steps 3-4: Finn's bank on the left, far bank on the right. */
+  function rockStrip(parent, opts) {
+    opts = opts || {};
+    var wrap = h('div', 'rockstrip');
+    var svg = el('svg', { viewBox: '0 0 320 86', 'class': 'rs-svg' });
+    el('rect', { x: 0, y: 0, width: 320, height: 86, 'class': 'rs-sky' }, svg);
+    el('rect', { x: 0, y: 50, width: 320, height: 36, 'class': 'water' }, svg);
+    el('path', { d: 'M0 42 L44 42 Q52 50 56 86 L0 86 Z', 'class': 'bank' }, svg);
+    el('path', { d: 'M320 42 L282 42 Q272 52 270 86 L320 86 Z', 'class': 'bank' }, svg);
+    S.buildFox(el('g', { transform: 'translate(30 42) scale(0.5)' }, svg)).mood('calm');
+    for (var t = 0; t <= 10; t++) el('line', { x1: rockX(t), y1: 76, x2: rockX(t), y2: 82, 'class': 'rs-tick' }, svg);
+    var r = el('g', { 'class': 'rs-rock' }, svg);
+    el('ellipse', { cx: 0, cy: 52, rx: 15, ry: 8, 'class': 'rock-body' }, r);
+    wrap.appendChild(svg); parent.appendChild(wrap);
+    return attachRock(svg, function (x) { return Math.round((262 - x) / 19); }, wrap, !!opts.showP,
+      function (t) { r.setAttribute('transform', 'translate(' + rockX(t) + ' 0)'); });
+  }
+
+  /* ---------- Bar chart (viewBox 420 x H). X maps values to x, Y maps probability to y. ---------- */
+  function chart(parent, o) {
+    var W = 420, H = o.height || 220, x0 = 48, x1 = 408, base = o.base || 168, top = o.top || 34;
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart', role: 'img', 'aria-label': o.label || 'Bar chart' });
+    parent.appendChild(svg);
+    var a = o.domain[0], b = o.domain[1], yMax = o.yMax;
+    function X(v) { return x0 + (v - a) / (b - a) * (x1 - x0); }
+    function Y(q) { return base - q / yMax * (base - top); }
+    var L = {};
+    ['grid', 'band', 'bars', 'ghosts', 'over', 'axis'].forEach(function (k) { L[k] = el('g', { 'class': 'c-' + k }, svg); });
+    (o.yTicks || []).forEach(function (q) {
+      el('line', { x1: x0, x2: x1, y1: Y(M.val(q)), y2: Y(M.val(q)), 'class': 'c-gridline' }, L.grid);
+      var t = el('text', { x: x0 - 8, y: Y(M.val(q)) + 6, 'text-anchor': 'end', 'class': 'c-tick' }, L.grid); t.textContent = ftext(q);
+    });
+    if (!o.noBase) el('line', { x1: x0, x2: x1, y1: base, y2: base, 'class': 'c-base' }, L.axis);
+    if (o.yTitle) { var yt = el('text', { x: 4, y: 15, 'class': 'c-title' }, L.axis); yt.textContent = o.yTitle; L.yTitle = yt; }
+    function clear(g) { g.textContent = ''; }
+    /* bars: [{v, q (Fraction), cls, label}] */
+    function bars(list, w) {
+      clear(L.bars); w = w || o.barW || 60;
+      list.forEach(function (d) {
+        var q = M.val(d.q), y = Y(q);
+        el('rect', { x: X(d.v) - w / 2, y: y, width: w, height: base - y, 'class': 'c-bar ' + (d.cls || ''), 'data-v': d.v, 'data-q': M.str(d.q) }, L.bars);
+        if (d.label !== false) {
+          var t = el('text', { x: X(d.v), y: y - 8, 'text-anchor': 'middle', 'class': 'c-val' }, L.bars);
+          t.textContent = d.label || ftext(d.q);
+        }
+      });
+    }
+    /* ghost bars (observed fractions): [{v, q (number), label}] drawn as dashed outlines */
+    function ghosts(list, w) {
+      clear(L.ghosts); w = (w || o.barW || 60) + 12;
+      (list || []).forEach(function (d) {
+        var y = Y(d.q);
+        el('rect', { x: X(d.v) - w / 2, y: y, width: w, height: base - y, 'class': 'c-ghost', 'data-v': d.v, 'data-q': String(d.q) }, L.ghosts);
+        if (d.label) { var t = el('text', { x: X(d.v), y: y - 8, 'text-anchor': 'middle', 'class': 'c-gval' }, L.ghosts); t.textContent = d.label; }
+      });
+    }
+    function xLabels(list, y) {
+      list.forEach(function (d) {
+        var t = el('text', { x: X(d.v), y: y || base + 24, 'text-anchor': 'middle', 'class': 'c-x' + (d.cls ? ' ' + d.cls : '') }, L.axis);
+        t.textContent = d.text;
+      });
+    }
+    return { svg: svg, X: X, Y: Y, L: L, bars: bars, ghosts: ghosts, xLabels: xLabels, base: base, top: top, x0: x0, x1: x1, W: W, H: H };
+  }
+
+  S.kit = { NAMES: NAMES, TONES: TONES, stage: stage, para: para, act: act, changed: changed, strip: strip, stripSet: stripSet, EXM: EXM, VARM: VARM,
+    mn: mn, mfrac: mfrac, math: math, frac: frac, ftext: ftext, rock: rock, rockStrip: rockStrip, attachRock: attachRock, streamBand: streamBand, chart: chart };
+})();
+</script>
+<script>
+/* Step 1 (Leap). Finn's outcomes start as pictures, which can't go on a chart. The fix
+   records each leap as a number, X = 1 for a landing and 0 for a splash, and draws its
+   PMF. After that, each press of Leap adds one leap, and the dashed bars (the share of
+   all leaps so far) close in on the PMF (Kimia's review, 2026-11-20: one leap per press,
+   no batches of twenty, no Hide the PMF, no rock to move here). */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, $ = S.$, h = S.h, math = K.math, mf = K.mfrac;
+  var P = M.LEAP_P, MAX = 60, SHOWN = 6;
+  var scene = S.buildScene($('scene'), '');
+  var state = { leaps: [], numbered: false, busy: false };
+  var strip = $('strip');
+  var PX = function (k) { return '<msub><mi>p</mi><mi>X</mi></msub><mo stretchy="false">(</mo>' + K.mn(k) + '<mo stretchy="false">)</mo>'; };
+
+  var ch = K.chart($('f0-chart'), { domain: [-0.7, 1.7], yMax: 1, yTicks: [M.F(0), M.F(1, 2), M.F(1)], height: 140, base: 108, barW: 74,
+    label: 'Share of Finn\'s leaps so far for each value of X, and the PMF', yTitle: 'probability' });
+  ch.xLabels([{ v: 0, text: 'X = 0: splash' }, { v: 1, text: 'X = 1: lands' }]);
+
+  function say(msg) { $('status').textContent = msg; }
+  function chipLabel(i, x) {
+    return 'Leap ' + (i + 1) + ': ' + (x ? 'lands' : 'splash') + (state.numbered ? ', X = ' + x : '');
+  }
+  /* The strip shows the latest six leaps; the count line gives the total. */
+  function addChip(i, x) {
+    var li = h('li', 'chip ' + (x ? 'win' : 'miss'));
+    li.appendChild(S.icon(x));
+    li.appendChild(h('span', 'w', x ? 'lands' : 'splash'));
+    li.appendChild(h('span', 'x', String(x)));
+    li.setAttribute('aria-label', chipLabel(i, x));
+    li.dataset.i = String(i);
+    strip.appendChild(li);
+    while (strip.children.length > SHOWN) strip.removeChild(strip.firstChild);
+    if (!S.instant) { li.classList.add('pop'); }
+  }
+  function relabel() {
+    [].forEach.call(strip.children, function (li) { li.setAttribute('aria-label', chipLabel(+li.dataset.i, state.leaps[+li.dataset.i])); });
+  }
+  function landings() { return state.leaps.reduce(function (a, b) { return a + b; }, 0); }
+  function readout() {
+    var n = state.leaps.length, L = landings();
+    $('strip-empty').hidden = n > 0;
+    $('f0-go').hidden = state.numbered || n === 0;
+    $('restart').hidden = n < MAX;
+    $('leap').disabled = state.busy || n >= MAX;
+    $('f0-problem').hidden = state.numbered || n === 0;
+    $('f0-problem').textContent = 'What is the chance of a landing? The pictures give nothing to chart.';
+    $('f0-hero').hidden = !state.numbered; $('f0-chart').hidden = !state.numbered;
+    $('f0-changed').hidden = !state.numbered;
+    strip.classList.toggle('numbered', state.numbered);
+    $('strip-head').textContent = (state.numbered ? "Finn's leaps and the value of X" : "Finn's leaps") + (n > SHOWN ? ' (the latest ' + SHOWN + ' of ' + n + ')' : '');
+    /* chart: PMF bars and the share of leaps so far, once the leaps are numbers */
+    ch.bars(state.numbered ? [{ v: 0, q: M.sub(M.F(1), P), cls: 'miss' }, { v: 1, q: P, cls: 'win' }] : []);
+    ch.ghosts(state.numbered && n ? [{ v: 0, q: (n - L) / n, label: '' }, { v: 1, q: L / n, label: '' }] : []);
+    $('f0-chart').dataset.share = state.numbered && n ? L + '/' + n : '';
+    $('f0-share').innerHTML = state.numbered ? 'Landed so far: <b>' + L + ' of ' + n + '</b> (dashed).' : '';
+    $('f0-share').dataset.value = String(L);
+    $('f0-pmf').innerHTML = state.numbered ?
+      '<div class="fline">' + math(PX(1) + '<mo>=</mo><mi>p</mi><mo>=</mo>' + mf(P)) + ' and ' + math(PX(0) + '<mo>=</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo>=</mo>' + mf(M.sub(M.F(1), P))) + '</div>' : '';
+    $('f0-prompt').textContent = n === 0 ? 'Press Leap a few times.'
+      : n >= MAX ? 'That makes ' + MAX + ' leaps. Start the morning over to leap again.'
+      : state.numbered ? 'Keep leaping. Watch the dashed bars as the leaps add up.'
+      : 'Leap again, or record each leap as a number.';
+  }
+
+  function leap() {
+    if (state.busy || state.leaps.length >= MAX) return Promise.resolve(null);
+    state.busy = true; readout();
+    var x = M.trial(S.rand, P);
+    return scene.leap(x).then(function () {
+      state.leaps.push(x);
+      addChip(state.leaps.length - 1, x);
+      state.busy = false; readout();
+      say('Leap ' + state.leaps.length + ': ' + (x ? 'Finn lands on the rock.' : 'Finn splashes into the water.') +
+        (state.numbered ? ' X = ' + x + '. ' + landings() + ' of ' + state.leaps.length + ' leaps have landed.' : ''));
+      return x;
+    });
+  }
+  function record() {
+    state.numbered = true; relabel(); readout();
+    say('Each leap is now a number, and the chart shows the PMF. ' + $('f0-share').textContent);
+    $('leap').focus();
+  }
+  function restart() {
+    state.leaps = []; state.numbered = false; strip.textContent = '';
+    scene.reset(); readout(); say('A new morning. No leaps yet.');
+    $('leap').focus();
+  }
+  $('leap').addEventListener('click', leap);
+  $('f0-go').addEventListener('click', record);
+  $('restart').addEventListener('click', restart);
+
+  readout();
+  window.__wd = { state: state, leap: leap, record: record, restart: restart, scene: scene, chart: ch, instant: S.instant, MAX: MAX };
+})();
+</script>
+<script>
+/* Steps 2-4: Finn's Bernoulli. One rock, shared by the three steps, sets p = t/10.
+   Mean: moving the rock tips a plank on a fixed pivot; the fix moves the pivot to E[X].
+   Spread: signed distances from E[X] always average to 0; the fix squares them. */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, el = S.el, h = S.h, $ = S.$;
+  var F = M.F, rock = K.rock, mf = K.mfrac, math = K.math, ft = K.ftext;
+  var PX = function (k) { return '<msub><mi>p</mi><mi>X</mi></msub><mo stretchy="false">(</mo>' + K.mn(k) + '<mo stretchy="false">)</mo>'; };
+  var DOT = '<mo>·</mo>';
+  function pmfBars() {
+    var p = rock.p();
+    return [{ v: 0, q: M.sub(F(1), p), cls: 'miss' }, { v: 1, q: p, cls: 'win' }];
+  }
+  function sceneRockX(t) { return 450 - t * 21; }
+
+  /* ================= Step 3: Mean =================
+     One figure: the stream on top and the plank below share one scale, so the rock
+     sits right above its value of p. The pivot starts at 1/2; moving the rock tips the
+     plank. The fix moves the pivot under the rock, the balance point E[X] = p. */
+  var EX = math('<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo>');
+  /* The dashed balance line is drawn only where it clears every bar and its label. */
+  function clearOfBars(X, pv, halfW) { return [0, 1].every(function (v) { return Math.abs(X(pv) - X(v)) >= halfW + 8; }); }
+  var s3 = (function () {
+    var f = K.stage(2, 'move the rock, then move the pivot', 'The pivot stays at 1/2, so the plank tips when the rock moves.');
+    K.para(f.text, 'note', 'Click or drag in the stream to move the rock, and watch the plank.');
+    var W = 420, H = 312, BEAM = 200, GROUND = 244, HALF = 30;
+    function X(v) { return 48 + (v + 0.35) / 1.7 * 360; }
+    var svg = el('svg', { viewBox: '0 0 ' + W + ' ' + H, 'class': 'chart beam-svg' });
+    f.visual.appendChild(svg);
+    var band = K.streamBand(svg, X, 64, 372);
+    el('line', { x1: X(-0.3), x2: X(1.3), y1: GROUND, y2: GROUND, 'class': 'c-base' }, svg);
+    for (var i = 0; i <= 10; i++) el('line', { x1: X(i / 10), x2: X(i / 10), y1: GROUND + 2, y2: GROUND + (i % 5 ? 8 : 13), 'class': 'c-tickmark' }, svg);
+    [[0, '0'], [0.5, '1/2'], [1, '1']].forEach(function (d) { var t = el('text', { x: X(d[0]), y: GROUND + 34, 'text-anchor': 'middle', 'class': 'c-x' }, svg); t.textContent = d[1]; });
+    var guide = el('g', { 'class': 'beam-guide' }, svg), mean = el('g', { 'class': 'beam-mean' }, svg);
+    var beam = el('g', { 'class': 'beam' }, svg), pivot = el('path', { 'class': 'pivot' }, svg);
+    var st = { c: 5, fixed: false, angle: 0 };
+    var ctl = K.attachRock(svg, function (x) { return Math.round((x - X(0)) / (X(1) - X(0)) * 10); }, f.visual, true, band.set, true);
+    function angleFor() { return Math.max(-8, Math.min(8, 24 * (rock.t - st.c) / 10)); }
+    function drawBeam(angle) {
+      var cx = X(st.c / 10);
+      beam.textContent = '';
+      el('rect', { x: X(-0.3), y: BEAM - 4, width: X(1.3) - X(-0.3), height: 8, rx: 3, 'class': 'plank' }, beam);
+      pmfBars().forEach(function (d) {
+        var hh = M.val(d.q) * 96;
+        el('rect', { x: X(d.v) - HALF, y: BEAM - 4 - hh, width: 2 * HALF, height: hh, 'class': 'c-bar ' + d.cls, 'data-v': d.v }, beam);
+        var t = el('text', { x: X(d.v), y: BEAM - 12 - hh, 'text-anchor': 'middle', 'class': 'c-val' }, beam); t.textContent = ft(d.q);
+      });
+      beam.setAttribute('transform', 'rotate(' + angle.toFixed(2) + ' ' + cx + ' ' + BEAM + ')');
+      beam.dataset.angle = angle.toFixed(2);
+      pivot.setAttribute('d', 'M' + cx + ' ' + (BEAM + 4) + ' L' + (cx - 17) + ' ' + GROUND + ' L' + (cx + 17) + ' ' + GROUND + ' Z');
+      pivot.dataset.c = String(st.c);
+      st.angle = angle;
+    }
+    var a = K.act(f.controls, 2, 'Move the pivot to the balance point', 'the expectation ' + EX, 'Put the pivot back at 1/2', fix, unfix);
+    var line = K.para(f.readout, 'fsum', '');
+    var hero = h('div', 'fhero'); hero.id = 'f2-hero'; f.readout.appendChild(hero);
+    K.changed(f, EX + ' is where the PMF bars balance. For Finn\'s leap it is ' + math('<mi>p</mi>') + ', right under the rock. Over many leaps, it is the fraction of leaps that land.');
+    function draw() {
+      var p = rock.p(), pv = M.val(p), level = st.c === rock.t;
+      drawBeam(angleFor());
+      line.innerHTML = st.fixed ? 'The pivot follows the rock, so the plank stays level.'
+        : 'The pivot is at ' + math(mf(F(1, 2))) + '. ' + (level ? '<b>The plank is level.</b>' : 'The plank tips toward ' + math('<mi>X</mi><mo>=</mo>' + K.mn(rock.t > st.c ? 1 : 0)) + '.');
+      line.dataset.level = level ? '1' : '0';
+      guide.textContent = ''; mean.textContent = '';
+      if (st.fixed) {
+        if (clearOfBars(X, pv, HALF)) el('line', { x1: X(pv), x2: X(pv), y1: band.bottom + 2, y2: BEAM, 'class': 'mean-line' }, guide);
+        var t = el('text', { x: Math.min(Math.max(X(pv), 70), 350), y: GROUND + 60, 'text-anchor': 'middle', 'class': 'mean-lab' }, mean); t.textContent = 'E[X] = ' + ft(p);
+      }
+      hero.hidden = !st.fixed; f.changed.hidden = !st.fixed;
+      hero.dataset.value = M.str(p);
+      hero.innerHTML = st.fixed ? '<div class="fline">' + math('<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo><mo>=</mo><mn>0</mn>' + DOT + PX(0) + '<mo>+</mo><mn>1</mn>' + DOT + PX(1)) + '</div>' +
+        '<div class="fline">' + math('<mo>=</mo><mn>0</mn>' + DOT + mf(M.sub(F(1), p)) + '<mo>+</mo><mn>1</mn>' + DOT + mf(p) + '<mo>=</mo>' + mf(p)) + '</div>' : '';
+    }
+    function fix() {
+      st.fixed = true;
+      var a0 = st.angle;
+      st.c = rock.t;
+      draw();
+      if (!S.instant) S.tween(420, function (k) { drawBeam(a0 * (1 - k)); });
+    }
+    function unfix() { st.fixed = false; st.c = 5; draw(); }
+    rock.on(function (t) { if (st.fixed) st.c = t; draw(); });
+    draw();
+    return { f: f, st: st, svg: svg, act: a, X: X, ctl: ctl };
+  })();
+
+  /* ================= Step 4: Spread =================
+     Two beats, one figure at a time, with the rock and the squared or signed choice kept
+     across them: "This rock" shows each value's distance from E[X]; "Every rock
+     position" plots the weighted sum against p. Both figures carry the stream on top. */
+  var s4 = (function () {
+    var f = K.stage(3, 'move the rock and watch the average distance', 'The distances from the mean always cancel out.');
+    K.para(f.text, 'note', 'Weight each value\'s distance from ' + EX + ' by its probability and add them up. Then move the rock.');
+    var nav = h('div', 'beat-nav'), grp = h('div'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'Views');
+    var b1 = h('button', '', '1. This rock'), b2 = h('button', '', '2. Every rock position');
+    [b1, b2].forEach(function (b, i) { b.type = 'button'; b.dataset.beat = String(i + 1); grp.appendChild(b); });
+    /* Six-frame page (design review, 2026-11-18): Spread is now beat 2 of the Balance frame,
+       and its every-rock-position plot is dropped; the extremes move into the readout. */
+    nav.appendChild(grp);
+    var beat1 = h('div', 'beat'), beat2 = h('div', 'beat'); beat1.id = 'f3-beat1'; beat2.id = 'f3-beat2';
+    f.visual.appendChild(beat1);
+
+    /* Beat 1: bars, the distance arrows from E[X], the standard deviation band */
+    var HALF = 32;
+    var ch = K.chart(beat1, { domain: [-0.7, 1.7], yMax: 1, yTicks: [F(0), F(1, 2), F(1)], height: 262, base: 190, top: 96, barW: 2 * HALF,
+      label: 'PMF bars with each value\'s distance from E[X], under the stream' });
+    var band1 = K.streamBand(ch.svg, ch.X, 52, 372);
+    ch.xLabels([{ v: 0, text: '0' }, { v: 1, text: '1' }], 190 + 22);
+    var dist = el('g', { 'class': 'dist' }, ch.L.over);
+    var ctl1 = K.attachRock(ch.svg, function (x) { return Math.round((x - ch.X(0)) / (ch.X(1) - ch.X(0)) * 10); }, beat1, true, band1.set, true);
+
+    /* Beat 2: the weighted sum for every rock position, p on the same scale as the stream */
+    function PXp(p) { return 80 + p * 270; }
+    function PYp(v) { return 236 - v / 0.3 * 120; }
+    var plot = el('svg', { viewBox: '0 0 420 272', 'class': 'chart', 'aria-label': 'The spread measure for every rock position' });
+    beat2.appendChild(plot);
+    var band2 = K.streamBand(plot, PXp, 52, 372);
+    var ptitle = el('text', { x: 4, y: 112, 'class': 'c-title' }, plot);
+    el('line', { x1: 70, x2: 360, y1: PYp(0), y2: PYp(0), 'class': 'c-base' }, plot);
+    [[0, '0'], [0.5, '1/2'], [1, '1']].forEach(function (d) { var t = el('text', { x: PXp(d[0]), y: 262, 'text-anchor': 'middle', 'class': 'c-x' }, plot); t.textContent = d[1]; });
+    var plab = el('text', { x: 40, y: 262, 'text-anchor': 'end', 'class': 'c-tick' }, plot); plab.textContent = 'p';
+    var quarter = el('g', {}, plot);
+    var curve = el('path', { 'class': 'curve' }, plot), dot = el('circle', { r: 8, 'class': 'curve-dot' }, plot);
+    var dotLab = el('text', { 'class': 'c-val', 'text-anchor': 'middle' }, plot);
+    var ctl2 = K.attachRock(plot, function (x) { return Math.round((x - PXp(0)) / 27); }, beat2, true, band2.set, true);
+
+    var a = K.act(f.controls, 3, 'Square the distances', 'the variance ' + math('<mi>var</mi><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo>'), 'Back to signed distances', function () { st.sq = true; draw(); }, function () { st.sq = false; draw(); });
+    var hero = h('div', 'fhero'); hero.id = 'f3-hero'; f.readout.appendChild(hero);
+    var prob = K.para(f.readout, 'problem', 'It comes out 0 wherever the rock sits, so it says nothing about how much the leaps vary.');
+    var extreme = K.para(f.readout, 'note extreme', ''); extreme.id = 'f3-extreme';
+    K.changed(f, 'Squared distances are never negative, so they can\'t cancel out.');
+    f.changed.insertAdjacentHTML('beforeend', '<p class="def"><math aria-label="var of X equals the expected value of X minus E of X, squared">' +
+      '<mi>var</mi><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo><mo>=</mo><mi>E</mi><mo stretchy="false">[</mo><msup><mrow><mo stretchy="false">(</mo><mi>X</mi><mo>−</mo><mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo><mo stretchy="false">)</mo></mrow><mn>2</mn></msup><mo stretchy="false">]</mo></math></p>' +
+      K.strip('f3', 'Bernoulli', PX(1) + '<mo>=</mo><mi>p</mi><mo>,</mo><mspace width="0.6em"/>' + PX(0) + '<mo>=</mo><mn>1</mn><mo>−</mo><mi>p</mi>', '',
+        '<mi>p</mi>', '<mi>p</mi><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo></mrow>'));
+    var st = { sq: false, beat: 1 };
+    function setBeat(n) {
+      st.beat = n;
+      beat1.hidden = n !== 1; beat2.hidden = n !== 2;
+      b1.setAttribute('aria-pressed', n === 1 ? 'true' : 'false'); b2.setAttribute('aria-pressed', n === 2 ? 'true' : 'false');
+    }
+    b1.addEventListener('click', function () { setBeat(1); });
+    b2.addEventListener('click', function () { setBeat(2); });
+    function draw() {
+      var p = rock.p(), q = M.sub(F(1), p), pv = M.val(p);
+      var d0 = M.sub(F(0), p), d1 = q;
+      var v = M.mul(p, q), sd = Math.sqrt(M.val(v));
+      K.stripSet('f3', p, v, '', true);
+      /* beat 1 */
+      ch.bars(pmfBars());
+      ch.L.band.textContent = ''; dist.textContent = '';
+      var mx = ch.X(pv), yA = ch.base + 40;
+      if (st.sq && sd > 0) el('rect', { x: ch.X(pv - sd), y: ch.top, width: ch.X(pv + sd) - ch.X(pv - sd), height: ch.base - ch.top, 'class': 'sd-band' }, ch.L.band);
+      if (clearOfBars(ch.X, pv, HALF)) el('line', { x1: mx, x2: mx, y1: band1.bottom + 2, y2: yA + 6, 'class': 'mean-line' }, dist);
+      [[0, d0], [1, d1]].forEach(function (d) {
+        var x = ch.X(d[0]);
+        if (Math.abs(x - mx) > 2) el('path', { d: 'M' + mx + ' ' + yA + ' L' + x + ' ' + yA + (x < mx ? ' m10 -6 l-10 6 l10 6' : ' m-10 -6 l10 6 l-10 6'), 'class': 'arrow' }, dist);
+        var lab = el('text', { x: x, y: yA + 28, 'text-anchor': 'middle', 'class': 'c-dist', 'data-v': d[0] }, dist);
+        lab.textContent = st.sq ? ft(M.mul(d[1], d[1])) : (d[1].n > 0n ? '+' : '') + ft(d[1]);
+      });
+      /* beat 2 */
+      ptitle.textContent = st.sq ? 'var(X) for each rock position' : 'average signed distance for each rock position';
+      var dpath = '';
+      for (var i = 0; i <= 50; i++) { var x = i / 50; dpath += (i ? ' L' : 'M') + PXp(x).toFixed(1) + ' ' + PYp(st.sq ? x * (1 - x) : 0).toFixed(1); }
+      curve.setAttribute('d', dpath);
+      quarter.textContent = '';
+      if (st.sq) {
+        el('line', { x1: 70, x2: 360, y1: PYp(0.25), y2: PYp(0.25), 'class': 'c-gridline' }, quarter);
+        var qt = el('text', { x: 62, y: PYp(0.25) + 6, 'text-anchor': 'end', 'class': 'c-tick' }, quarter); qt.textContent = '1/4';
+      }
+      var yv = st.sq ? M.val(v) : 0;
+      dot.setAttribute('cx', PXp(pv)); dot.setAttribute('cy', PYp(yv));
+      dotLab.setAttribute('x', Math.min(Math.max(PXp(pv), 90), 340)); dotLab.setAttribute('y', PYp(yv) - 16);
+      dotLab.textContent = st.sq ? ft(v) : '0';
+      /* readout */
+      var t0 = M.mul(d0, q), t1 = M.mul(d1, p);
+      var s0 = M.mul(M.mul(d0, d0), q), s1 = M.mul(M.mul(d1, d1), p);
+      function sq(x) { return '<msup><mrow><mo>(</mo>' + x + '<mo>)</mo></mrow><mn>2</mn></msup>'; }
+      var dd0 = '<mn>0</mn><mo>−</mo>' + mf(p), dd1 = '<mn>1</mn><mo>−</mo>' + mf(p);
+      var meanLine = '<div class="fline dim">' + math('<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo><mo>=</mo><mi>p</mi><mo>=</mo>' + mf(p)) + '</div>';
+      hero.dataset.value = st.sq ? M.str(v) : M.str(M.add(t0, t1));
+      hero.innerHTML = st.sq ?
+        '<div class="flabel">var(X)</div>' + meanLine + '<div class="fline">' + math(sq(dd0) + DOT + mf(q) + '<mo>+</mo>' + sq(dd1) + DOT + mf(p)) + '</div>' +
+        '<div class="fline">' + math('<mo>=</mo>' + mf(s0) + '<mo>+</mo>' + mf(s1) + '<mo>=</mo>' + mf(v) + '<mo>=</mo><mi>p</mi><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo>') + '</div>' +
+        '<div class="fline dim">standard deviation ' + math('<msqrt><mi>var</mi><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo></msqrt><mo>≈</mo><mn>' + sd.toFixed(2) + '</mn>') + ' (shaded band)</div>'
+        : '<div class="flabel">Average signed distance</div>' + meanLine + '<div class="fline">' + math('<mo>(</mo>' + dd0 + '<mo>)</mo>' + DOT + mf(q) + '<mo>+</mo><mo>(</mo>' + dd1 + '<mo>)</mo>' + DOT + mf(p)) + '</div>' +
+          '<div class="fline">' + math('<mo>=</mo>' + mf(t0) + '<mo>+</mo>' + mf(t1) + '<mo>=</mo><mn>0</mn>') + '</div>';
+      prob.hidden = st.sq; f.changed.hidden = !st.sq;
+      extreme.hidden = !st.sq;
+      extreme.innerHTML = math('<mi>var</mi><mo stretchy="false">(</mo><mi>X</mi><mo stretchy="false">)</mo>') + ' is largest, ' + math(mf(F(1, 4))) + ', at ' + math('<mi>p</mi><mo>=</mo>' + mf(F(1, 2))) + ', and ' + math('<mn>0</mn>') + ' when the leap is certain.';
+      extreme.dataset.state = M.str(v) === '1/4' ? 'max' : M.str(v) === '0' ? 'zero' : '';
+      a.go.hidden = st.sq; a.again.hidden = !st.sq;
+    }
+    rock.on(draw);
+    setBeat(1);
+    draw();
+    return { f: f, st: st, chart: ch, act: a, setBeat: setBeat, plot: plot, PXp: PXp };
+  })();
+
+  S.finn = { s3: s3, s4: s4 };
+})();
+</script>
+<script>
+/* Step 5 (Flies): Tad the frog and the binomial, in two beats (one figure each).
+   Story (storyboard revision, 2026-11-16): Tad sits on a lily pad while n flies pass, one at
+   a time. Each flick of the tongue catches its fly with chance p, independently, and
+   caught flies go in Tad's jar, so X is the number in the jar.
+   1. One run: watch the n tries; tap a try to flip it. The readout multiplies the run's
+      chance try by try.
+   2. Every run with k catches: the PMF chart, with bar k split into its C(n, k) runs,
+      all equally likely. Clicking another bar splits that one. The fix goes from one
+      run to every run with the same count; it has no undo (design review, 2026-11-16). */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, el = S.el, h = S.h, $ = S.$;
+  var F = M.F, mf = K.mfrac, math = K.math, ft = K.ftext;
+  var NMAX = 5;
+
+  /* ---------- Tad: a golden frog seen from the front (design A, 2026-11-16) ----------
+     Feet at y = 0, centered on x = 0. look(dx, dy) turns the pupils toward a point;
+     mood: calm (smile), happy (shut eyes, grin), oops (wide eyes, small o), open (mouth
+     open for the tongue). */
+  function buildFrog(parent) {
+    var g = el('g', { 'class': 'frog' }, parent);
+    el('ellipse', { cx: -25, cy: -7, rx: 9, ry: 8, 'class': 'frog-skin' }, g);
+    el('ellipse', { cx: 25, cy: -7, rx: 9, ry: 8, 'class': 'frog-skin' }, g);
+    el('circle', { cx: -12, cy: -36, r: 9.5, 'class': 'frog-skin' }, g);
+    el('circle', { cx: 12, cy: -36, r: 9.5, 'class': 'frog-skin' }, g);
+    el('path', { d: 'M-25 -2 C-32 -12 -30 -30 -17 -35 C-7 -39 7 -39 17 -35 C30 -30 32 -12 25 -2 C16 2 -16 2 -25 -2 Z', 'class': 'frog-skin' }, g);
+    el('ellipse', { cx: 0, cy: -10, rx: 15, ry: 8.5, 'class': 'frog-belly' }, g);
+    var eyes = el('g', {}, g), shut = el('g', {}, g);
+    var pupils = [];
+    [-12, 12].forEach(function (x) {
+      el('circle', { cx: x, cy: -37, r: 6.2, 'class': 'frog-eye' }, eyes);
+      var pg = el('g', {}, eyes);
+      var pu = el('circle', { cx: x + 1, cy: -36.5, r: 3.4, 'class': 'fox-eye' }, pg);
+      el('circle', { cx: x + 2.2, cy: -38, r: 1.1, 'class': 'frog-hi' }, pg);
+      pupils.push({ g: pg, c: pu });
+      el('path', { d: 'M' + (x - 5) + ' -36 Q' + x + ' -42 ' + (x + 5) + ' -36', 'class': 'fox-mouth' }, shut);
+    });
+    el('ellipse', { cx: -19, cy: -22, rx: 4, ry: 2.6, 'class': 'fox-blush' }, g);
+    el('ellipse', { cx: 19, cy: -22, rx: 4, ry: 2.6, 'class': 'fox-blush' }, g);
+    el('circle', { cx: -2.5, cy: -28, r: 0.9, 'class': 'fox-eye' }, g);
+    el('circle', { cx: 2.5, cy: -28, r: 0.9, 'class': 'fox-eye' }, g);
+    var smile = el('path', { d: 'M-13 -24 Q0 -14 13 -24', 'class': 'fox-mouth' }, g);
+    var grin = el('path', { d: 'M-13 -24 Q0 -10 13 -24 Z', 'class': 'fox-mouth-o' }, g);
+    var oh = el('ellipse', { cx: 0, cy: -20, rx: 3, ry: 3.6, 'class': 'fox-mouth-o' }, g);
+    var open = el('ellipse', { cx: 0, cy: -21, rx: 7, ry: 4.6, 'class': 'fox-mouth-o' }, g);
+    el('path', { d: 'M-17 1 q4 -9 9 0 Z', 'class': 'frog-skin' }, g);
+    el('path', { d: 'M8 1 q4 -9 9 0 Z', 'class': 'frog-skin' }, g);
+    function mood(name) {
+      smile.style.display = name === 'calm' ? '' : 'none';
+      grin.style.display = name === 'happy' ? '' : 'none';
+      oh.style.display = name === 'oops' ? '' : 'none';
+      open.style.display = name === 'open' ? '' : 'none';
+      eyes.style.display = name === 'happy' ? 'none' : '';
+      shut.style.display = name === 'happy' ? '' : 'none';
+      pupils.forEach(function (pp) { pp.c.setAttribute('r', name === 'oops' ? 3.9 : 3.4); });
+      g.dataset.mood = name;
+    }
+    function look(dx, dy) {
+      var L = Math.sqrt(dx * dx + dy * dy) || 1, k = Math.min(2.2, L) / L;
+      pupils.forEach(function (pp) { pp.g.setAttribute('transform', 'translate(' + (dx * k - 1).toFixed(2) + ' ' + (dy * k + 0.5).toFixed(2) + ')'); });
+    }
+    mood('calm'); look(0, 0);
+    return { g: g, mood: mood, look: look };
+  }
+  S.buildFrog = buildFrog;
+
+  /* Fly kinds follow the catch chance (design review, 2026-11-16): the harder to catch, the more
+     exotic and agile the fly. Colors avoid green and blue, which mean caught and escaped. */
+  function flyKind(t) { return t >= 7 ? 'slow' : t >= 4 ? 'quick' : 'dragon'; }
+  var KIND_NAME = { slow: 'slow flies', quick: 'quick flies', dragon: 'dragonflies' };
+  function fly(parent, cls, kind) {
+    kind = kind || 'slow';
+    var g = el('g', { 'class': 'fly fly-' + kind + (cls ? ' ' + cls : ''), 'data-kind': kind }, parent);
+    if (kind === 'dragon') {
+      [[-7, -5, -30], [-6, -3, -12], [6, -5, 30], [5, -3, 12]].forEach(function (w) { el('ellipse', { cx: w[0], cy: w[1], rx: 8, ry: 2.4, 'class': 'fly-w', transform: 'rotate(' + w[2] + ' ' + w[0] + ' ' + w[1] + ')' }, g); });
+      el('rect', { x: -2, y: -2, width: 15, height: 3.6, rx: 1.8, 'class': 'fly-b' }, g);
+      el('circle', { cx: -3, cy: -0.2, r: 3.2, 'class': 'fly-b' }, g);
+      if (!cls) [[-16, -6], [-18, 0], [-16, 6]].forEach(function (d) { el('line', { x1: d[0] + 20, y1: d[1], x2: d[0] + 28, y2: d[1], 'class': 'fly-speed' }, g); });
+    } else {
+      var wr = kind === 'quick' ? [6, 2.2] : [5, 3];
+      el('ellipse', { cx: -4, cy: -4, rx: wr[0], ry: wr[1], 'class': 'fly-w', transform: 'rotate(-25 -4 -4)' }, g);
+      el('ellipse', { cx: 3, cy: -5, rx: wr[0], ry: wr[1], 'class': 'fly-w', transform: 'rotate(25 3 -5)' }, g);
+      el('ellipse', { cx: 0, cy: 0, rx: kind === 'quick' ? 4.2 : 5, ry: kind === 'quick' ? 2.8 : 3.6, 'class': 'fly-b' }, g);
+      if (kind === 'quick' && !cls) [[8, -2], [9, 3]].forEach(function (d) { el('line', { x1: d[0], y1: d[1], x2: d[0] + 8, y2: d[1], 'class': 'fly-speed' }, g); });
+    }
+    return g;
+  }
+
+  /* ---------- runs with k catches, in binary order ---------- */
+  function runsWith(n, k) {
+    var out = [];
+    for (var m = (1 << n) - 1; m >= 0; m--) {
+      var bits = [], c = 0;
+      for (var i = 0; i < n; i++) { var b = (m >> (n - 1 - i)) & 1; bits.push(b); c += b; }
+      if (c === k) out.push(bits);
+    }
+    return out;
+  }
+  function catches(k) { return k + (k === 1 ? ' catch' : ' catches'); }
+
+  var f = K.stage(4, 'watch Tad try, then find every run like it', 'One run is only one way to catch that many flies.');
+  K.para(f.text, 'note', 'Send the flies. Tap a try to change it.');
+  var nav = h('div', 'beat-nav'), grp = h('div'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'Views');
+  var b1 = h('button', '', '1. One run'), b2 = h('button', '', '');
+  [b1, b2].forEach(function (b, i) { b.type = 'button'; b.dataset.beat = String(i + 1); grp.appendChild(b); });
+  nav.appendChild(grp); f.visual.appendChild(nav);
+  var beat1 = h('div', 'beat'), beat2 = h('div', 'beat'); beat1.id = 'f4-beat1'; beat2.id = 'f4-beat2';
+  f.visual.appendChild(beat1); f.visual.appendChild(beat2);
+
+  /* ---------- Beat 1: the pond (viewBox 420 x 204) ---------- */
+  var WY = 100, PIP = [104, 120], SCALE = 1.25, TARGET = [212, 44], JAR = [378, 98];
+  var MOUTH = [PIP[0], PIP[1] - 21 * SCALE];
+  var pond = el('svg', { viewBox: '0 0 420 204', 'class': 'chart pond-svg', role: 'group', 'aria-label': 'Tad on a lily pad, catching flies' });
+  beat1.appendChild(pond);
+  el('rect', { x: 0, y: 0, width: 420, height: 140, rx: 8, 'class': 'rs-sky' }, pond);
+  el('rect', { x: 0, y: WY, width: 420, height: 40, 'class': 'water' }, pond);
+  [[30, 128], [190, 124], [260, 132]].forEach(function (w) { el('path', { d: 'M' + w[0] + ' ' + w[1] + ' q10 -6 20 0 q10 6 20 0', 'class': 'wave' }, pond); });
+  el('path', { d: 'M420 ' + (WY - 8) + ' L336 ' + (WY - 8) + ' Q326 ' + (WY + 6) + ' 324 140 L420 140 Z', 'class': 'bank' }, pond);
+  el('ellipse', { cx: PIP[0], cy: PIP[1] + 2, rx: 50, ry: 12, 'class': 'pad-leaf' }, pond);
+  el('line', { x1: PIP[0], y1: PIP[1] + 2, x2: PIP[0] + 36, y2: PIP[1] - 4, 'class': 'pad-notch' }, pond);
+  /* the jar on the far bank */
+  var jarG = el('g', { 'class': 'jar' }, pond);
+  el('rect', { x: JAR[0] - 26, y: JAR[1] - 58, width: 52, height: 58, rx: 10, 'class': 'jar-glass' }, jarG);
+  el('rect', { x: JAR[0] - 22, y: JAR[1] - 66, width: 44, height: 10, rx: 3, 'class': 'jar-lid' }, jarG);
+  var jarFlies = el('g', {}, jarG);
+  var jarLab = el('text', { x: JAR[0], y: JAR[1] + 30, 'text-anchor': 'middle', 'class': 'c-x jar-lab' }, pond);
+  var frogHolder = el('g', { transform: 'translate(' + PIP[0] + ' ' + PIP[1] + ') scale(' + SCALE + ')' }, pond), frog = buildFrog(frogHolder);
+  var tongue = el('line', { 'class': 'tongue', x1: MOUTH[0], y1: MOUTH[1], x2: MOUTH[0], y2: MOUTH[1] }, pond);
+  var flyG = el('g', {}, pond), curFly = null;
+  var slots = el('g', {}, pond);
+
+  /* ---------- Beat 2: the PMF chart (viewBox 420 x 296) ---------- */
+  var BASE = 190, TOPC = 40;
+  var chart = el('svg', { viewBox: '0 0 420 296', 'class': 'chart', role: 'group', 'aria-label': 'The PMF of X, with one bar split into its runs' });
+  beat2.appendChild(chart);
+  var cTitle = el('text', { x: 4, y: 18, 'class': 'c-title' }, chart); cTitle.textContent = 'P(X = k)';
+  var cGrid = el('g', {}, chart), cBars = el('g', {}, chart), cAxis = el('g', {}, chart), cRuns = el('g', {}, chart);
+  el('line', { x1: 52, x2: 408, y1: BASE, y2: BASE, 'class': 'c-base' }, chart);
+
+  /* default five flies (leak screen, 2026-11-18): four would show C(4, 3) p^3 (1 - p), Problem 1's form */
+  var st = { n: 5, t: 7, run: null, k: null, found: false, beat: 1, busy: false };
+  function p() { return M.tenths(st.t); }
+  function q() { return M.sub(F(1), p()); }
+  function slotX(i) { return 34 + (i + 0.5) * (352 / st.n); }
+  function count(run) { return run ? run.reduce(function (a, b) { return a + b; }, 0) : null; }
+  function selK() { return st.k !== null ? st.k : st.run ? count(st.run) : Math.round(st.n * M.val(p())); }
+
+  function drawJar(k) {
+    jarFlies.textContent = '';
+    for (var j = 0; j < (k || 0); j++) {
+      var g = fly(jarFlies, 'in-jar', flyKind(st.t));
+      g.setAttribute('transform', 'translate(' + (JAR[0] - 12 + (j % 3) * 12) + ' ' + (JAR[1] - 10 - Math.floor(j / 3) * 14) + ') scale(0.9)');
+    }
+    jarLab.textContent = 'X = ' + (k || 0);
+    jarLab.dataset.value = String(k || 0);
+  }
+  /* The tries under the scene: each slot shows its result and its chance, and is a
+     button that flips the try once a run exists. */
+  function drawSlots(marks) {
+    slots.textContent = '';
+    if (!marks) return;
+    for (var i = 0; i < st.n; i++) {
+      var x = slotX(i), m = marks[i];
+      if (m === undefined) continue;
+      var g = el('g', { 'class': 'try ' + (m ? 'win' : 'miss'), 'data-i': i }, slots);
+      el('rect', { x: x - 30, y: 146, width: 60, height: 56, rx: 6, 'class': 'try-bg' }, g);
+      var t = el('text', { x: x, y: 172, 'text-anchor': 'middle', 'class': 'factor ' + (m ? 'win' : 'miss') }, g);
+      t.textContent = ft(m ? p() : q());
+      var w = el('text', { x: x, y: 194, 'text-anchor': 'middle', 'class': 'factor-w' }, g); w.textContent = m ? 'caught' : 'escaped';
+      if (i > 0) { var dot = el('text', { x: (x + slotX(i - 1)) / 2, y: 172, 'text-anchor': 'middle', 'class': 'factor-dot' }, slots); dot.textContent = '·'; }
+      if (st.run && !st.busy) {
+        g.setAttribute('role', 'button'); g.setAttribute('tabindex', '0'); g.classList.add('tappable');
+        g.setAttribute('aria-label', 'Try ' + (i + 1) + ': ' + (m ? 'caught' : 'escaped') + '. Select to make it ' + (m ? 'an escape' : 'a catch') + '.');
+        (function (j) {
+          g.addEventListener('click', function () { flip(j); });
+          g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(j); } });
+        })(i);
+      }
+    }
+  }
+
+  /* ---------- Beat 2 drawing ---------- */
+  function drawChart() {
+    cGrid.textContent = ''; cBars.textContent = ''; cAxis.textContent = ''; cRuns.textContent = '';
+    var n = st.n, dist = M.binomial(n, p()), cw = 352 / (n + 1), bw = Math.min(cw - 10, 56), k0 = selK();
+    var maxBar = Math.max.apply(null, dist.pmf.map(M.val)), sMax = maxBar > 0.5 ? 1 : 0.5, PX = (BASE - TOPC) / sMax;
+    el('line', { x1: 52, x2: 408, y1: BASE - sMax * PX, y2: BASE - sMax * PX, 'class': 'c-gridline' }, cGrid);
+    var tl = el('text', { x: 48, y: BASE - sMax * PX + 6, 'text-anchor': 'end', 'class': 'c-tick' }, cGrid); tl.textContent = sMax === 1 ? '1' : '1/2';
+    var one = M.mul(M.pow(p(), k0), M.pow(q(), n - k0)), runs = runsWith(n, k0);
+    dist.pmf.forEach(function (pk, k) {
+      var cx = 56 + (k + 0.5) * cw, hh = M.val(pk) * PX;
+      if (k === k0) {
+        el('rect', { x: cx - cw / 2 + 1, y: TOPC - 8, width: cw - 2, height: BASE - TOPC + 8, rx: 4, 'class': 'col-sel' }, cGrid);
+        var sh = hh / runs.length;
+        runs.forEach(function (bits, j) {
+          var y = BASE - (j + 1) * sh;
+          var g = el('g', { 'class': 'slice', 'data-seq': bits.join('') }, cBars);
+          el('rect', { x: cx - bw / 2, y: y, width: bw, height: Math.max(sh - 0.5, 0.3), 'class': 'slice-rect' + (j % 2 ? ' alt' : '') }, g);
+          if (sh >= 10) bits.forEach(function (b, i) { el('circle', { cx: cx - bw / 2 + 8 + i * ((bw - 16) / Math.max(n - 1, 1)), cy: y + sh / 2, r: Math.min(3.4, sh / 2 - 1.5), 'class': b ? 'dot-win' : 'dot-miss' }, g); });
+        });
+      } else {
+        el('rect', { x: cx - bw / 2, y: BASE - hh, width: bw, height: hh, 'class': 'kbar', 'data-k': k }, cBars);
+      }
+      var lab = el('text', { x: cx, y: BASE - hh - 7, 'text-anchor': 'middle', 'class': 'c-val col-lab', 'data-k': k }, cAxis);
+      lab.textContent = M.val(pk) > 0 && M.val(pk) < 0.005 ? '<0.01' : M.val(pk).toFixed(2);
+      var kl = el('text', { x: cx, y: BASE + 32, 'text-anchor': 'middle', 'class': 'c-x' }, cAxis); kl.textContent = String(k);
+      var hit = el('rect', { x: cx - cw / 2, y: TOPC - 10, width: cw, height: BASE - TOPC + 40, 'class': 'col-hit', role: 'button', tabindex: '0', 'data-k': k,
+        'aria-pressed': k === k0 ? 'true' : 'false', 'aria-label': catches(k) + ', probability ' + ft(pk) + '. Select to split this bar into its runs.' }, cAxis);
+      hit.addEventListener('click', function () { pick(k); });
+      hit.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pick(k); } });
+    });
+    var kt = el('text', { x: 4, y: BASE + 32, 'class': 'c-tick' }, cAxis); kt.textContent = 'k';
+    var mx = 56 + (M.val(dist.mean) + 0.5) * cw;
+    el('path', { d: 'M' + mx + ' ' + (BASE + 3) + ' l-8 13 l16 0 Z', 'class': 'pivot', 'data-x': M.str(dist.mean) }, cAxis);
+    /* the runs in the split bar, written out under the chart */
+    var rt = el('text', { x: 4, y: BASE + 54, 'class': 'c-title' }, cRuns);
+    rt.textContent = runs.length + (runs.length === 1 ? ' run' : ' runs') + ' with ' + catches(k0) + ', each with chance ' + ft(one);
+    var chipW = n * 10 + 10, per = Math.floor(412 / (chipW + 6));
+    runs.forEach(function (bits, j) {
+      var x = 4 + (j % per) * (chipW + 6), y = BASE + 61 + Math.floor(j / per) * 23;
+      var g = el('g', { 'class': 'run-chip', 'data-seq': bits.join('') }, cRuns);
+      el('rect', { x: x, y: y, width: chipW, height: 18, rx: 4, 'class': 'seq-rect' }, g);
+      bits.forEach(function (b, i) { el('circle', { cx: x + 9 + i * 10, cy: y + 9, r: 3.6, 'class': b ? 'dot-win' : 'dot-miss' }, g); });
+    });
+    return { dist: dist, k: k0, one: one, runs: runs };
+  }
+
+  /* ---------- controls ---------- */
+  function stepper(label, id, onDec, onInc, decLabel, incLabel) {
+    var row = h('div', 'stepper');
+    var lab = h('span', 'st-lab'); lab.innerHTML = label; row.appendChild(lab);
+    var dec = h('button', 'st-btn', '−'), val = h('span', 'st-val'), inc = h('button', 'st-btn', '+');
+    dec.type = inc.type = 'button'; dec.id = id + '-dec'; inc.id = id + '-inc'; val.id = id + '-val';
+    dec.setAttribute('aria-label', decLabel); inc.setAttribute('aria-label', incLabel);
+    dec.addEventListener('click', onDec); inc.addEventListener('click', onInc);
+    [dec, val, inc].forEach(function (x) { row.appendChild(x); });
+    return { row: row, dec: dec, inc: inc, val: val };
+  }
+  var sN = stepper('Flies, ' + math('<mi>n</mi>'), 'f4-n', function () { setN(st.n - 1); }, function () { setN(st.n + 1); }, 'One fly fewer', 'One fly more');
+  var sP = stepper('Catch chance, ' + math('<mi>p</mi>'), 'f4-p', function () { setT(st.t - 1); }, function () { setT(st.t + 1); }, 'Lower catch chance', 'Higher catch chance');
+  var params = h('div', 'params'); params.appendChild(sN.row); params.appendChild(sP.row); f.controls.appendChild(params);
+  /* the fly drawing shows the kind; this line names it for screen readers */
+  var kindLab = h('span', 'kind-lab visually-hidden'); kindLab.id = 'f4-kind'; kindLab.setAttribute('aria-live', 'polite'); params.appendChild(kindLab);
+  var row = h('div', 'act');
+  var tryBtn = h('button', 'leap-btn', 'Send the flies'); tryBtn.type = 'button'; tryBtn.id = 'f4-hop';
+  var go = h('button', 'go'); go.type = 'button'; go.id = 'f4-go';
+  row.appendChild(tryBtn); row.appendChild(go); f.controls.appendChild(row);
+  var runLine = K.para(f.readout, 'fsum', ''), prob = K.para(f.readout, 'problem', '');
+  var hero1 = h('div', 'fhero'); hero1.id = 'f4-hero1'; f.readout.appendChild(hero1);
+  var hero2 = h('div', 'fhero'); hero2.id = 'f4-hero'; f.readout.appendChild(hero2);
+  var C = function (n, k) { return '<mrow><mo>(</mo><mfrac linethickness="0">' + n + k + '</mfrac><mo>)</mo></mrow>'; };
+  var sup = function (base, e) { return '<msup>' + base + e + '</msup>'; };
+  var par = function (x) { return '<mrow><mo>(</mo>' + x + '<mo>)</mo></mrow>'; };
+  var PK = '<msup><mi>p</mi><mi>k</mi></msup><msup><mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo></mrow><mrow><mi>n</mi><mo>−</mo><mi>k</mi></mrow></msup>';
+  K.changed(f, 'Every run with ' + math('<mi>k</mi>') + ' catches has the same chance, and there are ' + math(C('<mi>n</mi>', '<mi>k</mi>')) + ' of them.');
+  f.changed.insertAdjacentHTML('beforeend', K.strip('f4', 'Binomial', C('<mi>n</mi>', '<mi>k</mi>') + PK, 'for k = 0, 1, …, n',
+    '<mi>n</mi><mi>p</mi>', null));
+
+  function setBeat(n) {
+    if (n === 2 && !st.found) return;
+    st.beat = n; beat1.hidden = n !== 1; beat2.hidden = n !== 2;
+    b1.setAttribute('aria-pressed', n === 1 ? 'true' : 'false'); b2.setAttribute('aria-pressed', n === 2 ? 'true' : 'false');
+    draw();
+  }
+  b1.addEventListener('click', function () { setBeat(1); });
+  b2.addEventListener('click', function () { setBeat(2); });
+  function pick(k) { st.k = k; draw(); }
+  function flip(i) { if (st.busy || !st.run) return; st.run[i] = 1 - st.run[i]; st.k = null; draw(); }
+  function setN(n) { n = Math.max(1, Math.min(NMAX, n)); if (n === st.n || st.busy) return; st.n = n; st.run = null; st.k = null; draw(); }
+  function setT(t) { t = Math.max(1, Math.min(9, t)); if (t === st.t || st.busy) return; st.t = t; draw(); }
+
+  function draw() {
+    var n = st.n, pp = p(), qq = q(), run = st.run, L = count(run);
+    if (!st.busy) {
+      drawSlots(run); drawJar(L);
+      if (!run) { frog.mood('calm'); frog.look(0, 0); }
+    }
+    var c = drawChart(), k0 = c.k;
+    sN.val.textContent = String(n); sP.val.innerHTML = math(mf(pp));
+    kindLab.textContent = 'Today: ' + KIND_NAME[flyKind(st.t)] + (st.t >= 7 ? ', easy to catch.' : st.t >= 4 ? ', harder to catch.' : ', hard to catch.');
+    kindLab.dataset.kind = flyKind(st.t);
+    sN.dec.disabled = n <= 1 || st.busy; sN.inc.disabled = n >= NMAX || st.busy;
+    sP.dec.disabled = st.t <= 1 || st.busy; sP.inc.disabled = st.t >= 9 || st.busy;
+    tryBtn.disabled = st.busy;
+    var kb = st.beat === 1 && L !== null ? L : k0;
+    b2.textContent = '2. Every run with ' + catches(kb);
+    b2.disabled = !st.found;
+    go.innerHTML = 'Find every run with ' + (L === null ? 'that many catches' : catches(L)) + '<small>the binomial PMF</small>';
+    go.hidden = st.found || !run || st.busy;
+    /* beat 1 readout: the chance of this exact run, multiplied try by try */
+    runLine.innerHTML = run ? 'This run: ' + run.map(function (b) { return b ? 'caught' : 'escaped'; }).join(', ') + '. <b>' + L + ' in the jar.</b>' : (st.busy ? 'The flies are coming.' : 'Press Send the flies.');
+    runLine.dataset.value = run ? run.join('') : '';
+    runLine.hidden = st.beat !== 1;
+    var onePr = run ? run.reduce(function (acc, b) { return M.mul(acc, b ? pp : qq); }, F(1)) : null;
+    hero1.hidden = st.beat !== 1 || !run;
+    hero1.dataset.value = onePr ? M.str(onePr) : '';
+    hero1.innerHTML = run ? '<div class="flabel">Chance of this run</div><div class="fline">' + math(run.map(function (b) { return mf(b ? pp : qq); }).join('<mo>·</mo>') + '<mo>=</mo>' + mf(onePr)) + '</div>' : '';
+    prob.hidden = st.beat !== 1 || !run || st.found;
+    prob.textContent = run ? 'This is one way to catch ' + L + (L === 1 ? ' fly' : ' flies') + '. Is it the chance of catching ' + L + '?' : '';
+    /* beat 2 readout: P(X = k) for the split bar */
+    var dist = c.dist, pk = dist.pmf[k0];
+    hero2.hidden = st.beat !== 2;
+    hero2.dataset.k = String(k0); hero2.dataset.value = M.str(pk);
+    hero2.dataset.one = M.str(c.one);
+    hero2.dataset.mean = M.str(dist.mean); hero2.dataset.variance = M.str(dist.variance);
+    hero2.innerHTML = '<div class="fline">' + math('<mi>P</mi><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo>' + K.mn(k0) + '<mo stretchy="false">)</mo><mo>=</mo>' + C(K.mn(n), K.mn(k0)) + '<mo>·</mo>' + sup(par(mf(pp)), K.mn(k0)) + '<mo>·</mo>' + sup(par(mf(qq)), K.mn(n - k0))) + '</div>' +
+      '<div class="fline">' + math('<mo>=</mo>' + K.mn(String(M.choose(n, k0))) + '<mo>·</mo>' + mf(c.one) + '<mo>=</mo>' + mf(pk)) + '</div>';
+    K.stripSet('f4', dist.mean, dist.variance, 'at n = ' + n + ', p = ' + K.ftext(pp));
+    f.changed.hidden = !st.found;
+  }
+
+  /* ---------- one try, as keyframes u from 0 to 3 ----------
+     0-1 the fly zigzags in from the right to a spot above Tad; Tad's eyes follow it.
+     1-2 Tad's mouth opens and the tongue shoots out to that spot. On an escape the fly
+         darts up and away while the tongue is out.
+     2-3 the tongue pulls back: with the fly on its tip (a catch: Tad gulps, grins, and the
+         fly goes in the jar), or empty (an escape: Tad says "o"). */
+  function tryPose(b, u, before) {
+    var t, fx, fy;
+    if (u < 1) {
+      t = u; var amp = 8 + 22 * (1 - M.val(p())), turns = st.t >= 7 ? 3 : st.t >= 4 ? 4 : 6;
+      fx = 430 + (TARGET[0] - 430) * t; fy = 20 + (TARGET[1] - 20) * t + amp * Math.sin(t * Math.PI * turns) * (1 - t);
+      frog.mood('calm'); tongue.style.display = 'none';
+    } else if (u < 2) {
+      t = u - 1; frog.mood('open'); tongue.style.display = '';
+      tongue.setAttribute('x2', (MOUTH[0] + (TARGET[0] - MOUTH[0]) * t).toFixed(1)); tongue.setAttribute('y2', (MOUTH[1] + (TARGET[1] - MOUTH[1]) * t).toFixed(1));
+      if (b) { fx = TARGET[0]; fy = TARGET[1]; } else { fx = TARGET[0] + 90 * t; fy = TARGET[1] - 60 * t; }
+    } else {
+      t = Math.min(u - 2, 1);
+      var tx = TARGET[0] + (MOUTH[0] - TARGET[0]) * t, ty = TARGET[1] + (MOUTH[1] - TARGET[1]) * t;
+      tongue.style.display = t < 1 ? '' : 'none';
+      tongue.setAttribute('x2', tx.toFixed(1)); tongue.setAttribute('y2', ty.toFixed(1));
+      if (b) { fx = tx; fy = ty; frog.mood(t < 1 ? 'open' : 'happy'); }
+      else { fx = TARGET[0] + 90 + 80 * t; fy = TARGET[1] - 60 - 20 * t; frog.mood(t < 0.4 ? 'open' : 'oops'); }
+    }
+    var kind = flyKind(st.t);
+    if (!curFly || curFly.dataset.kind !== kind) { flyG.textContent = ''; curFly = fly(flyG, '', kind); }
+    curFly.style.display = (b && u >= 3) || fx > 440 || fy < -10 ? 'none' : '';
+    curFly.setAttribute('transform', 'translate(' + fx.toFixed(1) + ' ' + fy.toFixed(1) + ') scale(1.5)');
+    frog.look((fx - PIP[0]) / 20, (fy - (PIP[1] - 46)) / 20);
+    if (u >= 3) { drawSlots(before.concat([b])); drawJar(count(before.concat([b]))); }
+  }
+  function tryOne(b, marks) {
+    var chain = Promise.resolve(), seq = [420, 140, 200];
+    seq.forEach(function (ms, stage) { chain = chain.then(function () { return S.tween(ms, function (t) { tryPose(b, stage + t, marks.slice()); }); }); });
+    return chain.then(function () { tryPose(b, 3, marks.slice()); marks.push(b); return S.tween(160, function () {}); });
+  }
+  function sendFlies() {
+    if (st.busy) return Promise.resolve(null);
+    var n = st.n, pp = p(), bits = [];
+    for (var i = 0; i < n; i++) bits.push(M.trial(S.rand, pp));
+    st.busy = true; st.run = null; st.k = null;
+    if (st.beat !== 1) setBeat(1);
+    draw(); drawSlots([]); drawJar(0);
+    var marks = [], chain = Promise.resolve();
+    bits.forEach(function (b) { chain = chain.then(function () { return tryOne(b, marks); }); });
+    return chain.then(function () {
+      st.busy = false; st.run = bits.slice(); if (curFly) curFly.style.display = 'none'; tongue.style.display = 'none';
+      draw(); frog.mood(bits[n - 1] ? 'happy' : 'calm'); frog.look(0, 0);
+      $('status').textContent = runLine.textContent;
+      return bits;
+    });
+  }
+  tryBtn.addEventListener('click', sendFlies);
+  go.addEventListener('click', function () { st.found = true; st.k = null; setBeat(2); b2.focus(); });
+  tongue.style.display = 'none';
+  setBeat(1);
+  S.pip = { f: f, st: st, hop: sendFlies, flyKind: flyKind, setN: setN, setT: setT, pick: pick, flip: flip, setBeat: setBeat, runsWith: runsWith, pond: pond, chart: chart, tryPose: tryPose, frog: frog };
+})();
+</script>
+<script>
+/* Step 6 (Digs): Nutmeg the squirrel and the geometric, in two beats (one figure each).
+   Nutmeg digs one hole at a time; each dig finds the buried acorn with chance p,
+   independently. X is the dig on which the acorn is first found.
+   1. Dig: the dig site. The readout gives the chance of the run so far. Once the acorn
+      turns up on dig k, there is only one way that happens: k - 1 empty holes, then
+      the acorn. After some empty holes the problem asks whether the acorn is now due.
+   2. Count again: the PMF of X. The fix restarts the count after the empty holes: the
+      bars past that point slide left and rescale onto the original bars, which is
+      memorylessness (Lec. 2 segment 6). It has no undo. */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, el = S.el, h = S.h, $ = S.$;
+  var F = M.F, mf = K.mfrac, math = K.math, ft = K.ftext;
+  var SLOTS = 12;
+
+  /* ---------- Nutmeg: a rigged squirrel seen from the side, facing right; feet at y = 0 ----------
+     Smooth joints and a plume tail (design review, 2026-11-16, second pass): the body is one merged
+     silhouette and the arms are curves. Rebuilt for movement: the body pivots at the hip, the head at the
+     neck, the tail at its base; two front arms have an upper arm, a forearm and a paw
+     (the far arm is darker and behind the body); the thigh and foot stay planted.
+     pose(p): { lean, head, tail, near: [shoulder, elbow], far: [...], mood } with angles
+     in degrees clockwise from +x. Returns the near paw's position in Nutmeg's coordinates. */
+  /* Design F (design review, 2026-11-16): chestnut, big head, bean body, stubby arms, cloud tail. */
+  var HIP = [-2, -4], SHOULDER = [11, -12], NECK = [9, -24], TAIL_BASE = [-6, -8];
+  function rot(pt, c, deg) {
+    var r = deg * Math.PI / 180, dx = pt[0] - c[0], dy = pt[1] - c[1];
+    return [c[0] + dx * Math.cos(r) - dy * Math.sin(r), c[1] + dx * Math.sin(r) + dy * Math.cos(r)];
+  }
+  function buildSquirrel(parent) {
+    var g = el('g', { 'class': 'squirrel' }, parent);
+    /* Tail: a scalloped cloud with a light patch at the top, no stripe (design F). */
+    var tailG = el('g', {}, g), tailO = el('g', { 'class': 'sq-o' }, tailG), tailF = el('g', {}, tailG);
+    var TAIL = 'M-4 -6 C-18 -6 -27 -14 -26 -26 C-33 -30 -33 -42 -25 -46 C-25 -57 -13 -61 -6 -55 C1 -58 8 -52 5 -44 C2 -38 -5 -38 -8 -31 C-10 -24 -8 -15 -1 -11 Z';
+    el('path', { d: TAIL }, tailO);
+    el('path', { d: TAIL, 'class': 'sq-tail' }, tailF);
+    el('path', { d: 'M-20 -44 C-21 -52 -12 -56 -7 -51 C-3 -53 1 -50 0 -46 C-6 -47 -12 -45 -14 -40 C-17 -40 -19 -41 -20 -44 Z', 'class': 'sq-tail-tip' }, tailF);
+    var farArm = el('g', {}, g);
+    /* One silhouette: outlines first, fills on top, so no ink line crosses a joint. */
+    var oBody = el('g', { 'class': 'sq-o' }, g), oHead = el('g', {}, oBody), oLeg = el('g', { 'class': 'sq-o' }, g), nearArmO = el('g', {}, g);
+    var fBody = el('g', { 'class': 'sq-f' }, g), fHead = el('g', {}, fBody), fLeg = el('g', { 'class': 'sq-f' }, g);
+    function both(o, f, tag, attrs, cls) { el(tag, attrs, o); var n = el(tag, attrs, f); if (cls) n.setAttribute('class', cls); return n; }
+    both(oBody, fBody, 'ellipse', { cx: 3, cy: -11, rx: 12, ry: 11.5 });
+    el('path', { d: 'M6 -13 C11 -15 15 -12 15 -7 C14 -3 10 -1.5 7 -2.5 C5 -5 5 -10 6 -13 Z', 'class': 'sq-belly' }, fBody);
+    el('path', { d: 'M-6 -10 Q-1 -15 5 -9', 'class': 'sq-crease' }, fBody);
+    fBody.appendChild(fHead); oBody.appendChild(oHead); /* the head sits in front of the body */
+    both(oHead, fHead, 'path', { d: 'M-9 -9 L-8 -21 L-1 -12 Z' });
+    both(oHead, fHead, 'path', { d: 'M-1 -11 L3 -23 L8 -11 Z' });
+    both(oHead, fHead, 'circle', { cx: 2, cy: 0, r: 13 });
+    el('path', { d: 'M1 -12 L3 -19 L6 -12 Z', 'class': 'sq-ear-in' }, fHead);
+    el('ellipse', { cx: 9, cy: 5, rx: 7, ry: 5.5, 'class': 'sq-belly' }, fHead);
+    el('circle', { cx: 15.5, cy: 3, r: 2.2, 'class': 'fox-nose' }, fHead);
+    el('ellipse', { cx: 2, cy: 5, rx: 3.2, ry: 2, 'class': 'fox-blush' }, fHead);
+    var eye = el('g', {}, fHead);
+    el('circle', { cx: 6, cy: -3, r: 3.6, 'class': 'fox-eye' }, eye);
+    el('circle', { cx: 7.3, cy: -4.4, r: 1.3, 'class': 'frog-hi' }, eye);
+    el('circle', { cx: 5, cy: -1.6, r: 0.6, 'class': 'frog-hi' }, eye);
+    var shut = el('path', { d: 'M2.6 -2.6 Q6 -7 9.4 -2.6', 'class': 'fox-mouth' }, fHead);
+    var smile = el('path', { d: 'M10 8 Q12.5 10.5 15 8', 'class': 'fox-mouth' }, fHead);
+    var oh = el('ellipse', { cx: 12.5, cy: 9, rx: 1.6, ry: 2, 'class': 'fox-mouth-o' }, fHead);
+    el('path', { d: 'M14 5 L22 3.5 M14 6.5 L22 8', 'class': 'sq-whisker' }, fHead);
+    both(oLeg, fLeg, 'ellipse', { cx: 2, cy: -1.5, rx: 7.5, ry: 3.2 }, 'foot');
+    el('path', { d: 'M-4 -3.4 Q2 -5.6 8 -3.2', 'class': 'sq-crease' }, fLeg);
+    var nearArm = el('g', {}, g);
+    /* Stubby arms: one curve from the chest, a cream paw. The near arm joins the silhouette
+       (outline under the body fill, soft edge only on its lower half). */
+    function drawArm(grp, a, dark, lean, outlineGrp) {
+      grp.textContent = ''; if (outlineGrp) outlineGrp.textContent = '';
+      var s = SHOULDER, e = [s[0] + 5 * Math.cos(a[0] * Math.PI / 180), s[1] + 5 * Math.sin(a[0] * Math.PI / 180)];
+      var w = [e[0] + 5 * Math.cos(a[1] * Math.PI / 180), e[1] + 5 * Math.sin(a[1] * Math.PI / 180)];
+      var d = 'M' + s[0].toFixed(1) + ' ' + s[1].toFixed(1) + ' Q' + e[0].toFixed(1) + ' ' + e[1].toFixed(1) + ' ' + w[0].toFixed(1) + ' ' + w[1].toFixed(1);
+      if (outlineGrp) {
+        el('path', { d: d, 'class': 'sq-limb-o' }, outlineGrp);
+        var t0 = 0.5, m1 = [s[0] + (e[0] - s[0]) * t0, s[1] + (e[1] - s[1]) * t0], m2 = [e[0] + (w[0] - e[0]) * t0, e[1] + (w[1] - e[1]) * t0];
+        var mid = [m1[0] + (m2[0] - m1[0]) * t0, m1[1] + (m2[1] - m1[1]) * t0];
+        el('path', { d: 'M' + mid[0].toFixed(1) + ' ' + mid[1].toFixed(1) + ' Q' + m2[0].toFixed(1) + ' ' + m2[1].toFixed(1) + ' ' + w[0].toFixed(1) + ' ' + w[1].toFixed(1), 'class': 'sq-limb-edge' }, grp);
+        el('path', { d: d, 'class': 'sq-limb' }, grp);
+      } else {
+        el('path', { d: d, 'class': 'sq-limb-o' }, grp);
+        el('path', { d: d, 'class': 'sq-limb' + (dark ? ' dark' : '') }, grp);
+      }
+      el('circle', { cx: w[0].toFixed(1), cy: w[1].toFixed(1), r: 2.4, 'class': 'sq-paw' + (dark ? ' dark' : '') }, grp);
+      return rot(w, HIP, lean);
+    }
+    function mood(name) {
+      eye.style.display = name === 'happy' ? 'none' : '';
+      shut.style.display = name === 'happy' ? '' : 'none';
+      smile.style.display = name === 'hmm' ? 'none' : '';
+      oh.style.display = name === 'hmm' ? '' : 'none';
+      g.dataset.mood = name;
+    }
+    function pose(p) {
+      var lean = p.lean || 0, rt = 'rotate(' + lean.toFixed(1) + ' ' + HIP[0] + ' ' + HIP[1] + ')';
+      [oBody, fBody, farArm, nearArm, nearArmO].forEach(function (x) { x.setAttribute('transform', rt); });
+      var ht = 'translate(' + NECK[0] + ' ' + NECK[1] + ') rotate(' + (p.head || 0).toFixed(1) + ')';
+      oHead.setAttribute('transform', ht); fHead.setAttribute('transform', ht);
+      tailG.setAttribute('transform', 'rotate(' + (p.tail || 0).toFixed(1) + ' ' + TAIL_BASE[0] + ' ' + TAIL_BASE[1] + ') translate(-4 -8) scale(0.74) translate(4 8)');
+      drawArm(farArm, p.far || [30, 70], true, lean);
+      var paw = drawArm(nearArm, p.near || [20, 60], false, lean, nearArmO);
+      if (p.mood) mood(p.mood);
+      g.dataset.lean = lean.toFixed(1);
+      return paw;
+    }
+    pose(POSES.stand);
+    return { g: g, pose: pose, mood: mood };
+  }
+  var POSES = {
+    stand: { lean: 0, head: 0, tail: 0, near: [20, 60], far: [30, 70], mood: 'calm' },
+    dig: { lean: 30, head: 18, tail: -12, near: [50, 70], far: [100, 140] },
+    hold: { lean: -6, head: -4, tail: 8, near: [0, -20], far: [10, -12], mood: 'happy' },
+    peer: { lean: 26, head: 24, tail: -8, near: [60, 80], far: [70, 90], mood: 'hmm' }
+  };
+  function mixPose(a, b, t) {
+    function m(x, y) { return x + (y - x) * t; }
+    return { lean: m(a.lean, b.lean), head: m(a.head, b.head), tail: m(a.tail, b.tail),
+      near: [m(a.near[0], b.near[0]), m(a.near[1], b.near[1])], far: [m(a.far[0], b.far[0]), m(a.far[1], b.far[1])], mood: t < 0.5 ? a.mood : b.mood };
+  }
+  /* One scoop of the paws, phase 0..1: reach forward into the hole, pull back under the body. */
+  function strokeArm(ph) { var s = (1 - Math.cos(2 * Math.PI * ph)) / 2; return [40 + 66 * s, 62 + 86 * s]; }
+  S.buildSquirrel = buildSquirrel; S.squirrelPoses = POSES;
+  function acorn(parent, x, y, s) {
+    var g = el('g', { 'class': 'acorn', transform: 'translate(' + x + ' ' + y + ') scale(' + (s || 1) + ')' }, parent);
+    el('ellipse', { cx: 0, cy: 3, rx: 6.5, ry: 7.5, 'class': 'acorn-nut' }, g);
+    el('path', { d: 'M-8 -1 Q0 -9 8 -1 Q0 1 -8 -1 Z', 'class': 'acorn-cap' }, g);
+    el('line', { x1: 0, y1: -5, x2: 1.5, y2: -9, 'class': 'acorn-stem' }, g);
+    return g;
+  }
+
+  var f = K.stage(5, 'dig, then count again from the next hole', 'A run of empty holes doesn\'t make the acorn due.');
+  K.para(f.text, 'note', 'Press Dig, one hole at a time.');
+  var nav = h('div', 'beat-nav'), grp = h('div'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'Views');
+  var b1 = h('button', '', '1. Dig'), b2 = h('button', '', '2. Count again');
+  [b1, b2].forEach(function (b, i) { b.type = 'button'; b.dataset.beat = String(i + 1); grp.appendChild(b); });
+  nav.appendChild(grp); f.visual.appendChild(nav);
+  var beat1 = h('div', 'beat'), beat2 = h('div', 'beat'); beat1.id = 'f5-beat1'; beat2.id = 'f5-beat2';
+  f.visual.appendChild(beat1); f.visual.appendChild(beat2);
+
+  /* ---------- Beat 1: the dig site (viewBox 420 x 156) ---------- */
+  var GROUND = 100, HOLE_Y = GROUND + 9;
+  var site = el('svg', { viewBox: '0 0 420 156', 'class': 'chart dig-svg', role: 'group', 'aria-label': 'Nutmeg\'s dig site' });
+  beat1.appendChild(site);
+  el('rect', { x: 0, y: 0, width: 420, height: 156, rx: 8, 'class': 'soil' }, site);
+  el('rect', { x: 0, y: 0, width: 420, height: GROUND, 'class': 'dig-sky' }, site);
+  el('rect', { x: 0, y: GROUND - 4, width: 420, height: 10, 'class': 'dig-grass' }, site);
+  [[60, 146], [150, 150], [240, 144], [330, 150], [390, 146], [110, 152]].forEach(function (d) { el('circle', { cx: d[0], cy: d[1], r: 2.2, 'class': 'soil-dot' }, site); });
+  var holesG = el('g', {}, site), dirtG = el('g', {}, site), labelsG = el('g', {}, site);
+  var sqHolder = el('g', {}, site), sq = buildSquirrel(sqHolder), heldG = el('g', {}, site);
+  var more = el('text', { x: 410, y: 150, 'text-anchor': 'end', 'class': 'c-tick' }, site);
+  function SX(i) { return 92 + i * 27; }
+  function placeSq(x, y) { sqHolder.setAttribute('transform', 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') scale(1.75)'); }
+
+  /* ---------- Beat 2: the PMF of X (viewBox 420 x 268) ---------- */
+  var BASE = 196, TOPC = 40, COLS = 13;
+  var chart = el('svg', { viewBox: '0 0 420 268', 'class': 'chart', role: 'img', 'aria-label': 'The PMF of X, and the PMF of the extra digs after the empty holes' });
+  beat2.appendChild(chart);
+  var cTitle = el('text', { x: 4, y: 18, 'class': 'c-title' }, chart); cTitle.textContent = 'P(X = k)';
+  var cGrid = el('g', {}, chart), cBars = el('g', {}, chart), cOver = el('g', {}, chart), cAxis = el('g', {}, chart), cCap = el('g', {}, chart);
+  el('line', { x1: 52, x2: 408, y1: BASE, y2: BASE, 'class': 'c-base' }, chart);
+  var cw = 352 / COLS;
+  function colX(c) { return 56 + (c + 0.5) * cw; }
+
+  var st = { t: 3, holes: [], found: false, fixed: false, after: 0, beat: 1, busy: false };
+  function p() { return M.tenths(st.t); }
+  function q() { return M.sub(F(1), p()); }
+  function empties() { return st.holes.filter(function (x) { return !x; }).length; }
+
+  function drawSite() {
+    holesG.textContent = ''; labelsG.textContent = '';
+    st.holes.forEach(function (x, i) {
+      if (i >= SLOTS) return;
+      var cx = SX(i), g = el('g', { 'class': 'hole ' + (x ? 'win' : 'miss'), 'data-i': i }, holesG);
+      el('ellipse', { cx: cx + 15, cy: HOLE_Y - 1, rx: 7, ry: 3.2, 'class': 'mound' }, g);
+      el('ellipse', { cx: cx, cy: HOLE_Y, rx: 11, ry: 5, 'class': 'hole-pit' }, g);
+      if (x) el('ellipse', { cx: cx, cy: HOLE_Y, rx: 15, ry: 7, 'class': 'hole-ring' }, g);
+      var t = el('text', { x: cx, y: HOLE_Y + 28, 'text-anchor': 'middle', 'class': 'c-tick dig-n ' + (x ? 'win' : 'miss') }, labelsG); t.textContent = String(i + 1);
+    });
+    more.textContent = st.holes.length > SLOTS ? 'and ' + (st.holes.length - SLOTS) + ' more holes' : '';
+  }
+
+  /* ---------- beat 2 drawing; k (0..1) runs the restart animation ---------- */
+  function drawChart(kAnim) {
+    cGrid.textContent = ''; cBars.textContent = ''; cOver.textContent = ''; cAxis.textContent = ''; cCap.textContent = '';
+    var pp = p(), dist = M.geometric(pp, 12), a = st.after;
+    var vals = dist.pmf.map(M.val).concat([M.val(dist.tail)]);
+    var mx = Math.max.apply(null, vals), sMax = mx > 0.5 ? 1 : mx > 0.25 ? 0.5 : 0.25, PX = (BASE - TOPC) / sMax;
+    el('line', { x1: 52, x2: 408, y1: BASE - sMax * PX, y2: BASE - sMax * PX, 'class': 'c-gridline' }, cGrid);
+    var tl = el('text', { x: 48, y: BASE - sMax * PX + 6, 'text-anchor': 'end', 'class': 'c-tick' }, cGrid); tl.textContent = sMax === 1 ? '1' : sMax === 0.5 ? '1/2' : '1/4';
+    var bw = cw - 8;
+    vals.forEach(function (v, c) {
+      el('rect', { x: colX(c) - bw / 2, y: BASE - v * PX, width: bw, height: v * PX, 'class': 'kbar' + (c >= a && kAnim < 1 ? ' after' : '') + (c < a && kAnim > 0 && kAnim < 1 ? ' faded' : ''), 'data-k': c + 1 }, cBars);
+      var kl = el('text', { x: colX(c), y: BASE + 22, 'text-anchor': 'middle', 'class': 'c-x dig-k' }, cAxis); kl.textContent = c === 12 ? '13+' : String(c + 1);
+    });
+    var kt = el('text', { x: 4, y: BASE + 22, 'class': 'c-tick' }, cAxis); kt.textContent = 'k';
+    var mean = M.val(dist.mean);
+    el('path', { d: 'M' + (56 + (mean - 0.5) * cw) + ' ' + (BASE + 28) + ' l-7 12 l14 0 Z', 'class': 'pivot', 'data-x': M.str(dist.mean) }, cAxis);
+    /* the restart: bar a + j (the extra digs after a empty holes) slides left a columns and
+       is divided by P(X > a) = (1 - p)^a, landing on bar j */
+    if (kAnim > 0) {
+      var scale = 1 / Math.pow(M.val(q()), a);
+      for (var j = 0; j < COLS; j++) {
+        var from = j + a, vFrom, vTo = vals[j];
+        if (j === 12) vFrom = vTo / scale; else vFrom = from <= 11 ? vals[from] : vTo / scale;
+        var xFrom = colX(Math.min(from, COLS - 0.5)), x = xFrom + (colX(j) - xFrom) * kAnim, v = vFrom + (vTo * 1 - vFrom) * kAnim;
+        el('rect', { x: x - bw / 2 - 2, y: BASE - v * PX, width: bw + 4, height: v * PX, 'class': 'over-bar', 'data-j': j + 1, 'data-v': v.toFixed(6) }, cOver);
+      }
+    }
+    if (kAnim >= 1) {
+      var c1 = el('text', { x: 4, y: BASE + 60, 'class': 'c-title' }, cCap); c1.textContent = 'Solid: digs counted from the start.';
+      var c2 = el('text', { x: 4, y: BASE + 80, 'class': 'c-title over-cap' }, cCap); c2.textContent = 'Dashed: extra digs after ' + a + (a === 1 ? ' empty hole.' : ' empty holes.');
+    }
+    return dist;
+  }
+
+  /* ---------- controls ---------- */
+  var stP = h('div', 'stepper');
+  stP.innerHTML = '<span class="st-lab">Find chance, ' + math('<mi>p</mi>') + '</span>';
+  var dec = h('button', 'st-btn', '−'), val = h('span', 'st-val'), inc = h('button', 'st-btn', '+');
+  dec.type = inc.type = 'button'; dec.id = 'f5-p-dec'; inc.id = 'f5-p-inc'; val.id = 'f5-p-val';
+  dec.setAttribute('aria-label', 'Lower find chance'); inc.setAttribute('aria-label', 'Higher find chance');
+  [dec, val, inc].forEach(function (x) { stP.appendChild(x); });
+  var params = h('div', 'params'); params.appendChild(stP); f.controls.appendChild(params);
+  dec.addEventListener('click', function () { setT(st.t - 1); });
+  inc.addEventListener('click', function () { setT(st.t + 1); });
+  var row = h('div', 'act');
+  var digBtn = h('button', 'leap-btn', 'Dig'); digBtn.type = 'button'; digBtn.id = 'f5-dig';
+  var newBtn = h('button', 'again small', 'Bury a new acorn'); newBtn.type = 'button'; newBtn.id = 'f5-new';
+  var go = h('button', 'go'); go.type = 'button'; go.id = 'f5-go';
+  row.appendChild(digBtn); row.appendChild(newBtn); f.controls.appendChild(row);
+  var row2 = h('div', 'act'); row2.appendChild(go); f.controls.appendChild(row2);
+  var runLine = K.para(f.readout, 'fsum', ''), prob = K.para(f.readout, 'problem', ''), only = K.para(f.readout, 'note only', '');
+  var hero1 = h('div', 'fhero'); hero1.id = 'f5-hero1'; f.readout.appendChild(hero1);
+  var hero2 = h('div', 'fhero'); hero2.id = 'f5-hero'; f.readout.appendChild(hero2);
+  var Q = '<mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo></mrow>';
+  var EX = '<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo>';
+  K.changed(f, 'The acorn is never due. After the empty holes, the extra digs Nutmeg still needs have the same PMF as a fresh start. This is memorylessness.');
+  f.changed.insertAdjacentHTML('beforeend', K.strip('f5', 'Geometric', '<msup>' + Q + '<mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>p</mi>', 'for k = 1, 2, 3, …',
+    '<mfrac><mn>1</mn><mi>p</mi></mfrac>', '<mfrac><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow><msup><mi>p</mi><mn>2</mn></msup></mfrac>'));
+
+  function setBeat(n) {
+    if (n === 2 && !st.fixed) return;
+    st.beat = n; beat1.hidden = n !== 1; beat2.hidden = n !== 2;
+    b1.setAttribute('aria-pressed', n === 1 ? 'true' : 'false'); b2.setAttribute('aria-pressed', n === 2 ? 'true' : 'false');
+    draw();
+  }
+  b1.addEventListener('click', function () { setBeat(1); });
+  b2.addEventListener('click', function () { setBeat(2); });
+  function setT(t) { t = Math.max(1, Math.min(9, t)); if (t === st.t || st.busy) return; st.t = t; reset(); }
+  function reset() { st.holes = []; st.found = false; dirtG.textContent = ''; draw(); }
+
+  function draw(kAnim) {
+    var pp = p(), qq = q(), n = st.holes.length, e = empties();
+    if (!st.busy) { drawSite(); dirtG.textContent = ''; heldG.textContent = ''; restPose(); }
+    var dist = drawChart(kAnim === undefined ? (st.fixed ? 1 : 0) : kAnim);
+    val.innerHTML = math(mf(pp)); dec.disabled = st.t <= 1 || st.busy; inc.disabled = st.t >= 9 || st.busy;
+    digBtn.disabled = st.busy || st.found; newBtn.disabled = st.busy || n === 0;
+    b2.disabled = !st.fixed;
+    var canFix = !st.fixed && !st.found && e >= 1 && !st.busy;
+    go.hidden = !canFix;
+    go.innerHTML = 'Count again from hole ' + (e + 1) + '<small>memorylessness</small>';
+    /* beat 1 readout */
+    runLine.hidden = st.beat !== 1;
+    runLine.innerHTML = n === 0 ? 'Press Dig.' : st.found ? '<b>Dig ' + n + ': the acorn!</b> ' + (n === 1 ? 'Found on the first dig.' : (n - 1) + (n === 2 ? ' empty hole' : ' empty holes') + ' first.') : (st.busy ? 'Digging.' : '<b>Dig ' + n + ': no acorn here.</b> ' + e + (e === 1 ? ' empty hole' : ' empty holes') + ' so far.');
+    runLine.dataset.value = st.holes.join('');
+    var chance = st.holes.reduce(function (acc, x) { return M.mul(acc, x ? pp : qq); }, F(1));
+    hero1.hidden = st.beat !== 1 || n === 0;
+    hero1.dataset.value = n ? M.str(chance) : '';
+    var expr = (e ? (e === 1 ? mf(qq) : '<msup><mrow><mo>(</mo>' + mf(qq) + '<mo>)</mo></mrow>' + K.mn(e) + '</msup>') : '') + (st.found ? (e ? '<mo>·</mo>' : '') + mf(pp) : '');
+    hero1.innerHTML = n ? '<div class="flabel">' + (st.found ? 'Chance of this run' : 'Chance of ' + e + (e === 1 ? ' empty hole' : ' empty holes') + ' so far') + '</div><div class="fline">' + math(n === 1 ? mf(chance) : expr + '<mo>=</mo>' + mf(chance)) + '</div>' : '';
+    only.hidden = st.beat !== 1 || !st.found;
+    only.innerHTML = st.found ? 'This is the only way to first find the acorn on dig ' + n + ', so ' + math('<mi>P</mi><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo>' + K.mn(n) + '<mo stretchy="false">)</mo><mo>=</mo>' + mf(chance)) + '.' : '';
+    prob.hidden = st.beat !== 1 || !canFix;
+    prob.textContent = 'Is the acorn more likely on the next dig?';
+    /* beat 2 readout */
+    var a = st.after;
+    hero2.hidden = st.beat !== 2;
+    hero2.dataset.after = String(a); hero2.dataset.mean = M.str(dist.mean); hero2.dataset.variance = M.str(dist.variance);
+    var ta = '<mrow><mi>' + a + '</mi></mrow>';
+    hero2.innerHTML = '<div class="fline">' + math('<mi>P</mi><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo>' + K.mn(a) + '<mo>+</mo><mi>j</mi><mo>∣</mo><mi>X</mi><mo>&gt;</mo>' + K.mn(a) + '<mo stretchy="false">)</mo><mo>=</mo><mfrac><mrow><msup>' + Q + '<mrow>' + K.mn(a) + '<mo>+</mo><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>p</mi></mrow><msup>' + Q + K.mn(a) + '</msup></mfrac>') + '</div>' +
+      '<div class="fline">' + math('<mo>=</mo><msup>' + Q + '<mrow><mi>j</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>p</mi><mo>=</mo><mi>P</mi><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo><mi>j</mi><mo stretchy="false">)</mo>') + '</div>';
+    K.stripSet('f5', dist.mean, dist.variance);
+    f.changed.hidden = !st.fixed;
+  }
+
+  /* ---------- one dig, as keyframes u from 0 to 4 ----------
+     0-1 hop to the next spot; 1-1.3 crouch at the hole, head down; 1.3-3 three scoops,
+     paws alternating, dirt flicked back between the hind legs, the hole growing and the
+     tail bouncing; 3-4 the result: a find is lifted overhead in both paws; an empty hole
+     gets a peer and a head shake. */
+  var REACH = 28;
+  function spot(i) { return SX(Math.min(i, SLOTS - 1)) - REACH; }
+  function digPose(i, x, u) {
+    var hx = SX(Math.min(i, SLOTS - 1)), x0 = i === 0 ? 50 : spot(i - 1), x1 = spot(i), t, pose, paw;
+    dirtG.textContent = ''; heldG.textContent = '';
+    if (u < 1) {
+      t = u; pose = POSES.stand; placeSq(x0 + (x1 - x0) * t, GROUND - 16 * 4 * t * (1 - t));
+      sq.pose({ lean: -6 * Math.sin(Math.PI * t), head: -4 * Math.sin(Math.PI * t), tail: 14 * Math.sin(Math.PI * t), near: [60, 10], far: [66, 16], mood: 'calm' });
+      return;
+    }
+    placeSq(x1, GROUND);
+    var grow = u < 1.3 ? 0 : Math.min(1, (u - 1.3) / 1.7);
+    if (u < 3.0 || !x) {
+      el('ellipse', { cx: hx, cy: HOLE_Y, rx: (2 + 9 * grow).toFixed(1), ry: (1 + 4 * grow).toFixed(1), 'class': 'hole-pit digging' }, dirtG);
+    }
+    if (u < 1.3) { sq.pose(mixPose(POSES.stand, POSES.dig, (u - 1) / 0.3)); return; }
+    if (u < 3) {
+      var ph = (u - 1.3) / 1.7 * 3;
+      sq.pose({ lean: POSES.dig.lean + 3 * Math.sin(ph * 2 * Math.PI), head: POSES.dig.head, tail: POSES.dig.tail + 10 * Math.sin(ph * 2 * Math.PI * 2),
+        near: strokeArm(ph % 1), far: strokeArm((ph + 0.5) % 1), mood: 'calm' });
+      /* dirt: each scoop flicks three crumbs back under the body, landing behind */
+      /* crumbs on both sides of Nutmeg (design review, 2026-11-16): the far-side ones pass behind
+         the body (dirtG), the near-side ones in front of it (heldG), each on its own arc */
+      for (var k = 0; k < 4; k++) {
+        var near = k % 2 === 1, tt = ((ph + k / 4) % 1);
+        var cx = hx - 4 - (near ? 76 : 92) * tt, cy = HOLE_Y - 4 - (near ? 30 : 48) * 4 * tt * (1 - tt) + (near ? 4 * tt : 0);
+        el('circle', { cx: cx.toFixed(1), cy: cy.toFixed(1), r: (near ? 4 : 3.4).toFixed(1), 'class': 'dirt' + (near ? ' near' : ''), opacity: (1 - tt * 0.5).toFixed(2) }, near ? heldG : dirtG);
+      }
+      return;
+    }
+    t = Math.min(u - 3, 1);
+    if (x) {
+      paw = sq.pose(mixPose(POSES.dig, POSES.hold, Math.min(1, t * 1.6)));
+      var w = toWorld(x1, paw);
+      acorn(heldG, (w[0] + 4).toFixed(1), (w[1] - 1).toFixed(1), 1.15);
+    } else {
+      var shake = t > 0.35 ? 12 * Math.sin((t - 0.35) * Math.PI * 4) * (1 - t) : 0;
+      var pp = mixPose(POSES.dig, POSES.peer, Math.min(1, t * 2.2)); pp.head += shake;
+      sq.pose(pp);
+    }
+  }
+  function toWorld(x1, paw) { return [x1 + paw[0] * 1.75, GROUND + paw[1] * 1.75]; }
+  function restPose() {
+    var n = st.holes.length;
+    if (st.found) {
+      var x1 = spot(n - 1); placeSq(x1, GROUND);
+      var w = toWorld(x1, sq.pose(POSES.hold));
+      acorn(heldG, (w[0] + 4).toFixed(1), (w[1] - 1).toFixed(1), 1.15);
+    } else {
+      placeSq(n === 0 ? 50 : spot(n - 1), GROUND);
+      sq.pose(n ? Object.assign({}, POSES.stand, { mood: 'hmm' }) : POSES.stand);
+    }
+  }
+  function dig() {
+    if (st.busy || st.found) return Promise.resolve(null);
+    var i = st.holes.length, x = M.trial(S.rand, p());
+    st.busy = true; draw();
+    var chain = Promise.resolve();
+    [240, 90, 640, 460].forEach(function (ms, stage) { chain = chain.then(function () { return S.tween(ms, function (t) { digPose(i, x, stage + t); }); }); });
+    return chain.then(function () {
+      st.holes.push(x); if (x) st.found = true;
+      st.busy = false; draw();
+      $('status').textContent = runLine.textContent;
+      return x;
+    });
+  }
+  digBtn.addEventListener('click', dig);
+  newBtn.addEventListener('click', reset);
+  go.addEventListener('click', function () {
+    st.fixed = true; st.after = empties(); setBeat(2); b2.focus();
+    if (!S.instant) S.tween(900, function (k) { draw(k); }).then(function () { draw(); });
+  });
+  setBeat(1);
+  S.nutmeg = { f: f, st: st, dig: dig, reset: reset, setT: setT, setBeat: setBeat, site: site, chart: chart, squirrel: sq, digPose: digPose, colX: colX, POSES: POSES };
+})();
+</script>
+<script>
+/* Step 7 (Trails): Professor Hoot and the discrete uniform, in two beats (one figure each).
+   A board-game map of five trails from start to home, each equally likely; trails 2,
+   3 and 4 pass the Old Oak. X is the trail Hoot takes.
+   1. Pick a trail: tap a trail's name and Hoot's piece moves along it; picks are tallied
+      (Cody, 2026-11-20: the separate Pick a trail button was redundant).
+      A tally of picks cannot say how likely an oak trail is.
+   2. Count the trails: the flat PMF. Every trail has chance 1/n, so the chance of the oak
+      trails is how many there are, divided by n. The pivot sits at E[X] = (n + 1)/2 and a
+      band shows one standard deviation, var(X) = (n^2 - 1)/12 (Lec. 1 segment 5, Lec. 2
+      segment 3, where the lecture writes (b - a)(b - a + 2)/12 with a = 1, b = n).
+   The fix has no undo; the beat buttons switch back. */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, el = S.el, h = S.h, $ = S.$;
+  var F = M.F, mf = K.mfrac, math = K.math, ft = K.ftext;
+  var NMAX = 12;
+
+  /* ---------- Professor Hoot: design B, happy squint, Q3 glasses (design review, 2026-11-16) ----------
+     Feet at y = 0, centered. pose({ lean, wingL, wingR, eyes: 'squint' | 'open', look: [dx, dy] }).
+     Wing angles rotate each wing about its shoulder; 0 is the wing folded at the side. */
+  function roundPolyR(P, R) {
+    var n = P.length, d = '';
+    for (var i = 0; i < n; i++) {
+      var a = P[(i + n - 1) % n], b = P[i], c = P[(i + 1) % n], r = R[i];
+      var la = Math.hypot(a[0] - b[0], a[1] - b[1]), lc = Math.hypot(c[0] - b[0], c[1] - b[1]);
+      var p1 = [b[0] + (a[0] - b[0]) * r / la, b[1] + (a[1] - b[1]) * r / la], p2 = [b[0] + (c[0] - b[0]) * r / lc, b[1] + (c[1] - b[1]) * r / lc];
+      d += (i ? ' L' : 'M') + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) + ' Q' + b[0].toFixed(2) + ' ' + b[1].toFixed(2) + ' ' + p2[0].toFixed(2) + ' ' + p2[1].toFixed(2);
+    }
+    return d + ' Z';
+  }
+  var SHOULDER_L = [-16, -30], SHOULDER_R = [16, -30];
+  function buildOwl(parent) {
+    var g = el('g', { 'class': 'owl' }, parent), body = el('g', {}, g);
+    function part(grp, tag, attrs, cls) {
+      var o = el(tag, attrs, grp); o.setAttribute('class', 'owl-o');
+      var f = el(tag, attrs, grp); f.setAttribute('class', cls || 'owl-body');
+      return f;
+    }
+    var tufts = el('g', {}, body);
+    part(tufts, 'path', { d: 'M-15 -42 L-17 -54 L-7 -45 Z' });
+    part(tufts, 'path', { d: 'M15 -42 L17 -54 L7 -45 Z' });
+    var wingL = el('g', {}, body), wingR = el('g', {}, body);
+    part(wingL, 'ellipse', { cx: -19, cy: -20, rx: 6.5, ry: 12, transform: 'rotate(14 -19 -20)' }, 'owl-wing');
+    part(wingR, 'ellipse', { cx: 19, cy: -20, rx: 6.5, ry: 12, transform: 'rotate(-14 19 -20)' }, 'owl-wing');
+    part(body, 'ellipse', { cx: 0, cy: -24, rx: 20, ry: 23.5 });
+    el('ellipse', { cx: 0, cy: -12, rx: 12.5, ry: 11.5, 'class': 'owl-belly' }, body);
+    var face = el('g', {}, body);
+    el('circle', { cx: -8, cy: -32, r: 10, 'class': 'owl-disc' }, face);
+    el('circle', { cx: 8, cy: -32, r: 10, 'class': 'owl-disc' }, face);
+    var squint = el('g', {}, face), open = el('g', {}, face), pupils = [];
+    [-8, 8].forEach(function (x) {
+      el('path', { d: 'M' + (x - 4.6) + ' -31 Q' + x + ' -36.5 ' + (x + 4.6) + ' -31', 'class': 'owl-squint' }, squint);
+      el('circle', { cx: x, cy: -32, r: 5.6, 'class': 'owl-eyew' }, open);
+      var pg = el('g', {}, open);
+      el('circle', { cx: x, cy: -31.6, r: 3.1, 'class': 'fox-eye' }, pg);
+      el('circle', { cx: x + 1.1, cy: -32.8, r: 1, 'class': 'frog-hi' }, pg);
+      pupils.push(pg);
+    });
+    /* Q3 glasses: octagon frames, corners softened a little, the top a touch wider. */
+    var OCT = [[-3.3, -38.2], [3.3, -38.2], [7.7, -34.6], [7.4, -28.6], [3, -25.2], [-3, -25.2], [-7.4, -28.6], [-7.7, -34.6]];
+    var RR = [0.8, 0.8, 1, 1.2, 1.4, 1.4, 1.2, 1];
+    var lenses = [-8, 8].map(function (x) { return roundPolyR(OCT.map(function (q) { return [x + q[0], q[1]]; }), RR); });
+    var gl = el('g', { 'class': 'owl-glasses' }, face);
+    ['owl-gold-edge', 'owl-gold'].forEach(function (cls) {
+      var gg = el('g', { 'class': cls }, gl);
+      lenses.forEach(function (d) { el('path', { d: d }, gg); });
+      el('path', { d: 'M-1.6 -33 Q0 -36 1.6 -33' }, gg);
+      el('path', { d: 'M-15.7 -34.4 L-20.6 -36.8 M15.7 -34.4 L20.6 -36.8' }, gg);
+    });
+    lenses.forEach(function (d) { el('path', { d: d, 'class': 'owl-tint' }, gl); });
+    [-8, 8].forEach(function (x) { el('path', { d: 'M' + (x - 5) + ' -34.6 q1.8 -1.8 4 -2', 'class': 'glint' }, gl); });
+    el('path', { d: 'M-2.6 -27 L2.6 -27 L0 -22 Z', 'class': 'owl-beak' }, face);
+    el('ellipse', { cx: -13, cy: -24, rx: 3, ry: 1.8, 'class': 'fox-blush' }, face);
+    el('ellipse', { cx: 13, cy: -24, rx: 3, ry: 1.8, 'class': 'fox-blush' }, face);
+    el('path', { d: 'M-9 0 l1.6 -3.6 l1.6 3.6 l1.6 -3.6 l1.6 3.6 Z M3 0 l1.6 -3.6 l1.6 3.6 l1.6 -3.6 l1.6 3.6 Z', 'class': 'owl-foot' }, g);
+    function pose(p) {
+      p = p || {};
+      body.setAttribute('transform', 'rotate(' + (p.lean || 0).toFixed(1) + ' 0 0)');
+      wingL.setAttribute('transform', 'rotate(' + (p.wingL || 0).toFixed(1) + ' ' + SHOULDER_L[0] + ' ' + SHOULDER_L[1] + ')');
+      wingR.setAttribute('transform', 'rotate(' + (p.wingR || 0).toFixed(1) + ' ' + SHOULDER_R[0] + ' ' + SHOULDER_R[1] + ')');
+      var isOpen = p.eyes === 'open';
+      squint.style.display = isOpen ? 'none' : ''; open.style.display = isOpen ? '' : 'none';
+      var l = p.look || [0, 0], L = Math.hypot(l[0], l[1]) || 1, k = Math.min(1.8, L) / L;
+      pupils.forEach(function (pg) { pg.setAttribute('transform', 'translate(' + (l[0] * k).toFixed(2) + ' ' + (l[1] * k).toFixed(2) + ')'); });
+      g.dataset.eyes = isOpen ? 'open' : 'squint';
+    }
+    pose({});
+    return { g: g, pose: pose };
+  }
+  S.buildOwl = buildOwl;
+  function oak(parent, x, y, s) {
+    var g = el('g', { 'class': 'oak', transform: 'translate(' + x.toFixed(1) + ' ' + y.toFixed(1) + ') scale(' + (s || 1) + ')' }, parent);
+    el('rect', { x: -1.6, y: -2, width: 3.2, height: 7, rx: 1, 'class': 'oak-trunk' }, g);
+    el('path', { d: 'M-7 -3 C-10 -8 -6 -13 -2 -12 C-1 -16 5 -16 6 -12 C10 -12 11 -6 7 -3 Z', 'class': 'oak-crown' }, g);
+    return g;
+  }
+
+  /* ---------- the board (study A, design review 2026-11-17) ----------
+     A fixed board of five trails from start (top left) to home (bottom right). Roads are
+     straight runs with rounded corners; trails share stretches. The high road crosses
+     over a lower road on a bridge, and the long way passes under the oak road through a
+     tunnel. Trails 2, 3 and 4 pass the Old Oak. Variable boards with other numbers of
+     trails may come later as separate environments. */
+  var RR = 5, START = [24, 24], HOME = [396, 248], OAKN = [150, 176];
+  var SEG = {
+    L2: { P: [[24, 212], [300, 212], [300, 110], [150, 110]], layer: 'lower' },
+    T1: { P: [[24, 24], [150, 24]], layer: 'mid' }, T2: { P: [[150, 24], [260, 24]], layer: 'mid' },
+    T3: { P: [[260, 24], [396, 24], [396, 248]], layer: 'mid' },
+    V1: { P: [[150, 24], [150, 110]], layer: 'mid' }, V12: { P: [[150, 110], [150, 140]], layer: 'mid' }, V2: { P: [[150, 140], [150, 176]], layer: 'mid' },
+    L1: { P: [[24, 24], [24, 212]], layer: 'mid' }, L3: { P: [[24, 212], [24, 248], [360, 248]], layer: 'mid' }, LH: { P: [[360, 248], [396, 248]], layer: 'mid' },
+    C2: { P: [[260, 24], [260, 140], [150, 140]], layer: 'upper' },
+    OH: { P: [[150, 176], [360, 176], [360, 248]], layer: 'upper' }
+  };
+  var ROUTES = [
+    { segs: ['T1', 'T2', 'T3'], oak: false, name: 'the north road' },
+    { segs: ['T1', 'T2', 'C2', 'V2', 'OH', 'LH'], oak: true, name: 'over the bridge' },
+    { segs: ['T1', 'V1', 'V12', 'V2', 'OH', 'LH'], oak: true, name: 'straight to the oak' },
+    { segs: ['L1', 'L2', 'V12', 'V2', 'OH', 'LH'], oak: true, name: 'through the tunnel' },
+    { segs: ['L1', 'L3', 'LH'], oak: false, name: 'the south road' }
+  ];
+  var N = ROUTES.length, BRIDGE = [260, 110, 90], TUNNEL = [300, 176];
+  function roadD(P) {
+    var d = 'M' + P[0][0] + ' ' + P[0][1];
+    for (var i = 1; i < P.length - 1; i++) {
+      var a = P[i - 1], b = P[i], c = P[i + 1], la = Math.hypot(b[0] - a[0], b[1] - a[1]), lc = Math.hypot(c[0] - b[0], c[1] - b[1]), r = Math.min(RR, la / 2, lc / 2);
+      var p1 = [b[0] + (a[0] - b[0]) * r / la, b[1] + (a[1] - b[1]) * r / la], p2 = [b[0] + (c[0] - b[0]) * r / lc, b[1] + (c[1] - b[1]) * r / lc];
+      d += ' L' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1) + ' Q' + b[0] + ' ' + b[1] + ' ' + p2[0].toFixed(1) + ' ' + p2[1].toFixed(1);
+    }
+    var z = P[P.length - 1]; return d + ' L' + z[0] + ' ' + z[1];
+  }
+  /* a trail's whole path, start to home, for the token to follow */
+  function routePoints(r) {
+    var pts = [];
+    ROUTES[r].segs.forEach(function (k) { SEG[k].P.forEach(function (q, i) { if (pts.length && i === 0) return; pts.push(q); }); });
+    return pts;
+  }
+
+  var f = K.stage(6, 'tap a trail, then count', 'Some trails pass the Old Oak. How likely is Hoot to take one?');
+  K.para(f.text, 'note', 'Tap a trail below the board to send Hoot along it.');
+  var nav = h('div', 'beat-nav'), grp = h('div'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'Views');
+  var b1 = h('button', '', '1. Pick a trail'), b2 = h('button', '', '2. Count the trails');
+  [b1, b2].forEach(function (b, i) { b.type = 'button'; b.dataset.beat = String(i + 1); grp.appendChild(b); });
+  nav.appendChild(grp); f.visual.appendChild(nav);
+  var beat1 = h('div', 'beat'), beat2 = h('div', 'beat'); beat1.id = 'f6-beat1'; beat2.id = 'f6-beat2';
+  f.visual.appendChild(beat1); f.visual.appendChild(beat2);
+
+  /* ---------- Beat 1: the board ---------- */
+  var board = el('svg', { viewBox: '0 0 420 272', 'class': 'chart board-svg', role: 'group', 'aria-label': 'The board: five trails from start to home, three of them past the Old Oak' });
+  beat1.appendChild(board);
+  el('rect', { x: 2, y: 2, width: 416, height: 268, rx: 4, 'class': 'bd-board' }, board);
+  [[153, 27, 104, 80, 'bd-rust'], [303, 179, 54, 66, 'bd-ochre'], [263, 27, 130, 24, 'bd-grey'], [27, 215, 54, 30, 'bd-black']].forEach(function (b) {
+    el('rect', { x: b[0], y: b[1], width: b[2], height: b[3], 'class': b[4] }, board);
+  });
+  var layer = { lower: el('g', {}, board), mid: el('g', {}, board) }, crossG = el('g', {}, board); layer.upper = el('g', {}, board);
+  var deckG = el('g', {}, board), spaceG = el('g', {}, board), markG = el('g', {}, board);
+  var segEls = {};
+  Object.keys(SEG).forEach(function (k) {
+    var g = el('g', { 'class': 'bd-road', 'data-seg': k }, layer[SEG[k].layer]), d = roadD(SEG[k].P);
+    el('path', { d: d, 'class': 'bd-edge' }, g); el('path', { d: d, 'class': 'bd-top' }, g);
+    segEls[k] = g;
+  });
+  (function () {
+    var b = el('g', { transform: 'translate(' + BRIDGE[0] + ' ' + BRIDGE[1] + ') rotate(' + BRIDGE[2] + ')' }, crossG);
+    el('rect', { x: -15, y: -11, width: 30, height: 22, rx: 2, 'class': 'bd-shadow' }, b);
+    var t = el('g', { transform: 'translate(' + BRIDGE[0] + ' ' + BRIDGE[1] + ') rotate(' + BRIDGE[2] + ')' }, deckG);
+    el('rect', { x: -14, y: -6.5, width: 28, height: 13, rx: 1.5, 'class': 'bd-deck' }, t);
+    [-8, -3, 2, 7].forEach(function (x) { el('line', { x1: x, y1: -6.5, x2: x, y2: 6.5, 'class': 'bd-plank' }, t); });
+    [-8, 8].forEach(function (y) { el('line', { x1: -14, y1: y, x2: 14, y2: y, 'class': 'bd-rail' }, t); });
+    var tg = el('g', { transform: 'translate(' + TUNNEL[0] + ' ' + TUNNEL[1] + ')' }, crossG);
+    el('rect', { x: -22, y: -12, width: 44, height: 24, rx: 12, 'class': 'bd-berm' }, tg);
+    [[300, 162, 0], [300, 190, 180]].forEach(function (q) { el('path', { d: 'M-6 0 A6 6 0 0 1 6 0 Z', 'class': 'portal', transform: 'translate(' + q[0] + ' ' + q[1] + ') rotate(' + q[2] + ')' }, markG); });
+  })();
+  /* board spaces along straight runs, none at corners, nodes or crossings */
+  var avoid = [START, HOME, [BRIDGE[0], BRIDGE[1]], TUNNEL];
+  Object.keys(SEG).forEach(function (k) {
+    var P = SEG[k].P;
+    for (var i = 0; i < P.length - 1; i++) {
+      var a = P[i], b = P[i + 1], L = Math.hypot(b[0] - a[0], b[1] - a[1]), n = Math.floor((L - 2 * RR) / 15);
+      for (var j = 0; j <= n; j++) {
+        var t = (RR + (L - 2 * RR) * (n ? j / n : 0.5)) / L, x = a[0] + (b[0] - a[0]) * t, y = a[1] + (b[1] - a[1]) * t;
+        if (avoid.some(function (q) { return Math.hypot(x - q[0], y - q[1]) < 18; })) continue;
+        el('circle', { cx: x.toFixed(1), cy: y.toFixed(1), r: 2.4, 'class': 'bd-space' }, spaceG);
+      }
+    }
+  });
+  [[150, 24], [260, 24], [150, 110], [150, 140], [24, 212], [360, 248]].forEach(function (n) { el('circle', { cx: n[0], cy: n[1], r: 5, 'class': 'bd-node' }, spaceG); });
+  el('circle', { cx: OAKN[0], cy: OAKN[1], r: 7.5, 'class': 'bd-oaknode' }, spaceG);
+  el('circle', { cx: START[0], cy: START[1], r: 12, 'class': 'bd-start' }, spaceG);
+  var stT = el('text', { x: 38, y: 52, 'class': 'bd-label' }, markG); stT.textContent = 'start';
+  oak(board, 118, 174, 2.2);
+  var ol = el('text', { x: 36, y: 202, 'class': 'bd-label' }, board); ol.textContent = 'the Old Oak';
+  var homeG = el('g', { transform: 'translate(382 228) scale(0.62)' }, board);
+  el('rect', { x: -6, y: -6, width: 12, height: 20, rx: 2.5, 'class': 'oak-trunk' }, homeG);
+  el('ellipse', { cx: 0, cy: 3, rx: 3, ry: 4.2, 'class': 'bd-hollow' }, homeG);
+  el('path', { d: 'M-19 -6 C-25 -16 -14 -26 -4 -23 C1 -30 15 -27 15 -18 C24 -17 24 -6 17 -4 C9 1 -12 1 -19 -6 Z', 'class': 'oak-crown' }, homeG);
+  var hl = el('text', { x: 374, y: 266, 'text-anchor': 'end', 'class': 'bd-label' }, board); hl.textContent = 'home';
+  el('text', { x: 268, y: 98, 'class': 'bd-small' }, board).textContent = 'the bridge';
+  el('text', { x: 312, y: 158, 'class': 'bd-small' }, board).textContent = 'the tunnel';
+  /* Hoot waits in the open field near the start; the token is Hoot's piece on the board */
+  var owlHolder = el('g', { transform: 'translate(78 112) scale(0.95)' }, board), owl = buildOwl(owlHolder);
+  var token = el('g', { 'class': 'bd-token' }, board);
+  el('circle', { r: 7, 'class': 'bd-token-o' }, token); el('circle', { r: 3, 'class': 'bd-token-i' }, token);
+  var routePaths = ROUTES.map(function (r, i) { return el('path', { d: roadD(routePoints(i)), fill: 'none', stroke: 'none' }, board); });
+  function placeToken(r, t) {
+    var p = r === null ? { x: START[0], y: START[1] } : routePaths[r].getPointAtLength(t * routePaths[r].getTotalLength());
+    token.setAttribute('transform', 'translate(' + p.x.toFixed(1) + ' ' + p.y.toFixed(1) + ')');
+    token.dataset.x = p.x.toFixed(1); token.dataset.y = p.y.toFixed(1);
+    return p;
+  }
+  /* trail chips: tap one and Hoot takes that trail */
+  var chips = h('div', 'trail-chips'); chips.setAttribute('role', 'group'); chips.setAttribute('aria-label', 'Trails');
+  var chipEls = ROUTES.map(function (r, i) {
+    var c = h('button', 'trail-chip'); c.type = 'button'; c.dataset.k = String(i + 1);
+    c.innerHTML = '<b>' + (i + 1) + '</b> ' + r.name + (r.oak ? ' <span class="oakdot" aria-label="passes the Old Oak"></span>' : '');
+    c.addEventListener('click', function () { pick(i + 1); });
+    chips.appendChild(c); return c;
+  });
+  beat1.appendChild(chips);
+
+  /* ---------- Beat 2: the PMF (viewBox 420 x 268) ---------- */
+  var BASE = 200, TOPC = 40;
+  var chart = el('svg', { viewBox: '0 0 420 268', 'class': 'chart', role: 'img', 'aria-label': 'The PMF of X, flat at 1/5, with the trails past the Old Oak picked out' });
+  beat2.appendChild(chart);
+  var cTitle = el('text', { x: 4, y: 18, 'class': 'c-title' }, chart); cTitle.textContent = 'P(X = k)';
+  var cBand = el('g', {}, chart), cGrid = el('g', {}, chart), cBars = el('g', {}, chart), cAxis = el('g', {}, chart);
+  el('line', { x1: 52, x2: 408, y1: BASE, y2: BASE, 'class': 'c-base' }, chart);
+
+  var st = { traced: null, picks: [], last: null, found: false, beat: 1, busy: false };
+  function oakCount() { return ROUTES.filter(function (r) { return r.oak; }).length; }
+  function light(k) {
+    var segs = k ? ROUTES[k - 1].segs : [];
+    Object.keys(segEls).forEach(function (s) { segEls[s].classList.toggle('lit', segs.indexOf(s) >= 0); });
+    chipEls.forEach(function (c, i) { c.setAttribute('aria-pressed', i + 1 === k ? 'true' : 'false'); });
+    board.dataset.lit = String(k || '');
+  }
+  function trace(k) { if (st.busy) return; st.traced = st.traced === k ? null : k; draw(); }
+
+  function drawChart() {
+    cBand.textContent = ''; cGrid.textContent = ''; cBars.textContent = ''; cAxis.textContent = '';
+    var d = M.uniform(N), cw = 352 / N, bw = Math.min(cw - 16, 46), PX = (BASE - TOPC) / 0.5;
+    function X(v) { return 56 + (v - 0.5) * cw; }
+    var y = BASE - PX / N;
+    el('line', { x1: 52, x2: 408, y1: y, y2: y, 'class': 'c-gridline' }, cGrid);
+    var tl = el('text', { x: 48, y: y + 6, 'text-anchor': 'end', 'class': 'c-tick' }, cGrid); tl.textContent = ft(F(1, N));
+    var sd = Math.sqrt(M.val(d.variance)), mean = M.val(d.mean);
+    el('rect', { x: X(mean - sd), y: y - 22, width: X(mean + sd) - X(mean - sd), height: BASE - y + 22, rx: 4, 'class': 'sd-band trail-band', 'data-sd': sd.toFixed(6) }, cBand);
+    for (var k = 1; k <= N; k++) {
+      el('rect', { x: X(k) - bw / 2, y: y, width: bw, height: PX / N, 'class': 'kbar' + (ROUTES[k - 1].oak ? ' oakbar' : ''), 'data-k': k }, cBars);
+      if (ROUTES[k - 1].oak) oak(cBars, X(k), y - 10, 1);
+      var kl = el('text', { x: X(k), y: BASE + 22, 'text-anchor': 'middle', 'class': 'c-x' }, cAxis); kl.textContent = String(k);
+    }
+    var kt = el('text', { x: 4, y: BASE + 22, 'class': 'c-tick' }, cAxis); kt.textContent = 'k';
+    el('path', { d: 'M' + X(mean) + ' ' + (BASE + 28) + ' l-8 13 l16 0 Z', 'class': 'pivot', 'data-x': M.str(d.mean) }, cAxis);
+    var bl = el('text', { x: 4, y: BASE + 60, 'class': 'c-title' }, cAxis); bl.textContent = 'Shaded: one standard deviation each side of E[X].';
+    return d;
+  }
+
+  /* ---------- controls ---------- */
+  var row = h('div', 'act');
+  var go = h('button', 'go'); go.type = 'button'; go.id = 'f6-go'; go.innerHTML = 'Count the trails<small>equally likely outcomes</small>';
+  row.appendChild(go); f.controls.appendChild(row);
+  var runLine = K.para(f.readout, 'fsum', ''), tally = K.para(f.readout, 'tally', ''), prob = K.para(f.readout, 'problem', '');
+  var hero = h('div', 'fhero'); hero.id = 'f6-hero'; f.readout.appendChild(hero);
+  var EX = '<mi>E</mi><mo stretchy="false">[</mo><mi>X</mi><mo stretchy="false">]</mo>';
+  K.changed(f, 'Every trail has the same chance, ' + math('<mfrac><mn>1</mn><mn>5</mn></mfrac>') + ', so counting trails gives the chance of any set of them.');
+  f.changed.insertAdjacentHTML('beforeend', K.strip('f6', 'Uniform', '<mfrac><mn>1</mn><mi>n</mi></mfrac>', 'for k = 1, 2, …, n',
+    '<mfrac><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow><mn>2</mn></mfrac>', '<mfrac><mrow><msup><mi>n</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mn>12</mn></mfrac>'));
+
+  function setBeat(n) {
+    if (n === 2 && !st.found) return;
+    st.beat = n; beat1.hidden = n !== 1; beat2.hidden = n !== 2;
+    b1.setAttribute('aria-pressed', n === 1 ? 'true' : 'false'); b2.setAttribute('aria-pressed', n === 2 ? 'true' : 'false');
+    draw();
+  }
+  b1.addEventListener('click', function () { setBeat(1); });
+  b2.addEventListener('click', function () { setBeat(2); });
+  function draw() {
+    var E = oakCount();
+    if (!st.busy) {
+      light(st.traced !== null ? st.traced : st.last);
+      placeToken(st.last === null ? null : st.last - 1, st.last === null ? 0 : 1);
+      owl.pose({});
+    }
+    var d = drawChart();
+    chipEls.forEach(function (c) { c.disabled = st.busy; });
+    go.hidden = st.found || st.picks.length === 0 || st.busy;
+    b2.disabled = !st.found;
+    var oakPicks = st.picks.filter(function (k) { return ROUTES[k - 1].oak; }).length;
+    runLine.hidden = st.beat !== 1; tally.hidden = st.beat !== 1 || !st.picks.length;
+    runLine.innerHTML = st.last === null ? (st.busy ? 'Hoot is on the way.' : 'Tap a trail.') : 'Hoot took trail ' + st.last + (ROUTES[st.last - 1].oak ? ', <b>past the Old Oak</b>.' : '.');
+    tally.innerHTML = 'Picks so far: ' + st.picks.slice(-14).join(', ') + (st.picks.length > 14 ? ', …' : '') + '. <b>Past the oak: ' + oakPicks + ' of ' + st.picks.length + '.</b>';
+    tally.dataset.oak = String(oakPicks); tally.dataset.total = String(st.picks.length);
+    prob.hidden = st.beat !== 1 || st.found || !st.picks.length;
+    prob.textContent = 'Is an oak trail more likely than not? Counting picks won\'t settle it.';
+    hero.hidden = st.beat !== 2;
+    hero.dataset.value = M.str(F(E, N)); hero.dataset.mean = M.str(d.mean); hero.dataset.variance = M.str(d.variance);
+    hero.innerHTML = '<div class="fline">' + math('<mi>P</mi><mo stretchy="false">(</mo><mtext>oak trail</mtext><mo stretchy="false">)</mo><mo>=</mo><mfrac><mtext>oak trails</mtext><mtext>trails</mtext></mfrac><mo>=</mo>' + mf(F(E, N))) + '</div>' +
+      '<div class="fline dim">' + math('<mi>P</mi><mo stretchy="false">(</mo><mi>X</mi><mo>=</mo><mi>k</mi><mo stretchy="false">)</mo><mo>=</mo>' + mf(F(1, N))) + ' for every trail</div>';
+    K.stripSet('f6', d.mean, d.variance);
+    f.changed.hidden = !st.found;
+  }
+
+  /* ---------- one pick, as keyframes u from 0 to 3 ----------
+     0-1 Hoot opens their eyes and raises a wing; the chosen trail lights up;
+     1-2.6 Hoot's piece moves along the trail from start to home, Hoot watching it;
+     2.6-3 the wing lowers and Hoot goes back to the happy squint. */
+  function pickPose(k, u) {
+    light(k);
+    var p;
+    if (u < 1) { p = placeToken(k - 1, 0); owl.pose({ wingR: -70 * u, eyes: u > 0.3 ? 'open' : 'squint', look: [(p.x - 78) / 30, (p.y - 80) / 30] }); }
+    else if (u < 2.6) { p = placeToken(k - 1, (u - 1) / 1.6); owl.pose({ wingR: -70, eyes: 'open', look: [(p.x - 78) / 30, (p.y - 80) / 30] }); }
+    else { var t = Math.min(1, (u - 2.6) / 0.4); p = placeToken(k - 1, 1); owl.pose({ wingR: -70 * (1 - t), eyes: t < 0.6 ? 'open' : 'squint', look: [(p.x - 78) / 30, (p.y - 80) / 30] }); }
+  }
+  function pick(chosen) {
+    if (st.busy) return Promise.resolve(null);
+    var k = chosen || 1 + Math.floor(S.rand() * N);
+    st.busy = true; st.traced = null; st.last = null; draw();
+    var chain = Promise.resolve();
+    [260, 1500, 340].forEach(function (ms, stage) {
+      var a = [0, 1, 2.6][stage], b = [1, 2.6, 3][stage];
+      chain = chain.then(function () { return S.tween(ms, function (t) { pickPose(k, a + (b - a) * t); }); });
+    });
+    return chain.then(function () {
+      st.picks.push(k); st.last = k; st.busy = false; draw();
+      $('status').textContent = runLine.textContent + ' ' + tally.textContent;
+      return k;
+    });
+  }
+  go.addEventListener('click', function () { st.found = true; setBeat(2); b2.focus(); });
+  setBeat(1);
+  S.hoot = { f: f, st: st, pick: pick, trace: trace, setBeat: setBeat, board: board, chart: chart, owl: owl, pickPose: pickPose, ROUTES: ROUTES, token: token, START: START, HOME: HOME };
+})();
+</script>
+<script>
+/* Step 6 (Compare): the four friends around a campfire (Kimia's review; Cody, 2026-11-20).
+   Tapping a friend adds that friend's card: the question their count answers, a small PMF
+   and the formula strip in the same three rows as every other frame. The cards sit side by
+   side in a fixed order, so the four distributions can be read against each other. One
+   control, the chance p, changes Finn's, Tad's and Nutmeg's cards together; Hoot's stays
+   flat. What changed appears once all four have spoken. The old row of ten trials is gone. */
+(function () {
+  'use strict';
+  var M = window.WDModel, S = window.__wdShared, K = S.kit, el = S.el, h = S.h, $ = S.$;
+  var F = M.F, mf = K.mfrac, math = K.math;
+  var NP = 5, GK = 8, NT = 5;
+  var NS = 'http://www.w3.org/2000/svg';
+  var Q = '<mrow><mo stretchy="false">(</mo><mn>1</mn><mo>−</mo><mi>p</mi><mo stretchy="false">)</mo></mrow>';
+  var C = function (n, k) { return '<mrow><mo>(</mo><mfrac linethickness="0">' + n + k + '</mfrac><mo>)</mo></mrow>'; };
+  var PXK = '<msub><mi>p</mi><mi>X</mi></msub>';
+
+  var f = K.stage(7, 'tap each friend, then change p', 'Four friends, four counts. How do they compare?');
+  K.para(f.text, 'note', 'Tap a friend or a question.');
+
+  var st = { t: 5, told: {} };
+  function p() { return M.tenths(st.t); }
+  var FRIENDS = [
+    { id: 'finn', who: 'Finn', build: S.buildFox, box: '-67 -70 117 72', ask: 'Did my leap land?', name: 'Bernoulli',
+      dist: function () { return M.bernoulli(p()); },
+      strip: function () { return K.strip('f7-finn', 'Bernoulli', PXK + '<mo stretchy="false">(</mo><mn>1</mn><mo stretchy="false">)</mo><mo>=</mo><mi>p</mi><mo>,</mo><mspace width="0.5em"/>' + PXK + '<mo stretchy="false">(</mo><mn>0</mn><mo stretchy="false">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>p</mi>', '', '<mi>p</mi>', '<mi>p</mi>' + Q); } },
+    { id: 'pip', who: 'Tad', build: S.buildFrog, box: '-36 -48 72 50', ask: 'How many of my ' + NP + ' flies did I catch?', name: 'Binomial',
+      dist: function () { return M.binomial(NP, p()); },
+      strip: function () { return K.strip('f7-pip', 'Binomial', C('<mi>n</mi>', '<mi>k</mi>') + '<msup><mi>p</mi><mi>k</mi></msup><msup>' + Q + '<mrow><mi>n</mi><mo>−</mo><mi>k</mi></mrow></msup>', '', '<mi>n</mi><mi>p</mi>', null); } },
+    { id: 'nutmeg', who: 'Nutmeg', build: S.buildSquirrel, box: '-26 -49 59 52', ask: 'Which dig found the acorn?', name: 'Geometric',
+      dist: function () { return M.geometric(p(), GK); },
+      strip: function () { return K.strip('f7-nutmeg', 'Geometric', '<msup>' + Q + '<mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msup><mi>p</mi>', '', '<mfrac><mn>1</mn><mi>p</mi></mfrac>', '<mfrac><mrow><mn>1</mn><mo>−</mo><mi>p</mi></mrow><msup><mi>p</mi><mn>2</mn></msup></mfrac>'); } },
+    { id: 'hoot', who: 'Hoot', build: S.buildOwl, box: '-30 -56 60 58', ask: 'Which of the ' + NT + ' trails did I take?', name: 'Uniform',
+      dist: function () { return M.uniform(NT); },
+      strip: function () { return K.strip('f7-hoot', 'Uniform', '<mfrac><mn>1</mn><mi>n</mi></mfrac>', '', '<mfrac><mrow><mi>n</mi><mo>+</mo><mn>1</mn></mrow><mn>2</mn></mfrac>', '<mfrac><mrow><msup><mi>n</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><mn>12</mn></mfrac>'); } }
+  ];
+
+  /* ---------- the campfire: a night clearing, the fire at the center, the friends seated
+     around it. Tad and Hoot sit behind the fire (smaller, for depth); Finn and Nutmeg sit in
+     front, each turned toward the fire. Each friend is a button. ---------- */
+  var SEATS = { finn: { x: 92, y: 196, s: 0.78, flip: false }, pip: { x: 138, y: 118, s: 0.72, flip: false },
+    hoot: { x: 286, y: 116, s: 0.74, flip: false }, nutmeg: { x: 330, y: 196, s: 1.05, flip: true } };
+  var scene = el('svg', { viewBox: '0 40 420 196', 'class': 'campfire', role: 'group', 'aria-label': 'Four friends around a campfire at night' });
+  f.visual.appendChild(scene);
+  var defs = el('defs', {}, scene);
+  var glow = el('radialGradient', { id: 'f7-glow', cx: '50%', cy: '50%', r: '50%' }, defs);
+  el('stop', { offset: '0%', 'stop-color': '#f6cf6e', 'stop-opacity': '0.55' }, glow);
+  el('stop', { offset: '100%', 'stop-color': '#f6cf6e', 'stop-opacity': '0' }, glow);
+  el('rect', { x: 0, y: 0, width: 420, height: 236, 'class': 'cf-sky' }, scene);
+  [[40, 52], [120, 46], [200, 58], [300, 48], [380, 62], [350, 78], [64, 74]].forEach(function (c) { el('circle', { cx: c[0], cy: c[1], r: 1.6, 'class': 'cf-star' }, scene); });
+  el('ellipse', { cx: 210, cy: 176, rx: 200, ry: 62, 'class': 'cf-ground' }, scene);
+  el('ellipse', { cx: 210, cy: 160, rx: 120, ry: 58, fill: 'url(#f7-glow)' }, scene);
+  var back = el('g', {}, scene), mid = el('g', { transform: 'translate(210 168)' }, scene), front = el('g', {}, scene);
+  /* the fire: crossed logs, an outer and inner flame, centered in the clearing */
+  el('path', { d: 'M-30 8 L30 -2 M-30 -2 L30 8', 'class': 'fire-log' }, mid);
+  el('path', { d: 'M0 -58 C14 -38 24 -26 18 -10 C14 0 6 4 0 4 C-8 4 -18 -2 -18 -14 C-18 -28 -6 -36 0 -58 Z', 'class': 'fire-out' }, mid);
+  el('path', { d: 'M0 -32 C8 -22 10 -14 8 -6 C6 0 3 1 0 1 C-4 1 -8 -2 -8 -8 C-8 -16 -2 -22 0 -32 Z', 'class': 'fire-in' }, mid);
+  function seat(F0) {
+    var S0 = SEATS[F0.id], layer = S0.y < 160 ? back : front;
+    var g = el('g', { 'class': 'friend', role: 'button', tabindex: '0', 'aria-label': F0.who + ': ' + F0.ask, 'aria-pressed': 'false', id: 'f7-' + F0.id }, layer);
+    el('ellipse', { cx: S0.x, cy: S0.y + 2, rx: 34 * S0.s, ry: 7 * S0.s, 'class': 'friend-ring' }, g);
+    var sp = el('g', { transform: 'translate(' + S0.x + ' ' + S0.y + ') scale(' + (S0.flip ? -S0.s : S0.s) + ' ' + S0.s + ')' }, g);
+    F0.build(sp);
+    var t = el('text', { x: S0.x, y: S0.y + 22, 'text-anchor': 'middle', 'class': 'friend-name' }, g); t.textContent = F0.who;
+    g.addEventListener('click', function () { toggle(F0.id); });
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(F0.id); } });
+    F0.btn = g;
+  }
+  FRIENDS.forEach(seat);
+
+  /* ---------- cards: one slot per friend, filled when that friend speaks ---------- */
+  var cards = h('div', 'cards');
+  FRIENDS.forEach(function (F0) {
+    var c = h('div', 'card'); c.id = 'f7-card-' + F0.id; c.dataset.who = F0.id;
+    c.innerHTML = '<button type="button" class="card-q" id="f7-q-' + F0.id + '" aria-pressed="false"><span class="card-who">' + F0.who + '</span> <span class="card-ask">' + F0.ask + '</span></button>' +
+      '<div class="card-body" hidden><div class="card-fig"><svg class="card-pmf" viewBox="0 0 160 40" aria-hidden="true"></svg>' +
+      '<p class="card-axis"><span></span><span></span></p></div>' + F0.strip() + '</div>';
+    c.querySelector('.card-q').addEventListener('click', function () { toggle(F0.id); });
+    F0.card = c; cards.appendChild(c);
+  });
+
+  /* ---------- controls: the shared chance p ---------- */
+  var stp = h('div', 'stepper'); stp.innerHTML = '<span class="st-lab">Chance of success, ' + math('<mi>p</mi>') + '</span>';
+  var dec = h('button', 'st-btn', '−'), val = h('span', 'st-val'), inc = h('button', 'st-btn', '+');
+  dec.type = inc.type = 'button'; dec.id = 'f7-p-dec'; inc.id = 'f7-p-inc'; val.id = 'f7-p-val';
+  dec.setAttribute('aria-label', 'Lower chance'); inc.setAttribute('aria-label', 'Higher chance');
+  [dec, val, inc].forEach(function (x) { stp.appendChild(x); });
+  var params = h('div', 'params cf-params'); params.appendChild(stp); f.visual.appendChild(params);   /* under the fire: the one control that changes the scene's cards */
+  dec.addEventListener('click', function () { setT(st.t - 1); }); inc.addEventListener('click', function () { setT(st.t + 1); });
+  var prob = K.para(f.readout, 'problem', 'Each friend counts something different. Open all four to compare.');
+  var line = K.para(f.readout, 'fsum', '');
+  f.readout.appendChild(cards);
+  K.changed(f, 'Finn, Tad and Nutmeg watch the same kind of trial, with chance ' + math('<mi>p</mi>') + '. Different questions about it give different PMFs. ' +
+    'Hoot\'s trails are a different experiment: equally likely outcomes, so the PMF stays flat.');
+
+  function drawPmf(F0) {
+    var d = F0.dist(), vals = d.pmf.map(M.val), tail = d.tail ? M.val(d.tail) : null;
+    if (tail !== null) vals = vals.concat([tail]);
+    var sv = F0.card.querySelector('.card-pmf'); sv.textContent = '';
+    var n = vals.length, gap = 4, bw = (152 - gap * (n - 1)) / n, top = Math.max.apply(null, vals.concat([0.5]));
+    vals.forEach(function (v, i) {
+      var hh = 36 * v / top;
+      el('rect', { x: 4 + i * (bw + gap), y: 38 - hh, width: bw, height: Math.max(hh, 0.5), 'class': 'card-bar' + (tail !== null && i === n - 1 ? ' tail' : '') }, sv);
+    });
+    el('line', { x1: 2, x2: 158, y1: 38.5, y2: 38.5, 'class': 'c-base' }, sv);
+    var ax = F0.card.querySelectorAll('.card-axis span');
+    ax[0].textContent = String(d.values[0]);
+    ax[1].textContent = tail !== null ? GK + '+' : String(d.values[d.values.length - 1]);
+    sv.dataset.bars = String(n);
+    K.stripSet('f7-' + F0.id, d.mean, d.variance, '', true);
+  }
+  function draw() {
+    val.innerHTML = math(mf(p()));
+    dec.disabled = st.t <= 1; inc.disabled = st.t >= 9;
+    var n = 0;
+    FRIENDS.forEach(function (F0) {
+      var on = !!st.told[F0.id]; if (on) n++;
+      F0.btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      F0.card.classList.toggle('told', on);
+      F0.card.querySelector('.card-q').setAttribute('aria-pressed', on ? 'true' : 'false');
+      F0.card.querySelector('.card-body').hidden = !on;
+      if (on) drawPmf(F0);
+    });
+    prob.hidden = n === 4; line.hidden = n < 4;
+    line.textContent = 'Change p and watch the cards.';
+    f.changed.hidden = n < 4;
+  }
+  /* A friend or their question selects that card; tapping either again unselects it. */
+  function toggle(id) {
+    st.told[id] = !st.told[id]; draw();
+    var who = FRIENDS.filter(function (x) { return x.id === id; })[0].who;
+    $('status').textContent = st.told[id] ? who + ': ' + $('f7-card-' + id).textContent.replace(/\s+/g, ' ').trim() : who + '\'s card is closed.';
+  }
+  function tell(id) { if (!st.told[id]) toggle(id); }
+  function setT(t) { t = Math.max(1, Math.min(9, t)); if (t === st.t) return; st.t = t; draw(); }
+  draw();
+  S.compare = { f: f, st: st, tell: tell, toggle: toggle, setT: setT, FRIENDS: FRIENDS };
+})();
+</script>
+<script>
+/* Steps bar, beats of merged frames, and pager (six frames, design review 2026-11-18).
+   Each step button names a section (data-frame). Two sections are folded in as beat 2
+   of the frame before them: Spread (frame-3) into Balance (frame-2). Leap holds its own PMF
+   (Kimia's review, 2026-11-20), so the old PMF section (frame-1) is gone. Folding moves the donor's figure, text, controls, readout and
+   What changed into the host, each part tagged with its beat; the shared head swaps its
+   kicker hint and heading per beat. Beat 2 opens once beat 1's fix has been used.
+   show(n) takes a section number, so show(3) opens the folded beat. */
+(function () {
+  'use strict';
+  var S = window.__wdShared, K = S.kit, $ = S.$, h = S.h;
+  var steps = [].slice.call(document.querySelectorAll('.step'));
+  var TOTAL = steps.length;
+  var FOLD = [
+    { host: 2, donor: 3, go: 'f2-go', labels: ['1. Find the balance point', '2. Measure the spread'] }
+  ];
+  var hostOf = {}, frames = {};   /* section -> { host, beat }; host -> fold record */
+
+  function partsOf(sec) {
+    return ['.f-visual', '.f-text', '.f-controls', '.f-readout', '.f-changed'].map(function (q) { return sec.querySelector(q); }).filter(Boolean);
+  }
+  FOLD.forEach(function (fd) {
+    var host = $('frame-' + fd.host), donor = $('frame-' + fd.donor);
+    if (!host || !donor) return;
+    var hl = host.querySelector('.f-left'), hr = host.querySelector('.f-right');
+    partsOf(host).forEach(function (n) { n.dataset.beat = '1'; });
+    partsOf(donor).forEach(function (n) {
+      n.dataset.beat = '2';
+      (n.classList.contains('f-visual') || n.classList.contains('f-changed') ? hl : hr).appendChild(n);
+    });
+    var heads = [host.querySelector('.f-head'), donor.querySelector('.f-head')];
+    fd.kick = heads.map(function (x) { var hw = x.querySelector('.how'); return hw ? hw.textContent : ''; });
+    fd.title = heads.map(function (x) { return x.querySelector('h2').textContent; });
+    var nav = h('div', 'beat-nav'), grp = h('div'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', 'Beats');
+    fd.btns = fd.labels.map(function (l, i) {
+      var b = h('button', '', l); b.type = 'button'; b.dataset.beat = String(i + 1); grp.appendChild(b);
+      b.addEventListener('click', function () { setBeat(fd, i + 1, true); });
+      return b;
+    });
+    nav.appendChild(grp); heads[0].querySelector('.kicker').appendChild(nav);   /* on the kicker line, to save height */
+    donor.remove();
+    fd.open = false; fd.beat = 1;
+    var go = $(fd.go);
+    if (go) go.addEventListener('click', function () { fd.open = true; refreshBeats(fd); });
+    hostOf[fd.donor] = { host: fd.host, beat: 2 }; frames[fd.host] = fd;
+  });
+  function refreshBeats(fd) {
+    var host = $('frame-' + fd.host);
+    [].forEach.call(host.querySelectorAll('[data-beat]'), function (n) {
+      if (n.closest('.beat-nav')) return;
+      n.style.display = n.dataset.beat === String(fd.beat) ? '' : 'none';
+    });
+    fd.btns.forEach(function (b, i) { b.setAttribute('aria-pressed', i + 1 === fd.beat ? 'true' : 'false'); b.disabled = i === 1 && !fd.open; });
+    var how = host.querySelector('.f-head .kicker > .how'), h2 = host.querySelector('.f-head h2');
+    if (how) how.textContent = fd.kick[fd.beat - 1];
+    h2.textContent = fd.title[fd.beat - 1];
+  }
+  function setBeat(fd, b, focus) {
+    if (b === 2 && !fd.open) return;
+    fd.beat = b; refreshBeats(fd);
+    if (b === 2 && fd.enter) fd.enter();
+    if (focus) $('frame-' + fd.host).querySelector('.f-head h2').focus();
+  }
+
+  /* number the kickers by button position, and name each frame's distribution (Kimia's review) */
+  var DIST = { 0: 'Bernoulli', 2: 'Bernoulli', 4: 'Binomial', 5: 'Geometric', 6: 'Uniform' };
+  steps.forEach(function (b, i) {
+    var sec = $('frame-' + b.dataset.frame), k = sec && sec.querySelector('.kicker');
+    if (k && k.firstChild && k.firstChild.nodeType === 3) k.firstChild.textContent = (i + 1) + ' · ' + b.textContent.replace(/^\d+/, '') + (DIST[b.dataset.frame] ? ' · ' + DIST[b.dataset.frame] : '');
+  });
+
+  var current = 0;   /* button index */
+  function secOf(i) { return +steps[i].dataset.frame; }
+  function built(i) { return !!$('frame-' + secOf(i)); }
+  steps.forEach(function (b, i) {
+    b.disabled = !built(i);
+    if (!b.disabled) b.setAttribute('aria-controls', 'frame-' + secOf(i));
+    b.addEventListener('click', function () { go(i, true); });
+    b.addEventListener('keydown', function (e) {
+      var d = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+      if (!d) return;
+      e.preventDefault();
+      var m = i + d;
+      if (m >= 0 && m < TOTAL) { go(m, false); steps[m].focus(); }
+    });
+  });
+  function go(i, focusHead) {
+    current = i;
+    steps.forEach(function (b, j) { var sec = $('frame-' + secOf(j)); if (sec) sec.hidden = j !== i; b.setAttribute('aria-selected', j === i ? 'true' : 'false'); b.tabIndex = j === i ? 0 : -1; });
+    var fd = frames[secOf(i)]; if (fd) refreshBeats(fd);
+    $('pcount').textContent = (i + 1) + ' of ' + TOTAL;
+    $('prev').disabled = i === 0 && !(fd && fd.beat === 2);
+    $('next').disabled = i + 1 >= TOTAL && !(fd && fd.beat === 1 && fd.open);
+    $('next-label').textContent = fd && fd.beat === 1 && fd.open ? 'Next: ' + fd.labels[1].replace(/^\d+\.\s*/, '') + ' ' : i + 1 < TOTAL ? 'Next: ' + steps[i + 1].textContent.replace(/^\d+/, '') + ' ' : 'Next ';
+    if (focusHead) $('frame-' + secOf(i)).querySelector('.f-head h2').focus();
+  }
+  /* show(n): n is a section number; folded sections open their host frame at beat 2 */
+  function show(n, focusHead) {
+    var f = hostOf[n], target = f ? f.host : n;
+    var i = steps.findIndex(function (b) { return +b.dataset.frame === target; });
+    if (i < 0) return;
+    if (f) { frames[f.host].open = true; frames[f.host].beat = 2; }
+    else if (frames[target]) frames[target].beat = 1;
+    go(i, focusHead);
+  }
+  $('prev').addEventListener('click', function () {
+    var fd = frames[secOf(current)];
+    if (fd && fd.beat === 2) { setBeat(fd, 1, true); go(current, true); return; }
+    if (current > 0) { var pf = frames[secOf(current - 1)]; if (pf && pf.open) pf.beat = 2; go(current - 1, true); }
+  });
+  $('next').addEventListener('click', function () {
+    var fd = frames[secOf(current)];
+    if (fd && fd.beat === 1 && fd.open) { setBeat(fd, 2, true); go(current, true); return; }
+    if (current + 1 < TOTAL) { var nf = frames[secOf(current + 1)]; if (nf) nf.beat = 1; go(current + 1, true); }
+  });
+  /* the fix of beat 1 also refreshes the pager so Next leads to beat 2 */
+  FOLD.forEach(function (fd) { var g = $(fd.go); if (g) g.addEventListener('click', function () { if (frames[secOf(current)] === fd) go(current, false); }); });
+  /* ---------- Story beats (Cody, 2026-11-20, from the garden pots pilot) ----------
+     Frames 1-5 open on short lines in large type; Compare keeps its text. Lines arrive on a
+     steady stagger and nothing leaves on a timer: once every line is in, the button turns
+     to Continue (named for the activity) and the learner starts the demo. Show all fills
+     the story at once; Replay the setup in the kicker plays it again. Reduced motion shows
+     every line at once; ?anim=0 (tests, screenshots) skips the story. */
+  var MI = function (x) { return '<math><mi>' + x + '</mi></math>'; };
+  /* Concise and scannable (Cody, 2026-11-20): one or two short lines, each with a small
+     figure where it helps, then the question the activity answers. */
+  var STORY = {
+    0: { go: 'Start leaping', lines: [
+      ['Four friends. Four kinds of chance.', 'cast'],
+      ['Finn leaps for the rock: a landing or a splash.', 'leap']],
+      bridge: 'Can the leaps go on a chart?' },
+    2: { go: 'Show the plank', lines: [
+      ['Stand Finn\'s two PMF bars on a plank, each as heavy as its probability.', 'plank']],
+      bridge: 'Where does the plank balance?' },
+    4: { go: 'Meet Tad', lines: [
+      ['Tad tries for ' + MI('n') + ' flies. Each is caught with chance ' + MI('p') + ', independently.', 'flies'],
+      [MI('X') + ' counts the flies in the jar.', null]],
+      bridge: 'How likely is each count?' },
+    5: { go: 'Start digging', lines: [
+      ['Nutmeg digs hole by hole. Each finds the acorn with chance ' + MI('p') + ', independently.', 'digs'],
+      [MI('X') + ' is the dig that finds it.', null]],
+      bridge: 'After a run of empty holes, is the acorn due?' },
+    6: { go: 'Show the board', lines: [
+      ['Hoot picks one of five trails home, each equally likely.', 'trails'],
+      [MI('X') + ' is the trail Hoot takes.', null]],
+      bridge: 'How likely is a trail past the Old Oak?' }
+  };
+  /* ---------- Story figures ---------- */
+  var NS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs, parent) { var n = document.createElementNS(NS, tag); Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); }); if (parent) parent.appendChild(n); return n; }
+  var BOX = { buildFox: '-67 -70 117 72', buildFrog: '-36 -48 72 50', buildSquirrel: '-26 -49 59 52', buildOwl: '-30 -56 60 58' };
+  function critter(parent, b, hgt, name) {
+    var c = h('span', 'fcrit'); parent.appendChild(c);
+    var vb = BOX[b].split(' ').map(Number), sv = svgEl('svg', { viewBox: BOX[b], height: hgt, width: Math.round(hgt * vb[2] / vb[3]), 'aria-hidden': 'true' }, c);
+    S[b](sv);
+    if (name) c.appendChild(h('span', 'fcap', name));
+    return c;
+  }
+  function row(parent) { var r = h('div', 'frow'); parent.appendChild(r); return r; }
+  function dots(parent, seq) {
+    var sv = svgEl('svg', { viewBox: '0 0 ' + (seq.length * 22) + ' 22', height: 22, width: seq.length * 22, 'aria-hidden': 'true' }, parent);
+    seq.forEach(function (x, i) { svgEl('circle', { cx: 11 + i * 22, cy: 11, r: 8, 'class': x ? 'fdot win' : 'fdot miss' }, sv); });
+  }
+  var FIGS = {
+    cast: function (f) { var r = row(f); critter(r, 'buildFox', 46, 'Finn'); critter(r, 'buildFrog', 46, 'Tad'); critter(r, 'buildSquirrel', 46, 'Nutmeg'); critter(r, 'buildOwl', 46, 'Hoot'); },
+    leap: function (f) {
+      var r = row(f); critter(r, 'buildFox', 48);
+      [1, 0].forEach(function (x) { var c = h('span', 'fcrit'); c.appendChild(S.icon(x)); c.appendChild(h('span', 'fcap', x ? 'lands' : 'splash')); r.appendChild(c); });
+    },
+    plank: function (f) {
+      var sv = svgEl('svg', { viewBox: '0 0 170 92', width: 170, height: 92, 'aria-hidden': 'true', 'class': 'fplank' }, f);
+      svgEl('rect', { x: 28, y: 52, width: 34, height: 18, 'class': 'fbar miss' }, sv);
+      svgEl('rect', { x: 108, y: 28, width: 34, height: 42, 'class': 'fbar win' }, sv);
+      svgEl('line', { x1: 10, x2: 160, y1: 71, y2: 71, 'class': 'fbeam' }, sv);
+      svgEl('path', { d: 'M85 73 l-9 15 l18 0 Z', 'class': 'fpivot' }, sv);
+      var q = svgEl('text', { x: 85, y: 50, 'text-anchor': 'middle', 'class': 'fq' }, sv); q.textContent = '?';
+    },
+    flies: function (f) { var r = row(f); critter(r, 'buildFrog', 46); dots(r, [1, 0, 1, 1, 0]); },
+    digs: function (f) {
+      var r = row(f); critter(r, 'buildSquirrel', 48);
+      var sv = svgEl('svg', { viewBox: '0 0 120 30', width: 120, height: 30, 'aria-hidden': 'true' }, r);
+      for (var i = 0; i < 4; i++) svgEl('ellipse', { cx: 14 + i * 30, cy: 18, rx: 11, ry: 6, 'class': 'fhole' }, sv);
+      svgEl('circle', { cx: 104, cy: 12, r: 6, 'class': 'facorn' }, sv);
+    },
+    trails: function (f) {
+      var r = row(f); critter(r, 'buildOwl', 48);
+      var t = h('span', 'ftrails'); [1, 2, 3, 4, 5].forEach(function (k) { t.appendChild(h('b', '', String(k))); }); r.appendChild(t);
+    }
+  };
+  var SKIP = /(^|[?&])anim=0(&|$)/.test(location.search);
+  var REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var STAGGER = 900, played = {}, timers = [];
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  Object.keys(STORY).forEach(function (n) {
+    var sec = $('frame-' + n), sto = STORY[n];
+    if (!sec) return;
+    var intro = h('div', 'intro'); intro.setAttribute('aria-live', 'polite');
+    var lines = h('div', 'intro-lines');
+    sto.lines.forEach(function (l) {
+      var ln = h('div', 'ln'), p = h('p', ''); p.innerHTML = l[0]; ln.appendChild(p);
+      if (l[1]) { var fg = h('div', 'fig'); fg.dataset.fig = l[1]; fg.setAttribute('aria-hidden', 'true'); FIGS[l[1]](fg); ln.appendChild(fg); }
+      lines.appendChild(ln);
+    });
+    var br = h('p', 'ln bridge'); br.innerHTML = sto.bridge; lines.appendChild(br);
+    var skip = h('button', 'again small intro-skip', 'Show all'); skip.type = 'button';
+    intro.appendChild(lines); intro.appendChild(skip);
+    sec.querySelector('.f-head').insertAdjacentElement('afterend', intro);
+    var rp = h('button', 'replay', 'Replay the setup'); rp.type = 'button'; rp.hidden = true;
+    var kick = sec.querySelector('.f-head .kicker'), bn = kick.querySelector('.beat-nav');
+    kick.insertBefore(rp, bn || null);
+    skip.addEventListener('click', function () {
+      if (!sec.classList.contains('told')) { showAll(n); skip.focus(); return; }
+      endIntro(n, true); sec.querySelector('.f-head h2').focus();
+    });
+    rp.addEventListener('click', function () { playIntro(n); skip.focus(); });
+  });
+  function introBtn(n, done) {
+    var sec = $('frame-' + n), b = sec.querySelector('.intro-skip');
+    b.textContent = done ? STORY[n].go : 'Show all';
+    b.className = done ? 'go intro-skip' : 'again small intro-skip';
+    sec.classList.toggle('told', !!done);
+  }
+  function showAll(n) {
+    clearTimers();
+    [].forEach.call($('frame-' + n).querySelectorAll('.intro .ln'), function (l) { l.classList.add('on'); });
+    introBtn(n, true);
+  }
+  function playIntro(n) {
+    var sec = $('frame-' + n), ls = [].slice.call(sec.querySelectorAll('.intro .ln'));
+    clearTimers();
+    sec.classList.remove('revealed'); sec.classList.add('playing');
+    sec.querySelector('.replay').hidden = true;
+    if (REDUCED) { showAll(n); return; }
+    introBtn(n, false);
+    ls.forEach(function (l, i) {
+      l.classList.remove('on');
+      timers.push(setTimeout(function () { l.classList.add('on'); if (i === ls.length - 1) introBtn(n, true); }, 250 + i * STAGGER));
+    });
+  }
+  function endIntro(n, animate) {
+    clearTimers();
+    var sec = $('frame-' + n);
+    sec.classList.remove('playing');
+    sec.classList.toggle('revealed', !!animate && !REDUCED);
+    [].forEach.call(sec.querySelectorAll('.intro .ln'), function (l) { l.classList.add('on'); });
+    sec.querySelector('.replay').hidden = false;
+    played[n] = true;
+  }
+  /* Called on every frame change: leave an unfinished story, open the new frame's story on a
+     first visit to its first beat. */
+  var lastSec = null;
+  function storyOnShow() {
+    var n = secOf(current), fd = frames[n];
+    if (lastSec !== null && lastSec !== n && STORY[lastSec]) {
+      var ls = $('frame-' + lastSec);
+      if (ls.classList.contains('playing')) { ls.classList.remove('playing'); played[lastSec] = false; clearTimers(); }
+    }
+    lastSec = n;
+    if (!STORY[n]) return;
+    if (!played[n] && !SKIP && !(fd && fd.beat === 2)) playIntro(n); else if (!$('frame-' + n).classList.contains('playing')) endIntro(n, false);
+  }
+  var goPlain = go;
+  go = function (i, focusHead) { goPlain(i, focusHead); storyOnShow(); };
+
+  go(0, false);
+  window.__wdNav = { show: show, current: function () { return secOf(current); }, beat: function (n) { var fd = frames[n]; return fd ? fd.beat : 1; } };
+})();
+</script>
+</body>
+</html>
