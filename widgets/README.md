@@ -10,6 +10,8 @@ the lesson.
 | --- | --- | --- |
 | [Standard notation for entering answers](https://codey-m.github.io/prob_stats/widgets/notation-guide.html) | 39 places across 6.3710.1x, 6.3710.2x, 6.3710.3x, 6.3710.4x, 6.3710.5x |  |
 | [Beach Beeps](https://codey-m.github.io/prob_stats/widgets/widget-bayes-base-rate.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Bayes' rule and the base rate |
+| [What does a goal tell you?](https://codey-m.github.io/prob_stats/widgets/unit-summary-what-does-a-goal-tell-you.html) | Unit 1, Lec. 2: Conditioning and Bayes' rule | Unit 1 synthesis: what does a goal tell you? |
+| [How many pots do we need?](https://codey-m.github.io/prob_stats/widgets/unit-summary-how-many-pots-do-we-need.html) | Unit 2, Lec. 4: Counting | Unit 2 synthesis: how many pots do we need? |
 | [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module1.html) | Glossary tab | Module 1 Glossary |
 
 ## 6.3710.2x Probability & SDA: Discrete Distributions & Categorical Data
@@ -17,6 +19,7 @@ the lesson.
 | Widget | Where | What it shows |
 | --- | --- | --- |
 | [Discrete distributions: PMF and CDF](https://codey-m.github.io/prob_stats/widgets/widget-discrete-dist.html) | Unit 1, Lec. 1: PMFs and expectation |  |
+| [Which distribution fits the count?](https://codey-m.github.io/prob_stats/widgets/unit-summary-which-distribution-fits-the-count.html) | Unit 1, Lec. 2: Variance and conditioning | Unit 1 synthesis: which distribution fits the count? |
 | [Normal probabilities](https://codey-m.github.io/prob_stats/widgets/widget-normal-probability.html) | Unit 2, Lec. 3: Probability density functions | Standard normal probability lookup |
 | [6.3710x — Glossary](https://codey-m.github.io/prob_stats/widgets/glossary-module2.html) | Glossary tab | Module 2 Glossary |
 
