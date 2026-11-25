@@ -295,6 +295,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
 @media (prefers-reduced-motion: reduce) { .fpot.drop { transition: none; } }
 .share-lab { flex: none; font-size: 12px; color: var(--muted); }
 .intro .ln.bridge { font-style: italic; color: var(--tone); }
+.problem.ok { color: var(--good, #1d6b3a); }
 </style>
 </head>
 <body>
@@ -452,7 +453,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
   <section id="frame-3" class="stage fstage" role="tabpanel" aria-labelledby="f3-title" data-tone="count" hidden>
     <div class="f-head">
       <p class="kicker">4 · Count<span class="how">group the ordered picks</span><button type="button" class="replay" hidden>Replay the setup</button></p>
-      <h2 id="f3-title" tabindex="-1">Twenty pots have over a million sprout patterns.</h2>
+      <h2 id="f3-title" tabindex="-1">Do we really need to count every sprout pattern?</h2>
     </div>
     <div class="intro" aria-live="polite" data-go="Show the picks">
       <div class="intro-lines">
@@ -482,7 +483,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
       <p class="prompt">Each card picks the two sprouting pots in order: 3 choices, then 2.</p>
       <div class="f-controls">
         <div class="act">
-          <button type="button" id="f3-go" class="go">Group picks that plant the same pots<small>order does not matter</small></button>
+          <button type="button" id="f3-go" class="go">Group picks that sprout the same pots<small>order does not matter</small></button>
           <button type="button" id="f3-again" class="again" hidden>Show the ordered picks</button>
         </div>
       </div>
@@ -522,11 +523,11 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
     </div>
     <div class="f-left">
       <div class="f-visual">
-        <svg id="chart" class="chart nchart" viewBox="0 0 540 330" role="slider" tabindex="0" aria-label="Number of pots" aria-valuemin="1" aria-valuemax="20" aria-valuenow="6" aria-valuetext="6 pots"></svg>
+        <svg id="chart" class="chart nchart" viewBox="0 0 540 392" role="slider" tabindex="0" aria-label="Number of pots" aria-valuemin="1" aria-valuemax="20" aria-valuenow="6" aria-valuetext="6 pots"></svg>
         <p class="rs-cap">Drag the marker, or use the arrow keys.</p>
       </div>
       <div id="f4-changed" class="changed f-changed" hidden>
-        <p><span class="head">What changed</span>12 is the first number of pots to reach 95%. That 95% averages over the packet: with the old packet known, 12 pots give 91.50%.</p>
+        <p><span class="head">What changed</span>With a random packet, 11 pots give 94.35%, so 12 is the first number of pots to reach 95%. With the old packet known, 12 pots give 91.50%.</p>
       </div>
     </div>
     <div class="f-right">
@@ -835,7 +836,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
         var gs = G.filter(function (g) { return g.packet === pk; });
         return gs.filter(function (g) { return g.reached; }).length + ' of ' + gs.length;
       };
-      $('f0-split').innerHTML = 'Old packet: <b>' + part('old') + '</b> reached two. New packet: <b>' + part('new') + '</b>.';
+      $('f0-split').innerHTML = 'Old packet: <b>' + part('old') + '</b> reached two.<br>New packet: <b>' + part('new') + '</b> reached two.';
     }
   }
   $('plant').addEventListener('click', function () {
@@ -928,7 +929,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
   var S2 = { A: false };
   function paint2() {
     paintGrid(g1, S2.A ? M.EV.A : null);
-    $('f1-before').hidden = S2.A; $('f1-after').hidden = !S2.A; $('f1-check').hidden = !S2.A;
+    $('f1-after').hidden = !S2.A; $('f1-check').hidden = !S2.A;
     $('f1-go').hidden = S2.A; $('f1-again').hidden = !S2.A; reveal('f1-changed', S2.A);
   }
   $('f1-go').addEventListener('click', function () { S2.A = true; paint2(); $('f1-again').focus(); say('Pot 1 sprouted. Old packet 25%, new packet 75%. P(B given A) = 0.75.'); });
@@ -1008,7 +1009,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
       var factors = pat.split('').map(function (c) { return c === '1' ? p1 : q1; }).join(' × ');
       wt.innerHTML = factors + '<br>= <b>' + M.dec(w) + '</b>';
     });
-    $('picks-sum').innerHTML = 'Exactly two sprouts, ' + S4.pk + ' packet: 3 × ' + M.dec(w) + ' = <b>' + M.dec(3 * w) + '</b>';
+    $('picks-sum').innerHTML = 'Exactly two sprouts, ' + S4.pk + ' packet:<br>(3 choose 2) × ' + p1 + '<sup>2</sup> × ' + q1 + ' = 3 × ' + M.dec(w) + ' = <b>' + M.dec(3 * w) + '</b>';
     [].slice.call($('pk-toggle').querySelectorAll('button')).forEach(function (b) { b.setAttribute('aria-checked', b.dataset.pk === S4.pk ? 'true' : 'false'); });
   }
   function set4(v) {
@@ -1028,7 +1029,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
   // ---------- Step 5: the decision chart ----------
   var S5 = { n: NAIVE, mix: false, reachedFirst: false, seen: null };
   // The chart's coordinate width shrinks below 560 px so its text stays at least 12.5 px tall.
-  var NMAX = 20, X0 = 58, X1 = 500, Y0 = 268, Y1 = 22, VBW = 540;
+  var NMAX = 20, X0 = 58, X1 = 500, Y0 = 330, Y1 = 22, VBW = 540;
   function xs(n) { return X0 + (n - 1) / (NMAX - 1) * (X1 - X0); }
   function ys(v) { return Y0 - v * (Y0 - Y1); }
   var FIRST = M.firstN(M.mix, 0.95);
@@ -1040,7 +1041,7 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
   function drawChart() {
     var svg = $('chart');
     VBW = window.innerWidth < 560 ? 380 : 540; X1 = VBW - 40;
-    svg.setAttribute('viewBox', '0 0 ' + VBW + ' 330');
+    svg.setAttribute('viewBox', '0 0 ' + VBW + ' 392');
     svg.textContent = '';
     for (var v = 0; v <= 1.001; v += 0.25) {
       el('line', { x1: X0, x2: X1, y1: ys(v), y2: ys(v), class: 'c-gridline' }, svg);
@@ -1094,7 +1095,6 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
     if (S5.mix) {
       row(tb, 'old', 'Old packet, known', M.pct(M.q(n, M.P.old)));
       row(tb, 'new', 'New packet, known', M.pct(M.q(n, M.P.new)));
-      if (n > 1) row(tb, 'mix', 'Random packet, ' + (n - 1) + (n - 1 === 1 ? ' pot' : ' pots'), M.pct(M.mix(n - 1)), 'prev');
     }
     if (S5.seen && n === NAIVE) row(tb, 'seen', 'Your ' + S5.seen.n + ' gardens in step 1', Math.round(100 * S5.seen.r / S5.seen.n) + '%', 'prev');
     $('f4-mixline').hidden = !S5.mix;
@@ -1105,7 +1105,9 @@ button.pname[aria-checked="true"] { border-color: var(--tone); background: var(-
     if (!S5.mix) { pr.hidden = !(n === NAIVE); pr.textContent = 'This curve ignores that a garden shares one packet.'; }
     else if (n < FIRST) { pr.hidden = false; pr.textContent = 'With a random packet, ' + n + (n === 1 ? ' pot gives ' : ' pots give ') + M.pct(M.mix(n)) + ': short of 95%.'; }
     else if (n > FIRST && !S5.reachedFirst) { pr.hidden = false; pr.textContent = n + ' pots reach 95%. Do fewer pots still reach it?'; }
+    else if (n === FIRST) { pr.hidden = false; pr.textContent = 'You reached your target! With a random packet, ' + n + ' pots give ' + M.pct(M.mix(n)) + '.'; }
     else pr.hidden = true;
+    pr.classList.toggle('ok', S5.mix && n >= FIRST);
     drawChart();
   }
   function setN(n) {
